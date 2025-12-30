@@ -15,9 +15,15 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
+  useEffect(() => {
+    if (!loading && user) {
+      // User is authenticated, stay on dashboard
+    }
+  }, [user, loading]);
+
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    navigate('/');
   };
 
   if (loading) {
