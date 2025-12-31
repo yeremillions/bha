@@ -38,7 +38,13 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+      {/* Decorative background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
+        <div className="absolute top-1/2 -left-40 h-96 w-96 rounded-full bg-accent/3 blur-3xl" />
+      </div>
+      
       {/* Sidebar */}
       <AdminSidebar 
         collapsed={sidebarCollapsed} 
@@ -48,56 +54,61 @@ const Dashboard = () => {
       {/* Main Content */}
       <div
         className={cn(
-          'transition-all duration-300',
-          sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'
+          'relative transition-all duration-300',
+          sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
         )}
       >
         {/* Header */}
         <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-6 lg:p-8">
           {/* Page Title */}
           <div className="mb-8">
-            <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              Welcome back! Here's what's happening today.
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
+              <span className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-accent/10 text-accent rounded-full">
+                Live
+              </span>
+            </div>
+            <p className="text-muted-foreground">
+              Welcome back! Here's what's happening at Brooklyn Hills today.
             </p>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          {/* Stats Grid - Bento style */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
             <StatCard
               title="Today's Bookings"
               value="3"
               subtitle="12 this week"
-              trend={{ value: '+12%', positive: true }}
+              trend={{ value: '12%', positive: true }}
               icon={BookOpen}
-              chartColor="stroke-blue-500"
+              variant="navy"
             />
             <StatCard
               title="Today's Revenue"
-              value="₦135,000"
-              subtitle="₦540,000 this week"
-              trend={{ value: '+8%', positive: true }}
+              value="₦135K"
+              subtitle="₦540K this week"
+              trend={{ value: '8%', positive: true }}
               icon={DollarSign}
-              chartColor="stroke-green-500"
+              variant="success"
             />
             <StatCard
               title="Occupancy Rate"
               value="78%"
               subtitle="This month"
-              trend={{ value: '+5%', positive: true }}
+              trend={{ value: '5%', positive: true }}
               icon={Percent}
-              chartColor="stroke-amber-500"
+              variant="gold"
             />
             <StatCard
               title="Bar Sales Today"
-              value="₦25,000"
-              subtitle="₦105,000 this week"
-              trend={{ value: '+15%', positive: true }}
+              value="₦25K"
+              subtitle="₦105K this week"
+              trend={{ value: '15%', positive: true }}
               icon={Wine}
-              chartColor="stroke-purple-500"
+              variant="purple"
             />
           </div>
 
@@ -111,7 +122,7 @@ const Dashboard = () => {
             <QuickActions />
           </div>
 
-          {/* Main Grid */}
+          {/* Main Grid - Modern bento layout */}
           <div className="grid gap-6 lg:grid-cols-2 mb-8">
             <TodaySchedule />
             <RecentBookings />
