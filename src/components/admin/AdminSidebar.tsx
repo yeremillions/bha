@@ -13,7 +13,7 @@ import {
   DollarSign,
   Settings,
   ChevronLeft,
-  LogOut,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -47,60 +47,112 @@ export const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-card border-r border-border transition-all duration-300',
-        collapsed ? 'w-16' : 'w-60'
+        'fixed left-0 top-0 z-40 h-screen transition-all duration-300 hidden lg:block',
+        collapsed ? 'w-20' : 'w-64'
       )}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-border">
-        <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent shrink-0">
-            <Building2 className="h-5 w-5 text-accent-foreground" />
-          </div>
-          {!collapsed && (
-            <span className="font-display text-lg font-semibold">Brooklyn Hills</span>
-          )}
-        </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn('h-8 w-8 shrink-0', collapsed && 'hidden')}
-          onClick={onToggle}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+      {/* Gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy to-navy-light" />
+      
+      {/* Decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 h-60 w-60 rounded-full bg-accent/5 blur-3xl" />
       </div>
-
-      {/* Navigation */}
-      <nav className="flex flex-col gap-1 p-3">
-        {navItems.map((item) => (
-          <Link
-            key={item.title}
-            to={item.url}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-              isActive(item.url)
-                ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+      
+      <div className="relative h-full flex flex-col">
+        {/* Logo */}
+        <div className={cn(
+          'flex h-20 items-center border-b border-white/10 px-6',
+          collapsed && 'justify-center px-4'
+        )}>
+          <Link to="/dashboard" className="flex items-center gap-3">
+            <div className="relative flex h-10 w-10 items-center justify-center shrink-0">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent to-gold-light animate-pulse-glow" />
+              <div className="relative flex h-full w-full items-center justify-center rounded-xl bg-navy">
+                <Building2 className="h-5 w-5 text-accent" />
+              </div>
+            </div>
+            {!collapsed && (
+              <div className="flex flex-col">
+                <span className="font-display text-lg font-bold text-cream">Brooklyn</span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-accent">Hills</span>
+              </div>
             )}
-          >
-            <item.icon className="h-5 w-5 shrink-0" />
-            {!collapsed && <span>{item.title}</span>}
           </Link>
-        ))}
-      </nav>
+        </div>
 
-      {/* Back to Website */}
-      <div className="absolute bottom-4 left-0 right-0 px-3">
-        <Link
-          to="/"
-          className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors'
-          )}
-        >
-          <Home className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Back to Website</span>}
-        </Link>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-6 px-3">
+          <div className="space-y-1">
+            {navItems.map((item) => {
+              const active = isActive(item.url);
+              return (
+                <Link
+                  key={item.title}
+                  to={item.url}
+                  className={cn(
+                    'group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
+                    active
+                      ? 'text-navy bg-accent shadow-lg shadow-accent/20'
+                      : 'text-cream/70 hover:text-cream hover:bg-white/5'
+                  )}
+                >
+                  {/* Active indicator */}
+                  {active && (
+                    <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-8 w-1 rounded-r-full bg-accent" />
+                  )}
+                  
+                  <item.icon className={cn(
+                    'h-5 w-5 shrink-0 transition-transform duration-200',
+                    active ? 'text-navy' : 'text-cream/60 group-hover:text-accent group-hover:scale-110'
+                  )} />
+                  
+                  {!collapsed && (
+                    <span className="truncate">{item.title}</span>
+                  )}
+                  
+                  {/* Hover glow */}
+                  {!active && (
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent/0 via-accent/5 to-accent/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* Bottom section */}
+        <div className="border-t border-white/10 p-3">
+          {/* Back to Website */}
+          <Link
+            to="/"
+            className="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-cream/60 hover:text-cream hover:bg-white/5 transition-all duration-200"
+          >
+            <Home className="h-5 w-5 shrink-0 group-hover:text-accent transition-colors" />
+            {!collapsed && <span>Back to Website</span>}
+          </Link>
+          
+          {/* Collapse toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              'mt-2 w-full justify-center text-cream/60 hover:text-cream hover:bg-white/5',
+              collapsed && 'px-0'
+            )}
+            onClick={onToggle}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <>
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                <span>Collapse</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </aside>
   );
