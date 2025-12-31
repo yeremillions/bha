@@ -300,13 +300,130 @@ const Landing = () => {
             </p>
           </div>
           
-          <Card className="max-w-md mx-auto bg-secondary/30">
-            <CardContent className="p-12 text-center">
-              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-display text-xl font-semibold text-foreground mb-2">No properties available at the moment</h3>
-              <p className="font-body text-muted-foreground">Please check back later</p>
-            </CardContent>
-          </Card>
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Property 1 */}
+            <Card className="overflow-hidden group hover:shadow-xl transition-shadow">
+              <div className="relative h-56 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80" 
+                  alt="Luxury Studio Apartment"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-4 left-4 px-3 py-1 bg-accent text-accent-foreground text-xs font-semibold rounded-full">
+                  Popular
+                </div>
+              </div>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 text-accent fill-accent" />
+                  ))}
+                  <span className="text-sm text-muted-foreground ml-1">(48 reviews)</span>
+                </div>
+                <h3 className="font-display text-xl font-semibold text-foreground mb-2">Luxury Studio Apartment</h3>
+                <p className="font-body text-muted-foreground text-sm mb-4 flex items-center gap-1">
+                  <MapPin className="h-4 w-4" /> Ewet Housing Estate, Uyo
+                </p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">WiFi</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">AC</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">Kitchen</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">1 Bed</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-display text-2xl font-bold text-foreground">₦35,000</span>
+                    <span className="text-muted-foreground text-sm"> / night</span>
+                  </div>
+                  <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    Book Now
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Property 2 */}
+            <Card className="overflow-hidden group hover:shadow-xl transition-shadow">
+              <div className="relative h-56 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80" 
+                  alt="Executive 2-Bedroom Suite"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-4 left-4 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
+                  Best Value
+                </div>
+              </div>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 text-accent fill-accent" />
+                  ))}
+                  <span className="text-sm text-muted-foreground ml-1">(72 reviews)</span>
+                </div>
+                <h3 className="font-display text-xl font-semibold text-foreground mb-2">Executive 2-Bedroom Suite</h3>
+                <p className="font-body text-muted-foreground text-sm mb-4 flex items-center gap-1">
+                  <MapPin className="h-4 w-4" /> Shelter Afrique, Uyo
+                </p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">WiFi</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">AC</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">Pool</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">2 Beds</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-display text-2xl font-bold text-foreground">₦55,000</span>
+                    <span className="text-muted-foreground text-sm"> / night</span>
+                  </div>
+                  <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    Book Now
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Property 3 */}
+            <Card className="overflow-hidden group hover:shadow-xl transition-shadow">
+              <div className="relative h-56 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80" 
+                  alt="Premium Penthouse"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-4 left-4 px-3 py-1 bg-accent text-accent-foreground text-xs font-semibold rounded-full">
+                  Premium
+                </div>
+              </div>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 text-accent fill-accent" />
+                  ))}
+                  <span className="text-sm text-muted-foreground ml-1">(36 reviews)</span>
+                </div>
+                <h3 className="font-display text-xl font-semibold text-foreground mb-2">Premium Penthouse</h3>
+                <p className="font-body text-muted-foreground text-sm mb-4 flex items-center gap-1">
+                  <MapPin className="h-4 w-4" /> Ikot Ekpene Road, Uyo
+                </p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">WiFi</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">Bar</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">Gym</span>
+                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">3 Beds</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-display text-2xl font-bold text-foreground">₦85,000</span>
+                    <span className="text-muted-foreground text-sm"> / night</span>
+                  </div>
+                  <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    Book Now
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="text-center mt-10">
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
