@@ -406,18 +406,18 @@ const Bookings = () => {
               <h3 className="font-semibold text-foreground">All Bookings</h3>
             </div>
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="min-w-[900px]">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
-                    <TableHead className="text-muted-foreground font-medium">ID</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Guest</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Property</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Check-in / Out</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-center">Guests</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Amount</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Status</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Payment</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-right">Actions</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[70px]">ID</TableHead>
+                    <TableHead className="text-muted-foreground font-medium min-w-[140px]">Guest</TableHead>
+                    <TableHead className="text-muted-foreground font-medium min-w-[160px]">Property</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[130px]">Check-in / Out</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-center w-[60px]">Guests</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[100px]">Amount</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[95px]">Status</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[80px]">Payment</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-right w-[60px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
