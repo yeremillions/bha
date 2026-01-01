@@ -18,6 +18,7 @@ import {
   Trash2,
   Eye,
   TrendingUp,
+  ArrowUpDown,
 } from 'lucide-react';
 
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -153,6 +154,7 @@ const Properties = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('name-asc');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -172,12 +174,25 @@ const Properties = () => {
     return null;
   }
 
-  const filteredProperties = properties.filter(property => {
-    const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || property.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredProperties = properties
+    .filter(property => {
+      const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           property.location.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || property.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'price-desc':
+          return b.pricePerNight - a.pricePerNight;
+        case 'capacity-desc':
+          return b.maxGuests - a.maxGuests;
+        default:
+          return 0;
+      }
+    });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
@@ -270,6 +285,17 @@ const Properties = () => {
                   <SelectItem value="available">Available</SelectItem>
                   <SelectItem value="occupied">Occupied</SelectItem>
                   <SelectItem value="maintenance">Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-44 bg-card border-border/50">
+                  <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Sort By" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                  <SelectItem value="price-desc">Price (High to Low)</SelectItem>
+                  <SelectItem value="capacity-desc">Capacity (High to Low)</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex rounded-lg border border-border/50 bg-card p-1">
