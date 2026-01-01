@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
+import Bookings from "./pages/Bookings";
 import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/properties" element={<Properties />} />
+              <Route path="/dashboard/bookings" element={<Bookings />} />
               <Route path="/dashboard/reports" element={<Reports />} />
               <Route path="/auth" element={<Auth />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
