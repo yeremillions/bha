@@ -15,27 +15,27 @@ interface StatCardProps {
 
 const variantStyles = {
   default: {
-    bg: 'from-primary/5 to-primary/10',
+    bg: 'from-primary/3 to-primary/5',
     icon: 'bg-primary/10 text-primary',
     accent: 'bg-primary',
   },
   gold: {
-    bg: 'from-accent/5 to-accent/15',
+    bg: 'from-accent/3 to-accent/8',
     icon: 'bg-accent/15 text-accent',
     accent: 'bg-accent',
   },
   navy: {
-    bg: 'from-navy/5 to-navy/10',
+    bg: 'from-navy/3 to-navy/5',
     icon: 'bg-navy/10 text-navy dark:bg-navy-light/20 dark:text-cream',
     accent: 'bg-navy dark:bg-navy-light',
   },
   success: {
-    bg: 'from-emerald-500/5 to-emerald-500/10',
+    bg: 'from-emerald-500/3 to-emerald-500/5',
     icon: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
     accent: 'bg-emerald-500',
   },
   purple: {
-    bg: 'from-violet-500/5 to-violet-500/10',
+    bg: 'from-violet-500/3 to-violet-500/5',
     icon: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
     accent: 'bg-violet-500',
   },
