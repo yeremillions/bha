@@ -299,9 +299,6 @@ const Properties = () => {
                 {/* Glassmorphism overlay */}
                 <div className="absolute inset-0 bg-card/60 backdrop-blur-sm" />
                 
-                {/* Gradient border effect */}
-                <div className="absolute inset-0 rounded-xl gradient-border opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
                 <div className="relative">
                   <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
                   <div className="flex items-center gap-2 mt-1">
