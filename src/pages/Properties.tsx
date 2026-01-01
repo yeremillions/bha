@@ -21,6 +21,11 @@ import {
   ArrowUpDown,
   Building2,
   Sparkles,
+  Shield,
+  Zap,
+  Wifi,
+  Tv,
+  UtensilsCrossed,
 } from 'lucide-react';
 
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -44,6 +49,23 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AddPropertyForm, PropertyFormData } from '@/components/admin/AddPropertyForm';
 
+// Amenity icons mapping
+const amenityIcons = {
+  security: Shield,
+  power: Zap,
+  wifi: Wifi,
+  entertainment: Tv,
+  kitchen: UtensilsCrossed,
+};
+
+const amenityLabels = {
+  security: '24/7 Security',
+  power: '24hr Power',
+  wifi: 'Fast WiFi',
+  entertainment: 'Smart TV',
+  kitchen: 'Full Kitchen',
+};
+
 // Mock property data
 const properties = [
   {
@@ -60,6 +82,7 @@ const properties = [
     status: 'available',
     occupancy: 85,
     image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop',
+    amenities: ['security', 'power', 'wifi', 'entertainment', 'kitchen'],
   },
   {
     id: '2',
@@ -75,6 +98,7 @@ const properties = [
     status: 'occupied',
     occupancy: 92,
     image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&h=400&fit=crop',
+    amenities: ['security', 'power', 'wifi', 'entertainment'],
   },
   {
     id: '3',
@@ -90,6 +114,7 @@ const properties = [
     status: 'available',
     occupancy: 78,
     image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop',
+    amenities: ['security', 'power', 'wifi', 'kitchen'],
   },
   {
     id: '4',
@@ -105,6 +130,7 @@ const properties = [
     status: 'maintenance',
     occupancy: 65,
     image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop',
+    amenities: ['security', 'power', 'wifi', 'entertainment', 'kitchen'],
   },
   {
     id: '5',
@@ -120,6 +146,7 @@ const properties = [
     status: 'available',
     occupancy: 88,
     image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&h=400&fit=crop',
+    amenities: ['power', 'wifi', 'entertainment'],
   },
   {
     id: '6',
@@ -135,6 +162,7 @@ const properties = [
     status: 'available',
     occupancy: 72,
     image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&h=400&fit=crop',
+    amenities: ['security', 'power', 'wifi', 'entertainment', 'kitchen'],
   },
 ];
 
@@ -488,7 +516,7 @@ const Properties = () => {
                       <span>{property.location}</span>
                     </div>
                     
-                    {/* Amenities */}
+                    {/* Room Details */}
                     <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border/50">
                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                         <Bed className="h-4 w-4" />
@@ -505,6 +533,29 @@ const Properties = () => {
                       <div className="ml-auto text-xs text-muted-foreground">
                         {property.reviews} reviews
                       </div>
+                    </div>
+                    
+                    {/* Amenities */}
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      {property.amenities.slice(0, 4).map((amenity) => {
+                        const Icon = amenityIcons[amenity as keyof typeof amenityIcons];
+                        const label = amenityLabels[amenity as keyof typeof amenityLabels];
+                        return (
+                          <div 
+                            key={amenity}
+                            className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-xs"
+                            title={label}
+                          >
+                            <Icon className="h-3 w-3" />
+                            <span className="hidden sm:inline">{label}</span>
+                          </div>
+                        );
+                      })}
+                      {property.amenities.length > 4 && (
+                        <span className="text-xs text-muted-foreground">
+                          +{property.amenities.length - 4} more
+                        </span>
+                      )}
                     </div>
                     
                     {/* Occupancy bar - Color coded */}
