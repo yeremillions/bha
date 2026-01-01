@@ -454,7 +454,7 @@ const Bookings = () => {
                         <TableCell>
                           <Badge 
                             className={cn(
-                              'capitalize border-0',
+                              'capitalize border-0 w-[5.5rem] justify-center whitespace-nowrap',
                               statusStyles[booking.status as keyof typeof statusStyles]
                             )}
                           >
