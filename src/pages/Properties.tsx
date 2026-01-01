@@ -47,6 +47,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { AddPropertyForm, PropertyFormData } from '@/components/admin/AddPropertyForm';
 
 // Amenity icons mapping
@@ -59,11 +65,19 @@ const amenityIcons = {
 };
 
 const amenityLabels = {
-  security: '24/7 Security',
-  power: '24hr Power',
-  wifi: 'Fast WiFi',
+  security: 'Security',
+  power: 'Power',
+  wifi: 'WiFi',
   entertainment: 'Smart TV',
-  kitchen: 'Full Kitchen',
+  kitchen: 'Kitchen',
+};
+
+const amenityDescriptions = {
+  security: 'CCTV Surveillance, 24/7 Armed Security, Gated Premises, Well-lit Surroundings',
+  power: 'Backup Generators, Solar Power, Inverters, 24hr Electricity Supply',
+  wifi: 'Ultra-Fast Wi-Fi in All Rooms & Common Areas',
+  entertainment: 'Smart TVs with Netflix, YouTube & Cable Channels',
+  kitchen: 'Full Kitchen: Fridge, Microwave, Gas Cooker, Cooking Utensils',
 };
 
 // Mock property data
@@ -536,27 +550,42 @@ const Properties = () => {
                     </div>
                     
                     {/* Amenities */}
-                    <div className="flex flex-wrap items-center gap-2 mt-3">
-                      {property.amenities.slice(0, 4).map((amenity) => {
-                        const Icon = amenityIcons[amenity as keyof typeof amenityIcons];
-                        const label = amenityLabels[amenity as keyof typeof amenityLabels];
-                        return (
-                          <div 
-                            key={amenity}
-                            className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-xs"
-                            title={label}
-                          >
-                            <Icon className="h-3 w-3" />
-                            <span className="hidden sm:inline">{label}</span>
-                          </div>
-                        );
-                      })}
-                      {property.amenities.length > 4 && (
-                        <span className="text-xs text-muted-foreground">
-                          +{property.amenities.length - 4} more
-                        </span>
-                      )}
-                    </div>
+                    <TooltipProvider delayDuration={200}>
+                      <div className="flex flex-wrap items-center gap-2 mt-3">
+                        {property.amenities.slice(0, 4).map((amenity) => {
+                          const Icon = amenityIcons[amenity as keyof typeof amenityIcons];
+                          const label = amenityLabels[amenity as keyof typeof amenityLabels];
+                          const description = amenityDescriptions[amenity as keyof typeof amenityDescriptions];
+                          return (
+                            <Tooltip key={amenity}>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-xs cursor-help transition-colors hover:bg-accent/20"
+                                >
+                                  <Icon className="h-3 w-3" />
+                                  <span className="hidden sm:inline">{label}</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs text-center">
+                                <p className="font-medium">{description}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })}
+                        {property.amenities.length > 4 && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-xs text-muted-foreground cursor-help hover:text-accent transition-colors">
+                                +{property.amenities.length - 4} more
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>{property.amenities.slice(4).map(a => amenityLabels[a as keyof typeof amenityLabels]).join(', ')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TooltipProvider>
                     
                     {/* Occupancy bar - Color coded */}
                     <div className="mt-4">
