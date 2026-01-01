@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, MoreHorizontal, TrendingUp } from 'lucide-react';
+import { ArrowRight, MoreHorizontal, TrendingUp, Eye, Edit, XCircle, CheckCircle, MessageSquare, Receipt, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from '@/hooks/use-toast';
 
 const bookings = [
   { 
@@ -94,13 +102,59 @@ export const RecentBookings = () => {
             </div>
             
             {/* Actions */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => toast({ title: "View Details", description: `Viewing ${booking.name}'s booking` })}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: "Edit Booking", description: `Editing ${booking.name}'s booking` })}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Booking
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: "Reschedule", description: `Rescheduling ${booking.name}'s booking` })}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Reschedule
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {booking.status === 'confirmed' ? (
+                  <DropdownMenuItem onClick={() => toast({ title: "Checked In", description: `${booking.name} marked as checked in` })}>
+                    <CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
+                    Mark as Checked In
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => toast({ title: "Confirmed", description: `${booking.name}'s booking confirmed` })}>
+                    <CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
+                    Confirm Booking
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => toast({ title: "Message Sent", description: `Opening chat with ${booking.name}` })}>
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Send Message
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: "Invoice", description: `Generating invoice for ${booking.name}` })}>
+                  <Receipt className="h-4 w-4 mr-2" />
+                  Generate Invoice
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => toast({ title: "Booking Cancelled", description: `${booking.name}'s booking has been cancelled`, variant: "destructive" })}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Cancel Booking
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ))}
       </div>
