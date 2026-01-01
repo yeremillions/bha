@@ -437,11 +437,11 @@ const Bookings = () => {
                         <TableCell className="text-foreground">{booking.property}</TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <p className="text-muted-foreground">
+                            <p className="text-muted-foreground whitespace-nowrap">
                               <span className="text-xs">In:</span>{' '}
                               <span className="text-foreground">{formatDate(booking.checkIn)}</span>
                             </p>
-                            <p className="text-muted-foreground">
+                            <p className="text-muted-foreground whitespace-nowrap">
                               <span className="text-xs">Out:</span>{' '}
                               <span className="text-foreground">{formatDate(booking.checkOut)}</span>
                             </p>
