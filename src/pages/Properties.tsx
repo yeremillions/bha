@@ -40,6 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AddPropertyForm, PropertyFormData } from '@/components/admin/AddPropertyForm';
 
 // Mock property data
 const properties = [
@@ -155,6 +156,12 @@ const Properties = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name-asc');
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  const handleAddProperty = (propertyData: PropertyFormData) => {
+    // For now, just log the data - in a real app, this would save to the database
+    console.log('New property:', propertyData);
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -228,11 +235,22 @@ const Properties = () => {
                 Manage your {properties.length} properties
               </p>
             </div>
-            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
+            <Button 
+              className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+              onClick={() => setShowAddForm(true)}
+            >
               <Plus className="h-4 w-4" />
               Add Property
             </Button>
           </div>
+
+          {/* Add Property Form */}
+          {showAddForm && (
+            <AddPropertyForm 
+              onClose={() => setShowAddForm(false)} 
+              onSubmit={handleAddProperty}
+            />
+          )}
 
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-4 mb-8">
