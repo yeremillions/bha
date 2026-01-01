@@ -262,21 +262,24 @@ const Properties = () => {
                 value: properties.length, 
                 color: 'text-foreground',
                 gradient: 'from-accent/20 to-accent/5',
-                delay: 0
+                delay: 0,
+                filterValue: 'all'
               },
               { 
                 label: 'Available', 
                 value: properties.filter(p => p.status === 'available').length, 
                 color: 'text-emerald-600 dark:text-emerald-400',
                 gradient: 'from-emerald-500/20 to-emerald-500/5',
-                delay: 1
+                delay: 1,
+                filterValue: 'available'
               },
               { 
                 label: 'Occupied', 
                 value: properties.filter(p => p.status === 'occupied').length, 
                 color: 'text-sky-600 dark:text-sky-400',
                 gradient: 'from-sky-500/20 to-sky-500/5',
-                delay: 2
+                delay: 2,
+                filterValue: 'occupied'
               },
               { 
                 label: 'Avg. Occupancy', 
@@ -284,15 +287,23 @@ const Properties = () => {
                 color: 'text-foreground',
                 gradient: 'from-amber-500/20 to-amber-500/5',
                 showTrend: true,
-                delay: 3
+                delay: 3,
+                filterValue: null
               },
-            ].map((stat, index) => (
-              <div
+            ].map((stat) => (
+              <button
                 key={stat.label}
+                onClick={() => stat.filterValue && setStatusFilter(stat.filterValue)}
+                disabled={!stat.filterValue}
                 className={cn(
-                  "group relative rounded-xl border border-border/50 bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5",
+                  "group relative rounded-xl border bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 text-left",
                   stat.gradient,
-                  `animate-fade-in-delay-${stat.delay}`
+                  stat.filterValue 
+                    ? "cursor-pointer hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5" 
+                    : "cursor-default",
+                  statusFilter === stat.filterValue 
+                    ? "border-accent ring-2 ring-accent/20" 
+                    : "border-border/50"
                 )}
                 style={{ animationDelay: `${stat.delay * 100}ms` }}
               >
@@ -316,7 +327,7 @@ const Properties = () => {
                 
                 {/* Decorative sparkle */}
                 <Sparkles className="absolute top-3 right-3 h-4 w-4 text-accent/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
+              </button>
             ))}
           </div>
 
