@@ -1,6 +1,7 @@
-import { TrendingUp, Building2, Wine, Wallet } from 'lucide-react';
+import { TrendingUp, Building2, Wine, Wallet, CalendarRange } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
 const stats = [
   { 
     label: 'Total Bookings', 
@@ -37,6 +38,8 @@ const stats = [
 ];
 
 export const MonthlyOverview = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
       {/* Header */}
@@ -46,9 +49,20 @@ export const MonthlyOverview = () => {
             <h3 className="text-lg font-display font-semibold text-foreground">Monthly Overview</h3>
             <p className="text-xs text-muted-foreground mt-0.5">December 2024 performance</p>
           </div>
-          <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full">
-            <TrendingUp className="h-3 w-3" />
-            <span className="text-xs font-semibold">+15%</span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/dashboard/reports')}
+              className="gap-1.5 text-xs h-7"
+            >
+              <CalendarRange className="h-3 w-3" />
+              Custom Period
+            </Button>
+            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full">
+              <TrendingUp className="h-3 w-3" />
+              <span className="text-xs font-semibold">+15%</span>
+            </div>
           </div>
         </div>
       </div>
