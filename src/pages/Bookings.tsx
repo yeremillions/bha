@@ -410,13 +410,13 @@ const Bookings = () => {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
                     <TableHead className="text-muted-foreground font-medium w-[8%]">ID</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[18%]">Guest</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[20%]">Property</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[18%]">Check-in / Out</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-center w-[8%]">Guests</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[12%]">Amount</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[10%]">Status</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-right w-[6%]">Actions</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[20%]">Guest</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[15%]">Property</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[14%]">Check-in / Out</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-center w-[6%]">Guests</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[14%]">Amount</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[14%]">Status</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-right w-[9%]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
