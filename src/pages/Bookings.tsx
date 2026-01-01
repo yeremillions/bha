@@ -127,11 +127,11 @@ const bookings = [
 ];
 
 const statusStyles = {
-  confirmed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
-  pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
-  checked_in: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30',
-  completed: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30',
-  cancelled: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30',
+  confirmed: 'bg-emerald-500 text-white border-emerald-500',
+  pending: 'bg-amber-500 text-white border-amber-500',
+  checked_in: 'bg-orange-500 text-white border-orange-500',
+  completed: 'bg-emerald-600 text-white border-emerald-600',
+  cancelled: 'bg-rose-500 text-white border-rose-500',
 };
 
 const statusLabels = {
@@ -409,15 +409,14 @@ const Bookings = () => {
               <Table className="w-full table-fixed">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
-                    <TableHead className="text-muted-foreground font-medium w-[7%]">ID</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[15%]">Guest</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[14%]">Property</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[8%]">ID</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[18%]">Guest</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[20%]">Property</TableHead>
                     <TableHead className="text-muted-foreground font-medium w-[18%]">Check-in / Out</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-center w-[6%]">Guests</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[10%]">Amount</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[11%]">Status</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[12%]">Payment</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-right w-[7%]">Actions</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-center w-[8%]">Guests</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[12%]">Amount</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[10%]">Status</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-right w-[6%]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -454,23 +453,12 @@ const Bookings = () => {
                         </TableCell>
                         <TableCell>
                           <Badge 
-                            variant="outline"
                             className={cn(
-                              'capitalize',
+                              'capitalize border-0',
                               statusStyles[booking.status as keyof typeof statusStyles]
                             )}
                           >
                             {statusLabels[booking.status as keyof typeof statusLabels]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            className={cn(
-                              'capitalize',
-                              paymentStyles[booking.payment as keyof typeof paymentStyles]
-                            )}
-                          >
-                            {paymentLabels[booking.payment as keyof typeof paymentLabels]}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
