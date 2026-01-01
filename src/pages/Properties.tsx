@@ -19,6 +19,8 @@ import {
   Eye,
   TrendingUp,
   ArrowUpDown,
+  Building2,
+  Sparkles,
 } from 'lucide-react';
 
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -252,98 +254,158 @@ const Properties = () => {
             />
           )}
 
-          {/* Stats Cards */}
+          {/* Stats Cards - Glassmorphism */}
           <div className="grid gap-4 md:grid-cols-4 mb-8">
-            <div className="rounded-xl border border-border/50 bg-card p-4">
-              <p className="text-xs text-muted-foreground font-medium">Total Properties</p>
-              <p className="text-2xl font-display font-bold text-foreground mt-1">{properties.length}</p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-card p-4">
-              <p className="text-xs text-muted-foreground font-medium">Available</p>
-              <p className="text-2xl font-display font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                {properties.filter(p => p.status === 'available').length}
-              </p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-card p-4">
-              <p className="text-xs text-muted-foreground font-medium">Occupied</p>
-              <p className="text-2xl font-display font-bold text-sky-600 dark:text-sky-400 mt-1">
-                {properties.filter(p => p.status === 'occupied').length}
-              </p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-card p-4">
-              <p className="text-xs text-muted-foreground font-medium">Avg. Occupancy</p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-2xl font-display font-bold text-foreground">
-                  {Math.round(properties.reduce((acc, p) => acc + p.occupancy, 0) / properties.length)}%
-                </p>
-                <TrendingUp className="h-4 w-4 text-emerald-500" />
+            {[
+              { 
+                label: 'Total Properties', 
+                value: properties.length, 
+                color: 'text-foreground',
+                gradient: 'from-accent/20 to-accent/5',
+                delay: 0
+              },
+              { 
+                label: 'Available', 
+                value: properties.filter(p => p.status === 'available').length, 
+                color: 'text-emerald-600 dark:text-emerald-400',
+                gradient: 'from-emerald-500/20 to-emerald-500/5',
+                delay: 1
+              },
+              { 
+                label: 'Occupied', 
+                value: properties.filter(p => p.status === 'occupied').length, 
+                color: 'text-sky-600 dark:text-sky-400',
+                gradient: 'from-sky-500/20 to-sky-500/5',
+                delay: 2
+              },
+              { 
+                label: 'Avg. Occupancy', 
+                value: `${Math.round(properties.reduce((acc, p) => acc + p.occupancy, 0) / properties.length)}%`, 
+                color: 'text-foreground',
+                gradient: 'from-amber-500/20 to-amber-500/5',
+                showTrend: true,
+                delay: 3
+              },
+            ].map((stat, index) => (
+              <div
+                key={stat.label}
+                className={cn(
+                  "group relative rounded-xl border border-border/50 bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5",
+                  stat.gradient,
+                  `animate-fade-in-delay-${stat.delay}`
+                )}
+                style={{ animationDelay: `${stat.delay * 100}ms` }}
+              >
+                {/* Glassmorphism overlay */}
+                <div className="absolute inset-0 bg-card/60 backdrop-blur-sm" />
+                
+                {/* Gradient border effect */}
+                <div className="absolute inset-0 rounded-xl gradient-border opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="relative">
+                  <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className={cn("text-2xl font-display font-bold", stat.color)}>
+                      {stat.value}
+                    </p>
+                    {stat.showTrend && (
+                      <div className="flex items-center gap-1 text-emerald-500">
+                        <TrendingUp className="h-4 w-4" />
+                        <span className="text-xs font-medium">+2.5%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Decorative sparkle */}
+                <Sparkles className="absolute top-3 right-3 h-4 w-4 text-accent/30 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* Filters & Search */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search properties..."
-                className="pl-10 bg-card border-border/50"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40 bg-card border-border/50">
-                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="occupied">Occupied</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-44 bg-card border-border/50">
-                  <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Sort By" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-                  <SelectItem value="price-desc">Price (High to Low)</SelectItem>
-                  <SelectItem value="capacity-desc">Capacity (High to Low)</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex rounded-lg border border-border/50 bg-card p-1">
-                <Button
-                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
+          {/* Filters & Search - Enhanced Glass Bar */}
+          <div className="relative rounded-2xl border border-border/50 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-sm p-4 mb-6 animate-fade-in">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search properties..."
+                  className="pl-10 bg-background/50 border-border/50 focus:bg-background transition-colors"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40 bg-background/50 border-border/50 hover:bg-background transition-colors">
+                    <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border z-50">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="occupied">Occupied</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-44 bg-background/50 border-border/50 hover:bg-background transition-colors">
+                    <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Sort By" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border z-50">
+                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="price-desc">Price (High to Low)</SelectItem>
+                    <SelectItem value="capacity-desc">Capacity (High to Low)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex rounded-lg border border-border/50 bg-background/50 p-1">
+                  <Button
+                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
+            
+            {/* Active filters indicator */}
+            {(searchQuery || statusFilter !== 'all') && (
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/30">
+                <span className="text-xs text-muted-foreground">Active filters:</span>
+                {searchQuery && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs">
+                    Search: "{searchQuery}"
+                  </span>
+                )}
+                {statusFilter !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs capitalize">
+                    {statusFilter}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Properties Grid/List */}
-          {viewMode === 'grid' ? (
+          {viewMode === 'grid' && filteredProperties.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredProperties.map((property) => (
+              {filteredProperties.map((property, index) => (
                 <div
                   key={property.id}
-                  className="group rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent/5 hover:-translate-y-1"
+                  className="group rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-2 hover:border-accent/30 animate-fade-in"
+                  style={{ animationDelay: `${index * 75}ms` }}
                 >
                   {/* Image */}
                   <div className="relative aspect-[4/3] overflow-hidden">
@@ -437,15 +499,25 @@ const Properties = () => {
                       </div>
                     </div>
                     
-                    {/* Occupancy bar */}
+                    {/* Occupancy bar - Color coded */}
                     <div className="mt-4">
                       <div className="flex items-center justify-between text-xs mb-1">
                         <span className="text-muted-foreground">Occupancy</span>
-                        <span className="font-medium text-foreground">{property.occupancy}%</span>
+                        <span className={cn(
+                          "font-medium",
+                          property.occupancy >= 80 ? "text-emerald-600 dark:text-emerald-400" :
+                          property.occupancy >= 50 ? "text-amber-600 dark:text-amber-400" :
+                          "text-rose-600 dark:text-rose-400"
+                        )}>{property.occupancy}%</span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-accent to-gold-light transition-all"
+                          className={cn(
+                            "h-full transition-all duration-500 group-hover:animate-pulse",
+                            property.occupancy >= 80 ? "bg-gradient-to-r from-emerald-500 to-emerald-400" :
+                            property.occupancy >= 50 ? "bg-gradient-to-r from-amber-500 to-amber-400" :
+                            "bg-gradient-to-r from-rose-500 to-rose-400"
+                          )}
                           style={{ width: `${property.occupancy}%` }}
                         />
                       </div>
@@ -454,13 +526,14 @@ const Properties = () => {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+          ) : viewMode === 'list' && filteredProperties.length > 0 ? (
+            <div className="rounded-2xl border border-border/50 bg-card overflow-hidden animate-fade-in">
               <div className="divide-y divide-border/50">
-                {filteredProperties.map((property) => (
+                {filteredProperties.map((property, index) => (
                   <div
                     key={property.id}
-                    className="group flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors"
+                    className="group flex items-center gap-4 p-4 hover:bg-accent/5 transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     {/* Image */}
                     <div className="relative h-20 w-28 rounded-xl overflow-hidden shrink-0">
@@ -561,12 +634,42 @@ const Properties = () => {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
 
-          {/* Empty state */}
+          {/* Empty state - Enhanced */}
           {filteredProperties.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No properties found matching your criteria.</p>
+            <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
+              <div className="relative mb-6">
+                {/* Decorative circles */}
+                <div className="absolute inset-0 rounded-full bg-accent/5 animate-ping" style={{ animationDuration: '3s' }} />
+                <div className="relative h-24 w-24 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
+                  <Building2 className="h-10 w-10 text-accent/60" />
+                </div>
+              </div>
+              <h3 className="font-display text-xl font-semibold text-foreground mb-2">
+                No properties found
+              </h3>
+              <p className="text-muted-foreground text-center max-w-md mb-6">
+                We couldn't find any properties matching your current filters. Try adjusting your search or filter criteria.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('all');
+                  }}
+                >
+                  Clear Filters
+                </Button>
+                <Button 
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                  onClick={() => setShowAddForm(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Property
+                </Button>
+              </div>
             </div>
           )}
         </main>
