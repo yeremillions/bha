@@ -405,18 +405,18 @@ const Bookings = () => {
             <div className="p-4 border-b border-border/50">
               <h3 className="font-semibold text-foreground">All Bookings</h3>
             </div>
-            <div>
+            <div className="overflow-hidden">
               <Table className="w-full table-fixed">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
-                    <TableHead className="text-muted-foreground font-medium w-[8%]">ID</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[18%]">Guest</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[16%]">Property</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[14%]">Check-in / Out</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[7%]">ID</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[15%]">Guest</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[14%]">Property</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[18%]">Check-in / Out</TableHead>
                     <TableHead className="text-muted-foreground font-medium text-center w-[6%]">Guests</TableHead>
                     <TableHead className="text-muted-foreground font-medium w-[10%]">Amount</TableHead>
                     <TableHead className="text-muted-foreground font-medium w-[11%]">Status</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[10%]">Payment</TableHead>
+                    <TableHead className="text-muted-foreground font-medium w-[12%]">Payment</TableHead>
                     <TableHead className="text-muted-foreground font-medium text-right w-[7%]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
