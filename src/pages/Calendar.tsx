@@ -433,13 +433,17 @@ const Calendar = () => {
                         {/* Booking indicators */}
                         {bookings.length > 0 && status !== 'past' && (
                           <div className="flex-1 flex flex-col justify-end gap-0.5 overflow-hidden">
-                            {bookings.slice(0, 2).map((booking, i) => (
-                              <div 
+                            {bookings.slice(0, 2).map((booking) => (
+                              <button 
                                 key={booking.id}
-                                className="hidden sm:block text-[8px] truncate px-1 py-0.5 rounded bg-accent/20 text-accent"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/dashboard/bookings?search=${encodeURIComponent(booking.guestName)}`);
+                                }}
+                                className="hidden sm:block text-[8px] truncate px-1 py-0.5 rounded bg-accent/20 text-accent hover:bg-accent/40 transition-colors text-left"
                               >
                                 {booking.guestName.split(' ')[0]}
-                              </div>
+                              </button>
                             ))}
                             {bookings.length > 2 && (
                               <div className="hidden sm:block text-[8px] text-muted-foreground">
@@ -456,16 +460,20 @@ const Calendar = () => {
                         )}
                       </div>
                       
-                      {/* Hover tooltip */}
+                      {/* Hover tooltip - click to navigate */}
                       {bookings.length > 0 && status !== 'past' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 p-2">
+                        <button
+                          onClick={() => navigate(`/dashboard/bookings?search=${encodeURIComponent(bookings[0]?.guestName || '')}`)}
+                          className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 p-2 cursor-pointer"
+                        >
                           <div className="text-center">
                             <p className="text-xs font-medium text-foreground">{bookings.length} booking{bookings.length > 1 ? 's' : ''}</p>
                             <p className="text-[10px] text-muted-foreground truncate max-w-full">
                               {bookings[0]?.guestName}
                             </p>
+                            <p className="text-[9px] text-accent mt-1">Click to view</p>
                           </div>
-                        </div>
+                        </button>
                       )}
                     </div>
                   );
