@@ -438,7 +438,7 @@ const Calendar = () => {
                                 key={booking.id}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  navigate(`/dashboard/bookings?search=${encodeURIComponent(booking.guestName)}`);
+                                  navigate(`/dashboard/bookings/${booking.id}`);
                                 }}
                                 className="hidden sm:block text-[8px] truncate px-1 py-0.5 rounded bg-accent/20 text-accent hover:bg-accent/40 transition-colors text-left"
                               >
@@ -463,7 +463,7 @@ const Calendar = () => {
                       {/* Hover tooltip - click to navigate */}
                       {bookings.length > 0 && status !== 'past' && (
                         <button
-                          onClick={() => navigate(`/dashboard/bookings?search=${encodeURIComponent(bookings[0]?.guestName || '')}`)}
+                          onClick={() => navigate(`/dashboard/bookings/${bookings[0]?.id}`)}
                           className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 p-2 cursor-pointer"
                         >
                           <div className="text-center">

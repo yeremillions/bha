@@ -9,6 +9,7 @@ import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
 import Bookings from "./pages/Bookings";
+import BookingDetails from "./pages/BookingDetails";
 import Calendar from "./pages/Calendar";
 import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
@@ -29,6 +30,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/properties" element={<Properties />} />
               <Route path="/dashboard/bookings" element={<Bookings />} />
+              <Route path="/dashboard/bookings/:id" element={<BookingDetails />} />
               <Route path="/dashboard/calendar" element={<Calendar />} />
               <Route path="/dashboard/reports" element={<Reports />} />
               <Route path="/auth" element={<Auth />} />
