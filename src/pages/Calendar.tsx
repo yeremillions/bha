@@ -11,6 +11,8 @@ import {
   Banknote,
   Home,
   Sparkles,
+  User,
+  ArrowRight,
 } from 'lucide-react';
 
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -23,6 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 // Mock data for bookings
 const mockBookings = [
@@ -47,12 +55,24 @@ const properties = [
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
+type BookingItem = {
+  id: string;
+  propertyId: string;
+  propertyName: string;
+  startDate: string;
+  endDate: string;
+  guestName: string;
+};
+
 const Calendar = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // January 2026
   const [selectedProperty, setSelectedProperty] = useState('all');
+  const [selectedDayBookings, setSelectedDayBookings] = useState<BookingItem[]>([]);
+  const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -460,10 +480,18 @@ const Calendar = () => {
                         )}
                       </div>
                       
-                      {/* Hover tooltip - click to navigate */}
+                      {/* Hover tooltip - click to navigate or open dialog */}
                       {bookings.length > 0 && status !== 'past' && (
                         <button
-                          onClick={() => navigate(`/dashboard/bookings/${bookings[0]?.id}`)}
+                          onClick={() => {
+                            if (bookings.length === 1) {
+                              navigate(`/dashboard/bookings/${bookings[0]?.id}`);
+                            } else {
+                              setSelectedDayBookings(bookings);
+                              setSelectedDayDate(new Date(year, month, day));
+                              setDialogOpen(true);
+                            }
+                          }}
                           className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 p-2 cursor-pointer"
                         >
                           <div className="text-center">
@@ -481,6 +509,47 @@ const Calendar = () => {
               </div>
             </div>
           </div>
+
+          {/* Bookings Dialog for multiple bookings */}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5 text-accent" />
+                  {selectedDayDate && (
+                    <span>
+                      Bookings for {selectedDayDate.toLocaleDateString('en-US', { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </span>
+                  )}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 mt-4">
+                {selectedDayBookings.map((booking) => (
+                  <button
+                    key={booking.id}
+                    onClick={() => {
+                      setDialogOpen(false);
+                      navigate(`/dashboard/bookings/${booking.id}`);
+                    }}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 hover:border-accent/30 transition-colors group text-left"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <User className="h-5 w-5 text-accent" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{booking.guestName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{booking.propertyName}</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                  </button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </div>
