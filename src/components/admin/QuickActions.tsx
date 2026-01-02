@@ -66,7 +66,7 @@ export const QuickActions = () => {
     <div className="space-y-4">
       <h3 className="text-lg font-display font-semibold text-foreground">Quick Actions</h3>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
         {actions.map((action) => (
           <Link
             key={action.title}
