@@ -77,7 +77,7 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Grid - Bento style */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
             <StatCard
               title="Today's Bookings"
               value="3"
@@ -123,13 +123,13 @@ const Dashboard = () => {
           </div>
 
           {/* Main Grid - Modern bento layout */}
-          <div className="grid gap-6 lg:grid-cols-2 mb-8">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 mb-8">
             <TodaySchedule />
             <RecentBookings />
           </div>
 
           {/* Bottom Grid */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
             <HousekeepingTasks />
             <MonthlyOverview />
           </div>
