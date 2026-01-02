@@ -405,18 +405,18 @@ const Bookings = () => {
             <div className="p-4 border-b border-border/50">
               <h3 className="font-semibold text-foreground">All Bookings</h3>
             </div>
-            <div className="overflow-hidden">
-              <Table className="w-full table-fixed">
+            <div className="overflow-x-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
-                    <TableHead className="text-muted-foreground font-medium w-[8%]">ID</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[20%]">Guest</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[15%]">Property</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[14%]">Check-in / Out</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-center w-[6%]">Guests</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[14%]">Amount</TableHead>
-                    <TableHead className="text-muted-foreground font-medium w-[14%]">Status</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-right w-[9%]">Actions</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">ID</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Guest</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Property</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Check-in / Out</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-center whitespace-nowrap">Guests</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Amount</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Status</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-right whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
