@@ -221,6 +221,10 @@ const Bookings = () => {
     .reduce((sum, b) => sum + b.amount, 0);
 
   const handleAction = (action: string, bookingId: string) => {
+    if (action === 'View Details') {
+      navigate(`/dashboard/bookings/${bookingId}`);
+      return;
+    }
     toast({
       title: action,
       description: `Action "${action}" triggered for booking ${bookingId}`,
