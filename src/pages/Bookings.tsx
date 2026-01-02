@@ -437,7 +437,8 @@ const Bookings = () => {
                     filteredBookings.map((booking, index) => (
                       <TableRow 
                         key={booking.id}
-                        className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
+                        onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
+                        className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <TableCell className="font-medium text-foreground">{booking.id}</TableCell>
@@ -474,7 +475,7 @@ const Bookings = () => {
                             {statusLabels[booking.status as keyof typeof statusLabels]}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
