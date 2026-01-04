@@ -151,13 +151,13 @@ export default function Bar() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold font-playfair text-foreground">Bar Management</h1>
-                <p className="text-muted-foreground mt-1">Manage tabs, sales, and inventory</p>
+                <h1 className="text-2xl sm:text-3xl font-bold font-playfair text-foreground">Bar Management</h1>
+                <p className="text-muted-foreground text-sm sm:text-base mt-1">Manage tabs, sales, and inventory</p>
               </div>
-              <div className="flex gap-3">
-                <Button variant="outline" className="gap-2">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                <Button variant="outline" className="gap-2 text-sm">
                   <TrendingUp className="h-4 w-4" />
-                  View Reports
+                  <span className="hidden xs:inline">View</span> Reports
                 </Button>
                 <NewTabDialog 
                   onTabCreated={(data) => {
@@ -206,17 +206,17 @@ export default function Bar() {
 
             {/* Main Content Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="bg-card/50 backdrop-blur-sm border border-border/50">
-                <TabsTrigger value="tabs" className="gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  Guest Tabs
+              <TabsList className="bg-card/50 backdrop-blur-sm border border-border/50 w-full sm:w-auto flex-wrap h-auto p-1">
+                <TabsTrigger value="tabs" className="gap-1.5 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-initial">
+                  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Guest</span> Tabs
                 </TabsTrigger>
-                <TabsTrigger value="sales" className="gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  Today's Sales
+                <TabsTrigger value="sales" className="gap-1.5 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-initial">
+                  <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Today's</span> Sales
                 </TabsTrigger>
-                <TabsTrigger value="inventory" className="gap-2">
-                  <Package className="h-4 w-4" />
+                <TabsTrigger value="inventory" className="gap-1.5 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-initial">
+                  <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Inventory
                 </TabsTrigger>
               </TabsList>
@@ -225,20 +225,20 @@ export default function Bar() {
               <TabsContent value="tabs" className="space-y-4">
                 <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader className="pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex flex-col gap-4">
                       <CardTitle className="text-lg font-semibold">Active Guest Tabs</CardTitle>
-                      <div className="flex gap-3">
-                        <div className="relative">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <div className="relative flex-1 sm:flex-initial">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             placeholder="Search guests..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 w-[200px] bg-background/50"
+                            className="pl-9 w-full sm:w-[200px] bg-background/50"
                           />
                         </div>
                         <Select value={tabFilter} onValueChange={setTabFilter}>
-                          <SelectTrigger className="w-[130px] bg-background/50">
+                          <SelectTrigger className="w-full sm:w-[130px] bg-background/50">
                             <SelectValue placeholder="Filter" />
                           </SelectTrigger>
                           <SelectContent>
@@ -251,8 +251,8 @@ export default function Bar() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <Table>
+                  <CardContent className="overflow-x-auto">
+                    <Table className="min-w-[600px]">
                       <TableHeader>
                         <TableRow className="border-border/50 hover:bg-transparent">
                           <TableHead>Guest</TableHead>
@@ -323,8 +323,8 @@ export default function Bar() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <Table>
+                  <CardContent className="overflow-x-auto">
+                    <Table className="min-w-[550px]">
                       <TableHeader>
                         <TableRow className="border-border/50 hover:bg-transparent">
                           <TableHead>Item</TableHead>
@@ -383,20 +383,26 @@ export default function Bar() {
 
                 <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader className="pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <CardTitle className="text-lg font-semibold">Inventory Overview</CardTitle>
-                      <div className="flex gap-3">
-                        <div className="relative">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <CardTitle className="text-lg font-semibold">Inventory Overview</CardTitle>
+                        <Button className="gap-2 w-full sm:w-auto">
+                          <Plus className="h-4 w-4" />
+                          Add Item
+                        </Button>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <div className="relative flex-1 sm:flex-initial">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             placeholder="Search items..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 w-[200px] bg-background/50"
+                            className="pl-9 w-full sm:w-[200px] bg-background/50"
                           />
                         </div>
                         <Select value={inventoryFilter} onValueChange={setInventoryFilter}>
-                          <SelectTrigger className="w-[150px] bg-background/50">
+                          <SelectTrigger className="w-full sm:w-[150px] bg-background/50">
                             <SelectValue placeholder="Filter" />
                           </SelectTrigger>
                           <SelectContent>
@@ -408,15 +414,11 @@ export default function Bar() {
                             <SelectItem value="mixers">Mixers</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Button className="gap-2">
-                          <Plus className="h-4 w-4" />
-                          Add Item
-                        </Button>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <Table>
+                  <CardContent className="overflow-x-auto">
+                    <Table className="min-w-[650px]">
                       <TableHeader>
                         <TableRow className="border-border/50 hover:bg-transparent">
                           <TableHead>Item</TableHead>
