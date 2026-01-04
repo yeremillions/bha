@@ -51,19 +51,19 @@ import { toast } from "@/hooks/use-toast";
 
 // Mock data
 const mockTabs = [
-  { id: 1, guestName: "John Smith", room: "101A", amount: 145.50, items: 8, status: "open", openedAt: "2024-01-15 18:30" },
-  { id: 2, guestName: "Sarah Johnson", room: "102B", amount: 67.25, items: 4, status: "open", openedAt: "2024-01-15 19:15" },
-  { id: 3, guestName: "Michael Brown", room: "103A", amount: 234.00, items: 12, status: "open", openedAt: "2024-01-15 17:45" },
-  { id: 4, guestName: "Emily Davis", room: "104B", amount: 89.75, items: 5, status: "pending", openedAt: "2024-01-14 20:00" },
-  { id: 5, guestName: "Robert Wilson", room: "101B", amount: 312.50, items: 15, status: "closed", openedAt: "2024-01-14 18:00" },
+  { id: 1, guestName: "John Smith", apartment: "101A", amount: 87500, items: 8, status: "open", openedAt: "2024-01-15 18:30" },
+  { id: 2, guestName: "Sarah Johnson", apartment: "102B", amount: 42500, items: 4, status: "open", openedAt: "2024-01-15 19:15" },
+  { id: 3, guestName: "Michael Brown", apartment: "103A", amount: 145000, items: 12, status: "open", openedAt: "2024-01-15 17:45" },
+  { id: 4, guestName: "Emily Davis", apartment: "104B", amount: 55000, items: 5, status: "pending", openedAt: "2024-01-14 20:00" },
+  { id: 5, guestName: "Robert Wilson", apartment: "101B", amount: 195000, items: 15, status: "closed", openedAt: "2024-01-14 18:00" },
 ];
 
 const mockSales = [
-  { id: 1, item: "Château Margaux 2018", category: "Wine", quantity: 2, amount: 180.00, time: "19:45", guest: "John Smith" },
-  { id: 2, item: "Hendrick's Gin & Tonic", category: "Cocktails", quantity: 3, amount: 45.00, time: "19:30", guest: "Sarah Johnson" },
-  { id: 3, item: "Craft Beer Flight", category: "Beer", quantity: 1, amount: 28.00, time: "19:15", guest: "Michael Brown" },
-  { id: 4, item: "Espresso Martini", category: "Cocktails", quantity: 2, amount: 32.00, time: "19:00", guest: "Emily Davis" },
-  { id: 5, item: "Premium Whisky Selection", category: "Spirits", quantity: 1, amount: 95.00, time: "18:45", guest: "John Smith" },
+  { id: 1, item: "Château Margaux 2018", category: "Wine", quantity: 2, amount: 115000, time: "19:45", guest: "John Smith" },
+  { id: 2, item: "Hendrick's Gin & Tonic", category: "Cocktails", quantity: 3, amount: 27000, time: "19:30", guest: "Sarah Johnson" },
+  { id: 3, item: "Craft Beer Flight", category: "Beer", quantity: 1, amount: 18000, time: "19:15", guest: "Michael Brown" },
+  { id: 4, item: "Espresso Martini", category: "Cocktails", quantity: 2, amount: 19000, time: "19:00", guest: "Emily Davis" },
+  { id: 5, item: "Premium Whisky Selection", category: "Spirits", quantity: 1, amount: 65000, time: "18:45", guest: "John Smith" },
 ];
 
 const mockInventory = [
@@ -78,7 +78,7 @@ const mockInventory = [
 ];
 
 const statCards = [
-  { title: "Today's Revenue", value: "$1,847.50", change: "+12.5%", icon: DollarSign, trend: "up" },
+  { title: "Today's Revenue", value: "₦1,147,500", change: "+12.5%", icon: DollarSign, trend: "up" },
   { title: "Open Tabs", value: "4", change: "3 pending", icon: CreditCard, trend: "neutral" },
   { title: "Items Sold", value: "47", change: "+8 vs yesterday", icon: Wine, trend: "up" },
   { title: "Low Stock Items", value: "3", change: "Action needed", icon: AlertTriangle, trend: "warning" },
@@ -93,7 +93,7 @@ export default function Bar() {
 
   const filteredTabs = mockTabs.filter(tab => {
     const matchesSearch = tab.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          tab.room.toLowerCase().includes(searchTerm.toLowerCase());
+                          tab.apartment.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = tabFilter === "all" || tab.status === tabFilter;
     return matchesSearch && matchesFilter;
   });
@@ -163,7 +163,7 @@ export default function Bar() {
                   onTabCreated={(data) => {
                     toast({
                       title: "Tab Created",
-                      description: `New tab opened for Room ${data.room} - ${data.guest} ($${data.total.toFixed(2)})`,
+                      description: `New tab opened for Apt ${data.apartment} - ${data.guest} (₦${data.total.toLocaleString()})`,
                     });
                   }}
                 />
@@ -256,7 +256,7 @@ export default function Bar() {
                       <TableHeader>
                         <TableRow className="border-border/50 hover:bg-transparent">
                           <TableHead>Guest</TableHead>
-                          <TableHead>Room</TableHead>
+                          <TableHead>Apartment</TableHead>
                           <TableHead>Items</TableHead>
                           <TableHead>Amount</TableHead>
                           <TableHead>Opened</TableHead>
@@ -269,10 +269,10 @@ export default function Bar() {
                           <TableRow key={tab.id} className="border-border/50">
                             <TableCell className="font-medium">{tab.guestName}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className="font-mono">{tab.room}</Badge>
+                              <Badge variant="outline" className="font-mono">{tab.apartment}</Badge>
                             </TableCell>
                             <TableCell>{tab.items} items</TableCell>
-                            <TableCell className="font-semibold">${tab.amount.toFixed(2)}</TableCell>
+                            <TableCell className="font-semibold">₦{tab.amount.toLocaleString()}</TableCell>
                             <TableCell className="text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
@@ -347,7 +347,7 @@ export default function Bar() {
                             </TableCell>
                             <TableCell>{sale.guest}</TableCell>
                             <TableCell>{sale.quantity}</TableCell>
-                            <TableCell className="font-semibold text-emerald-400">${sale.amount.toFixed(2)}</TableCell>
+                            <TableCell className="font-semibold text-emerald-400">₦{sale.amount.toLocaleString()}</TableCell>
                             <TableCell className="text-muted-foreground">{sale.time}</TableCell>
                           </TableRow>
                         ))}
