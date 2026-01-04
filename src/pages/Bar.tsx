@@ -46,6 +46,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NewTabDialog } from "@/components/bar/NewTabDialog";
+import { toast } from "@/hooks/use-toast";
 
 // Mock data
 const mockTabs = [
@@ -157,10 +159,14 @@ export default function Bar() {
                   <TrendingUp className="h-4 w-4" />
                   View Reports
                 </Button>
-                <Button className="gap-2 bg-primary hover:bg-primary/90">
-                  <Plus className="h-4 w-4" />
-                  New Tab
-                </Button>
+                <NewTabDialog 
+                  onTabCreated={(data) => {
+                    toast({
+                      title: "Tab Created",
+                      description: `New tab opened for Room ${data.room} - ${data.guest} ($${data.total.toFixed(2)})`,
+                    });
+                  }}
+                />
               </div>
             </div>
 
