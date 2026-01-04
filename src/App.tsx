@@ -13,6 +13,7 @@ import BookingDetails from "./pages/BookingDetails";
 import Calendar from "./pages/Calendar";
 import Housekeeping from "./pages/Housekeeping";
 import Bar from "./pages/Bar";
+import Maintenance from "./pages/Maintenance";
 import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/dashboard/calendar" element={<Calendar />} />
               <Route path="/dashboard/housekeeping" element={<Housekeeping />} />
               <Route path="/dashboard/bar" element={<Bar />} />
+              <Route path="/dashboard/maintenance" element={<Maintenance />} />
               <Route path="/dashboard/reports" element={<Reports />} />
               <Route path="/auth" element={<Auth />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

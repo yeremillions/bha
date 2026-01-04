@@ -1,0 +1,575 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
+import {
+  Search,
+  Filter,
+  Download,
+  Plus,
+  Wrench,
+  AlertTriangle,
+  Clock,
+  CheckCircle2,
+  Loader2,
+  Banknote,
+  Star,
+  Eye,
+  Sparkles,
+  Users,
+} from 'lucide-react';
+
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { toast } from '@/hooks/use-toast';
+
+// Mock maintenance data
+const maintenanceIssues = [
+  {
+    id: 'MT001',
+    property: 'Luxury 3-Bedroom Penthouse',
+    issue: 'AC not cooling properly in master bedroom',
+    reportedBy: 'Guest - Adebayo Johnson',
+    category: 'HVAC',
+    priority: 'urgent',
+    assignedTo: 'John AC Services',
+    cost: 25000,
+    status: 'in_progress',
+  },
+  {
+    id: 'MT002',
+    property: 'Cozy 2-Bedroom Apartment',
+    issue: 'Leaking kitchen faucet',
+    reportedBy: 'Housekeeping - Mary Obi',
+    category: 'Plumbing',
+    priority: 'high',
+    assignedTo: null,
+    cost: 8000,
+    status: 'pending',
+  },
+  {
+    id: 'MT003',
+    property: 'Executive Studio',
+    issue: 'Broken door lock on main entrance',
+    reportedBy: 'Security - Night Shift',
+    category: 'Security',
+    priority: 'urgent',
+    assignedTo: null,
+    cost: 15000,
+    status: 'pending',
+  },
+  {
+    id: 'MT004',
+    property: 'Family 4-Bedroom Home',
+    issue: 'Generator not starting',
+    reportedBy: 'Property Manager',
+    category: 'Electrical',
+    priority: 'high',
+    assignedTo: 'PowerFix Solutions',
+    cost: 35000,
+    status: 'assigned',
+  },
+  {
+    id: 'MT005',
+    property: 'Luxury Penthouse',
+    issue: 'Pool pump making unusual noise',
+    reportedBy: 'Maintenance Staff',
+    category: 'Facilities',
+    priority: 'normal',
+    assignedTo: 'AquaMaint Ltd',
+    cost: 12000,
+    status: 'in_progress',
+  },
+  {
+    id: 'MT006',
+    property: 'Executive Studio',
+    issue: 'WiFi router replacement',
+    reportedBy: 'IT Support',
+    category: 'IT/Electrical',
+    priority: 'normal',
+    assignedTo: 'NetFix Tech',
+    cost: 16500,
+    status: 'completed',
+  },
+  {
+    id: 'MT007',
+    property: 'Cozy 2-Bedroom Apartment',
+    issue: 'Bathroom tiles need regrouting',
+    reportedBy: 'Housekeeping - Grace Ada',
+    category: 'General Repairs',
+    priority: 'low',
+    assignedTo: null,
+    cost: 18000,
+    status: 'pending',
+  },
+];
+
+const vendors = [
+  { name: 'John AC Services', specialty: 'HVAC', rating: 4.8, jobs: 15 },
+  { name: 'PowerFix Solutions', specialty: 'Electrical', rating: 4.9, jobs: 22 },
+  { name: 'AquaMaint Ltd', specialty: 'Pool/Facilities', rating: 4.7, jobs: 8 },
+  { name: 'TilePro Services', specialty: 'General Repairs', rating: 4.6, jobs: 12 },
+  { name: 'NetFix Tech', specialty: 'IT/Electrical', rating: 4.9, jobs: 18 },
+];
+
+const priorityStyles = {
+  urgent: 'bg-rose-500 text-white border-rose-500',
+  high: 'bg-amber-500 text-white border-amber-500',
+  normal: 'bg-sky-500 text-white border-sky-500',
+  low: 'bg-slate-500 text-white border-slate-500',
+};
+
+const priorityLabels = {
+  urgent: 'URGENT',
+  high: 'HIGH',
+  normal: 'NORMAL',
+  low: 'LOW',
+};
+
+const statusStyles = {
+  pending: 'bg-amber-500 text-white',
+  assigned: 'bg-sky-500 text-white',
+  in_progress: 'bg-emerald-500 text-white',
+  completed: 'bg-emerald-600 text-white',
+};
+
+const statusLabels = {
+  pending: 'Pending',
+  assigned: 'Assigned',
+  in_progress: 'In Progress',
+  completed: 'Completed',
+};
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
+
+const Maintenance = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const filteredIssues = maintenanceIssues.filter(issue => {
+    const matchesSearch = 
+      issue.property.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      issue.issue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      issue.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      issue.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || issue.status === statusFilter;
+    const matchesPriority = priorityFilter === 'all' || issue.priority === priorityFilter;
+    const matchesCategory = categoryFilter === 'all' || issue.category.toLowerCase() === categoryFilter.toLowerCase();
+    return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
+  });
+
+  const categories = [...new Set(maintenanceIssues.map(i => i.category))];
+
+  const totalCost = maintenanceIssues
+    .filter(i => i.status === 'completed')
+    .reduce((sum, i) => sum + i.cost, 0);
+
+  const handleAction = (action: string, issueId: string) => {
+    toast({
+      title: action,
+      description: `Action "${action}" triggered for issue ${issueId}`,
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+      {/* Decorative background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
+        <div className="absolute top-1/2 -left-40 h-96 w-96 rounded-full bg-accent/3 blur-3xl" />
+      </div>
+
+      {/* Sidebar */}
+      <AdminSidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+
+      {/* Main Content */}
+      <div
+        className={cn(
+          'relative transition-all duration-300',
+          sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+        )}
+      >
+        {/* Header */}
+        <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+
+        {/* Page Content */}
+        <main className="p-6 lg:p-8">
+          {/* Page Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-display font-bold text-foreground">Maintenance Tracking</h1>
+              <p className="text-muted-foreground mt-1">
+                Manage property maintenance issues and vendor assignments
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => handleAction('Export', 'all')}
+              >
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+              <Button className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground">
+                <Plus className="h-4 w-4" />
+                Report Issue
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 mb-8">
+            {[
+              {
+                label: 'Total Issues',
+                value: maintenanceIssues.length,
+                subtext: 'All time',
+                icon: Wrench,
+                color: 'text-foreground',
+                gradient: 'from-accent/20 to-accent/5',
+                filterValue: 'all',
+                filterType: 'status',
+              },
+              {
+                label: 'Urgent',
+                value: maintenanceIssues.filter(i => i.priority === 'urgent').length,
+                subtext: 'High priority',
+                icon: AlertTriangle,
+                color: 'text-rose-600 dark:text-rose-400',
+                gradient: 'from-rose-500/20 to-rose-500/5',
+                filterValue: 'urgent',
+                filterType: 'priority',
+              },
+              {
+                label: 'Pending',
+                value: maintenanceIssues.filter(i => i.status === 'pending').length,
+                subtext: 'Not assigned',
+                icon: Clock,
+                color: 'text-amber-600 dark:text-amber-400',
+                gradient: 'from-amber-500/20 to-amber-500/5',
+                filterValue: 'pending',
+                filterType: 'status',
+              },
+              {
+                label: 'In Progress',
+                value: maintenanceIssues.filter(i => i.status === 'in_progress').length,
+                subtext: 'Being fixed',
+                icon: Loader2,
+                color: 'text-sky-600 dark:text-sky-400',
+                gradient: 'from-sky-500/20 to-sky-500/5',
+                filterValue: 'in_progress',
+                filterType: 'status',
+              },
+              {
+                label: 'Completed',
+                value: maintenanceIssues.filter(i => i.status === 'completed').length,
+                subtext: 'Resolved',
+                icon: CheckCircle2,
+                color: 'text-emerald-600 dark:text-emerald-400',
+                gradient: 'from-emerald-500/20 to-emerald-500/5',
+                filterValue: 'completed',
+                filterType: 'status',
+              },
+              {
+                label: 'Total Cost',
+                value: formatCurrency(totalCost),
+                subtext: 'Completed jobs',
+                icon: Banknote,
+                color: 'text-accent',
+                gradient: 'from-accent/20 to-accent/5',
+                filterValue: 'completed',
+                filterType: 'status',
+              },
+            ].map((stat, index) => (
+              <button
+                key={stat.label}
+                onClick={() => {
+                  if (stat.filterType === 'status') {
+                    setStatusFilter(stat.filterValue);
+                    setPriorityFilter('all');
+                  } else {
+                    setPriorityFilter(stat.filterValue);
+                    setStatusFilter('all');
+                  }
+                  setCategoryFilter('all');
+                }}
+                className={cn(
+                  'group relative rounded-xl border bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 text-left cursor-pointer hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5',
+                  stat.gradient,
+                  (stat.filterType === 'status' && statusFilter === stat.filterValue) ||
+                    (stat.filterType === 'priority' && priorityFilter === stat.filterValue)
+                    ? 'border-accent ring-2 ring-accent/20'
+                    : 'border-border/50'
+                )}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {/* Glassmorphism overlay */}
+                <div className="absolute inset-0 bg-card/60 backdrop-blur-sm" />
+
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
+                    <stat.icon className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                  <p className={cn('text-2xl font-display font-bold', stat.color)}>
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.subtext}</p>
+                </div>
+
+                {/* Decorative sparkle */}
+                <Sparkles className="absolute top-3 right-3 h-4 w-4 text-accent/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            ))}
+          </div>
+
+          {/* Preferred Vendors Section */}
+          <Card className="mb-8 border-border/50 animate-fade-in">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-lg font-display">Preferred Vendors</CardTitle>
+              </div>
+              <Button variant="ghost" size="sm" className="text-accent hover:text-accent/80">
+                Manage Vendors
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                {vendors.map((vendor, index) => (
+                  <div
+                    key={vendor.name}
+                    className="group relative rounded-xl border border-border/50 bg-gradient-to-br from-card to-muted/30 p-4 text-center transition-all duration-300 hover:shadow-md hover:border-accent/30 animate-fade-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent">
+                      <Wrench className="h-5 w-5" />
+                    </div>
+                    <h4 className="font-semibold text-foreground text-sm">{vendor.name}</h4>
+                    <p className="text-xs text-muted-foreground font-medium mt-1">{vendor.specialty}</p>
+                    <div className="flex items-center justify-center gap-1 mt-2 text-accent">
+                      <Star className="h-3 w-3 fill-current" />
+                      <span className="text-xs font-semibold">{vendor.rating}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{vendor.jobs} jobs</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Filters */}
+          <div className="relative rounded-2xl border border-border/50 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-sm p-4 mb-6 animate-fade-in">
+            <div className="flex items-center gap-2 mb-4">
+              <Wrench className="h-4 w-4 text-muted-foreground" />
+              <h3 className="font-semibold text-foreground">Maintenance Issues</h3>
+            </div>
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by property, issue, or ID..."
+                  className="pl-10 bg-background/50 border-border/50 focus:bg-background transition-colors"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full lg:w-36 bg-background/50 border-border/50 hover:bg-background transition-colors">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border z-50">
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="w-full lg:w-36 bg-background/50 border-border/50 hover:bg-background transition-colors">
+                  <SelectValue placeholder="All Priority" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border z-50">
+                  <SelectItem value="all">All Priority</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full lg:w-40 bg-background/50 border-border/50 hover:bg-background transition-colors">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border z-50">
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat.toLowerCase()}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Maintenance Table */}
+          <div className="relative rounded-2xl border border-border/50 bg-card overflow-hidden animate-fade-in">
+            <div className="overflow-x-auto">
+              <Table className="w-full">
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-border/50">
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">ID</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Property</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap min-w-[200px]">Issue</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Category</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Priority</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Assigned To</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Cost</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Status</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-right whitespace-nowrap">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredIssues.length > 0 ? (
+                    filteredIssues.map((issue, index) => (
+                      <TableRow
+                        key={issue.id}
+                        className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <TableCell className="font-medium text-foreground">{issue.id}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded-full bg-accent/10 flex items-center justify-center">
+                              <span className="text-xs">🏠</span>
+                            </div>
+                            <span className="text-foreground">{issue.property}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-foreground">{issue.issue}</p>
+                            <p className="text-xs text-muted-foreground">By: {issue.reportedBy}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-medium">
+                            {issue.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={cn(
+                              'text-xs font-semibold border',
+                              priorityStyles[issue.priority as keyof typeof priorityStyles]
+                            )}
+                          >
+                            {priorityLabels[issue.priority as keyof typeof priorityLabels]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {issue.assignedTo ? (
+                            <span className="text-foreground">{issue.assignedTo}</span>
+                          ) : (
+                            <span className="text-rose-500 dark:text-rose-400 font-medium">Unassigned</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium text-foreground">
+                          {formatCurrency(issue.cost)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={cn(
+                              'text-xs font-medium',
+                              statusStyles[issue.status as keyof typeof statusStyles]
+                            )}
+                          >
+                            {statusLabels[issue.status as keyof typeof statusLabels]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAction('View', issue.id)}
+                            className="text-accent hover:text-accent/80"
+                          >
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={9} className="h-32 text-center">
+                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                          <Wrench className="h-8 w-8 mb-2 opacity-50" />
+                          <p>No maintenance issues found</p>
+                          <p className="text-sm">Try adjusting your filters</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default Maintenance;
