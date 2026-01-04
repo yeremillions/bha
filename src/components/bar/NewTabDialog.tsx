@@ -19,8 +19,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Receipt } from "lucide-react";
 
-// Mock rooms for selection
-const mockRooms = [
+// Mock apartments for selection
+const mockApartments = [
   { id: "101A", guest: "John Smith" },
   { id: "102B", guest: "Sarah Johnson" },
   { id: "103A", guest: "Michael Brown" },
@@ -32,19 +32,19 @@ const mockRooms = [
 
 // Mock menu items for initial items selection
 const mockMenuItems = [
-  { id: 1, name: "Mojito", price: 14.00, category: "Cocktails" },
-  { id: 2, name: "Espresso Martini", price: 16.00, category: "Cocktails" },
-  { id: 3, name: "Gin & Tonic", price: 15.00, category: "Cocktails" },
-  { id: 4, name: "Margarita", price: 14.00, category: "Cocktails" },
-  { id: 5, name: "Craft IPA", price: 8.00, category: "Beer" },
-  { id: 6, name: "Lager", price: 7.00, category: "Beer" },
-  { id: 7, name: "House Red Wine", price: 12.00, category: "Wine" },
-  { id: 8, name: "House White Wine", price: 11.00, category: "Wine" },
-  { id: 9, name: "Prosecco Glass", price: 10.00, category: "Wine" },
-  { id: 10, name: "Whisky Neat", price: 18.00, category: "Spirits" },
-  { id: 11, name: "Vodka Soda", price: 12.00, category: "Spirits" },
-  { id: 12, name: "Soft Drink", price: 4.00, category: "Non-Alcoholic" },
-  { id: 13, name: "Coffee", price: 5.00, category: "Non-Alcoholic" },
+  { id: 1, name: "Mojito", price: 8500, category: "Cocktails" },
+  { id: 2, name: "Espresso Martini", price: 9500, category: "Cocktails" },
+  { id: 3, name: "Gin & Tonic", price: 9000, category: "Cocktails" },
+  { id: 4, name: "Margarita", price: 8500, category: "Cocktails" },
+  { id: 5, name: "Craft IPA", price: 4500, category: "Beer" },
+  { id: 6, name: "Lager", price: 4000, category: "Beer" },
+  { id: 7, name: "House Red Wine", price: 7500, category: "Wine" },
+  { id: 8, name: "House White Wine", price: 7000, category: "Wine" },
+  { id: 9, name: "Prosecco Glass", price: 6500, category: "Wine" },
+  { id: 10, name: "Whisky Neat", price: 12000, category: "Spirits" },
+  { id: 11, name: "Vodka Soda", price: 7500, category: "Spirits" },
+  { id: 12, name: "Soft Drink", price: 2000, category: "Non-Alcoholic" },
+  { id: 13, name: "Coffee", price: 2500, category: "Non-Alcoholic" },
 ];
 
 interface TabItem {
@@ -56,12 +56,12 @@ interface TabItem {
 
 interface NewTabDialogProps {
   trigger?: React.ReactNode;
-  onTabCreated?: (data: { room: string; guest: string; items: TabItem[]; total: number }) => void;
+  onTabCreated?: (data: { apartment: string; guest: string; items: TabItem[]; total: number }) => void;
 }
 
 export function NewTabDialog({ trigger, onTabCreated }: NewTabDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState("");
+  const [selectedApartment, setSelectedApartment] = useState("");
   const [tabItems, setTabItems] = useState<TabItem[]>([]);
   const [selectedMenuItem, setSelectedMenuItem] = useState("");
 
@@ -108,12 +108,12 @@ export function NewTabDialog({ trigger, onTabCreated }: NewTabDialogProps) {
   };
 
   const handleCreateTab = () => {
-    const roomData = mockRooms.find(r => r.id === selectedRoom);
-    if (!roomData) return;
+    const apartmentData = mockApartments.find(a => a.id === selectedApartment);
+    if (!apartmentData) return;
 
     const tabData = {
-      room: selectedRoom,
-      guest: roomData.guest,
+      apartment: selectedApartment,
+      guest: apartmentData.guest,
       items: tabItems,
       total: calculateTabTotal()
     };
@@ -122,13 +122,13 @@ export function NewTabDialog({ trigger, onTabCreated }: NewTabDialogProps) {
     onTabCreated?.(tabData);
     
     // Reset form and close dialog
-    setSelectedRoom("");
+    setSelectedApartment("");
     setTabItems([]);
     setSelectedMenuItem("");
     setIsOpen(false);
   };
 
-  const selectedRoomData = mockRooms.find(r => r.id === selectedRoom);
+  const selectedApartmentData = mockApartments.find(a => a.id === selectedApartment);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -144,29 +144,29 @@ export function NewTabDialog({ trigger, onTabCreated }: NewTabDialogProps) {
         <DialogHeader>
           <DialogTitle>Create Guest Tab</DialogTitle>
           <DialogDescription>
-            Open a new tab for a guest room with initial items.
+            Open a new tab for a guest apartment with initial items.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          {/* Room Selection */}
+          {/* Apartment Selection */}
           <div className="space-y-2">
-            <Label htmlFor="room">Select Room</Label>
-            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-              <SelectTrigger id="room">
-                <SelectValue placeholder="Choose a room" />
+            <Label htmlFor="apartment">Select Apartment</Label>
+            <Select value={selectedApartment} onValueChange={setSelectedApartment}>
+              <SelectTrigger id="apartment">
+                <SelectValue placeholder="Choose an apartment" />
               </SelectTrigger>
               <SelectContent>
-                {mockRooms.map(room => (
-                  <SelectItem key={room.id} value={room.id}>
-                    Room {room.id} - {room.guest}
+                {mockApartments.map(apt => (
+                  <SelectItem key={apt.id} value={apt.id}>
+                    Apt {apt.id} - {apt.guest}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {selectedRoomData && (
+            {selectedApartmentData && (
               <p className="text-sm text-muted-foreground">
-                Guest: {selectedRoomData.guest}
+                Guest: {selectedApartmentData.guest}
               </p>
             )}
           </div>
@@ -180,9 +180,9 @@ export function NewTabDialog({ trigger, onTabCreated }: NewTabDialogProps) {
                   <SelectValue placeholder="Select an item" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockMenuItems.map(item => (
+                {mockMenuItems.map(item => (
                     <SelectItem key={item.id} value={item.id.toString()}>
-                      {item.name} - ${item.price.toFixed(2)}
+                      {item.name} - ₦{item.price.toLocaleString()}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -203,7 +203,7 @@ export function NewTabDialog({ trigger, onTabCreated }: NewTabDialogProps) {
                     <div className="flex-1">
                       <p className="font-medium text-sm">{item.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        ${item.price.toFixed(2)} each
+                        ₦{item.price.toLocaleString()} each
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -242,7 +242,7 @@ export function NewTabDialog({ trigger, onTabCreated }: NewTabDialogProps) {
               <div className="flex justify-between items-center pt-2 border-t border-border">
                 <span className="font-medium">Total</span>
                 <span className="text-lg font-bold text-primary">
-                  ${calculateTabTotal().toFixed(2)}
+                  ₦{calculateTabTotal().toLocaleString()}
                 </span>
               </div>
             </div>
@@ -262,7 +262,7 @@ export function NewTabDialog({ trigger, onTabCreated }: NewTabDialogProps) {
           </Button>
           <Button 
             onClick={handleCreateTab}
-            disabled={!selectedRoom || tabItems.length === 0}
+            disabled={!selectedApartment || tabItems.length === 0}
           >
             <Receipt className="h-4 w-4 mr-2" />
             Create Tab
