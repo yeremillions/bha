@@ -486,8 +486,9 @@ const Maintenance = () => {
                     filteredIssues.map((issue, index) => (
                       <TableRow
                         key={issue.id}
-                        className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
+                        className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
                         style={{ animationDelay: `${index * 50}ms` }}
+                        onClick={() => navigate(`/dashboard/maintenance/${issue.id}`)}
                       >
                         <TableCell className="font-medium text-foreground">{issue.id}</TableCell>
                         <TableCell>
@@ -543,7 +544,10 @@ const Maintenance = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleAction('View', issue.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/dashboard/maintenance/${issue.id}`);
+                            }}
                             className="text-accent hover:text-accent/80"
                           >
                             View
