@@ -497,12 +497,9 @@ const Maintenance = () => {
                     <TableHead className="text-muted-foreground font-medium whitespace-nowrap">ID</TableHead>
                     <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Property</TableHead>
                     <TableHead className="text-muted-foreground font-medium whitespace-nowrap min-w-[200px]">Issue</TableHead>
-                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Category</TableHead>
                     <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Priority</TableHead>
                     <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Assigned To</TableHead>
-                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Cost</TableHead>
                     <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Status</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-right whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -530,11 +527,6 @@ const Maintenance = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="font-medium">
-                            {issue.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
                           <Badge
                             className={cn(
                               'text-xs font-semibold border',
@@ -551,9 +543,6 @@ const Maintenance = () => {
                             <span className="text-rose-500 dark:text-rose-400 font-medium">Unassigned</span>
                           )}
                         </TableCell>
-                        <TableCell className="font-medium text-foreground">
-                          {formatCurrency(issue.cost)}
-                        </TableCell>
                         <TableCell>
                           <Badge
                             className={cn(
@@ -564,24 +553,11 @@ const Maintenance = () => {
                             {statusLabels[issue.status as keyof typeof statusLabels]}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/dashboard/maintenance/${issue.id}`);
-                            }}
-                            className="text-accent hover:text-accent/80"
-                          >
-                            View
-                          </Button>
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={9} className="h-32 text-center">
+                      <TableCell colSpan={6} className="h-32 text-center">
                         <div className="flex flex-col items-center justify-center text-muted-foreground">
                           <Wrench className="h-8 w-8 mb-2 opacity-50" />
                           <p>No maintenance issues found</p>
