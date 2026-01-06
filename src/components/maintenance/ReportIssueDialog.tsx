@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -28,7 +28,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const reportIssueSchema = z.object({
   property: z.string().min(1, 'Please select a property'),
@@ -71,7 +73,11 @@ const priorities = [
 ];
 
 export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps) {
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ReportIssueFormData>({
     resolver: zodResolver(reportIssueSchema),
@@ -84,24 +90,125 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
     },
   });
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + selectedImages.length > 5) {
+      toast({
+        title: 'Too many images',
+        description: 'You can upload a maximum of 5 images',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Invalid file type',
+          description: `${file.name} is not an image`,
+          variant: 'destructive',
+        });
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: `${file.name} exceeds 5MB limit`,
+          variant: 'destructive',
+        });
+        return false;
+      }
+      return true;
+    });
+
+    setSelectedImages(prev => [...prev, ...validFiles]);
+    
+    // Generate previews
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    if (!user || selectedImages.length === 0) return [];
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of selectedImages) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error } = await supabase.storage
+        .from('maintenance-images')
+        .upload(fileName, file);
+
+      if (error) {
+        console.error('Upload error:', error);
+        throw new Error(`Failed to upload ${file.name}`);
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('maintenance-images')
+        .getPublicUrl(fileName);
+
+      uploadedUrls.push(urlData.publicUrl);
+    }
+
+    return uploadedUrls;
+  };
+
   const onSubmit = async (data: ReportIssueFormData) => {
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: 'Issue Reported',
-      description: `Maintenance ticket created for ${data.property}`,
-    });
-    
-    form.reset();
-    setIsSubmitting(false);
-    onOpenChange(false);
+    try {
+      // Upload images if any
+      const imageUrls = await uploadImages();
+      
+      // Simulate API call (in real app, save to database)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('Issue reported:', { ...data, images: imageUrls });
+      
+      toast({
+        title: 'Issue Reported',
+        description: `Maintenance ticket created for ${data.property}${imageUrls.length > 0 ? ` with ${imageUrls.length} image(s)` : ''}`,
+      });
+      
+      form.reset();
+      setSelectedImages([]);
+      setImagePreviews([]);
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to submit issue',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      form.reset();
+      setSelectedImages([]);
+      setImagePreviews([]);
+    }
+    onOpenChange(open);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[700px] bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-display text-foreground">Report Maintenance Issue</DialogTitle>
@@ -228,12 +335,63 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
               )}
             />
 
+            {/* Row 4: Image Upload */}
+            <div className="space-y-2">
+              <FormLabel>Attach Photos</FormLabel>
+              <div className="flex flex-wrap gap-3">
+                {/* Image Previews */}
+                {imagePreviews.map((preview, index) => (
+                  <div
+                    key={index}
+                    className="relative group h-20 w-20 rounded-lg overflow-hidden border border-border/50 bg-muted"
+                  >
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Upload Button */}
+                {selectedImages.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="h-20 w-20 rounded-lg border-2 border-dashed border-border/50 bg-background/50 hover:bg-muted/50 hover:border-accent/50 transition-colors flex flex-col items-center justify-center gap-1 text-muted-foreground"
+                  >
+                    <Upload className="h-5 w-5" />
+                    <span className="text-xs">Upload</span>
+                  </button>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Up to 5 images, max 5MB each
+              </p>
+            </div>
+
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
                 disabled={isSubmitting}
               >
                 Cancel
