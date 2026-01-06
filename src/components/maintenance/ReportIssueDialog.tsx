@@ -102,7 +102,7 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-card border-border">
+      <DialogContent className="sm:max-w-[700px] bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-display text-foreground">Report Maintenance Issue</DialogTitle>
           <DialogDescription>
@@ -112,81 +112,85 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="property"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Property *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-background/50 border-border/50">
-                        <SelectValue placeholder="Select a property" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-popover border-border z-50">
-                      {properties.map((property) => (
-                        <SelectItem key={property} value={property}>
-                          {property}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Row 1: Property, Category, Priority */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="property"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background/50 border-border/50">
+                          <SelectValue placeholder="Select property" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover border-border z-50">
+                        {properties.map((property) => (
+                          <SelectItem key={property} value={property}>
+                            {property}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-background/50 border-border/50">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-popover border-border z-50">
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background/50 border-border/50">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover border-border z-50">
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Priority *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-background/50 border-border/50">
-                        <SelectValue placeholder="Select priority level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-popover border-border z-50">
-                      {priorities.map((priority) => (
-                        <SelectItem key={priority.value} value={priority.value}>
-                          {priority.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background/50 border-border/50">
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover border-border z-50">
+                        {priorities.map((priority) => (
+                          <SelectItem key={priority.value} value={priority.value}>
+                            {priority.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
+            {/* Row 2: Location */}
             <FormField
               control={form.control}
               name="location"
@@ -205,6 +209,7 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
               )}
             />
 
+            {/* Row 3: Issue Description */}
             <FormField
               control={form.control}
               name="issue"
@@ -214,7 +219,7 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
                   <FormControl>
                     <Textarea
                       placeholder="Describe the maintenance issue in detail..."
-                      className="bg-background/50 border-border/50 min-h-[100px] resize-none"
+                      className="bg-background/50 border-border/50 min-h-[80px] resize-none"
                       {...field}
                     />
                   </FormControl>
@@ -223,7 +228,8 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-2">
               <Button
                 type="button"
                 variant="outline"
