@@ -21,6 +21,7 @@ import {
 
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { ReportIssueDialog } from '@/components/maintenance/ReportIssueDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -175,6 +176,7 @@ const Maintenance = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -262,7 +264,10 @@ const Maintenance = () => {
                 <Download className="h-4 w-4" />
                 Export
               </Button>
-              <Button className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Button 
+                className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+                onClick={() => setReportDialogOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
                 Report Issue
               </Button>
@@ -571,6 +576,9 @@ const Maintenance = () => {
             </div>
           </div>
         </main>
+
+        {/* Report Issue Dialog */}
+        <ReportIssueDialog open={reportDialogOpen} onOpenChange={setReportDialogOpen} />
       </div>
     </div>
   );
