@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import {
   Search,
-  Filter,
   Download,
   Plus,
   Wrench,
@@ -14,7 +13,6 @@ import {
   Loader2,
   Banknote,
   Star,
-  Eye,
   Sparkles,
   Users,
 } from 'lucide-react';
@@ -42,87 +40,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import type { Tables } from '@/integrations/supabase/types';
 
-// Mock maintenance data
-const maintenanceIssues = [
-  {
-    id: 'MT001',
-    property: 'Luxury 3-Bedroom Penthouse',
-    issue: 'AC not cooling properly in master bedroom',
-    reportedBy: 'Guest - Adebayo Johnson',
-    category: 'HVAC',
-    priority: 'urgent',
-    assignedTo: 'John AC Services',
-    cost: 25000,
-    status: 'in_progress',
-  },
-  {
-    id: 'MT002',
-    property: 'Cozy 2-Bedroom Apartment',
-    issue: 'Leaking kitchen faucet',
-    reportedBy: 'Housekeeping - Mary Obi',
-    category: 'Plumbing',
-    priority: 'high',
-    assignedTo: null,
-    cost: 8000,
-    status: 'pending',
-  },
-  {
-    id: 'MT003',
-    property: 'Executive Studio',
-    issue: 'Broken door lock on main entrance',
-    reportedBy: 'Security - Night Shift',
-    category: 'Security',
-    priority: 'urgent',
-    assignedTo: null,
-    cost: 15000,
-    status: 'pending',
-  },
-  {
-    id: 'MT004',
-    property: 'Family 4-Bedroom Home',
-    issue: 'Generator not starting',
-    reportedBy: 'Property Manager',
-    category: 'Electrical',
-    priority: 'high',
-    assignedTo: 'PowerFix Solutions',
-    cost: 35000,
-    status: 'assigned',
-  },
-  {
-    id: 'MT005',
-    property: 'Luxury Penthouse',
-    issue: 'Pool pump making unusual noise',
-    reportedBy: 'Maintenance Staff',
-    category: 'Facilities',
-    priority: 'normal',
-    assignedTo: 'AquaMaint Ltd',
-    cost: 12000,
-    status: 'in_progress',
-  },
-  {
-    id: 'MT006',
-    property: 'Executive Studio',
-    issue: 'WiFi router replacement',
-    reportedBy: 'IT Support',
-    category: 'IT/Electrical',
-    priority: 'normal',
-    assignedTo: 'NetFix Tech',
-    cost: 16500,
-    status: 'completed',
-  },
-  {
-    id: 'MT007',
-    property: 'Cozy 2-Bedroom Apartment',
-    issue: 'Bathroom tiles need regrouting',
-    reportedBy: 'Housekeeping - Grace Ada',
-    category: 'General Repairs',
-    priority: 'low',
-    assignedTo: null,
-    cost: 18000,
-    status: 'pending',
-  },
-];
+type MaintenanceIssue = Tables<'maintenance_issues'>;
 
 const vendors = [
   { name: 'John AC Services', specialty: 'HVAC', rating: 4.8, jobs: 15 },
@@ -132,40 +54,36 @@ const vendors = [
   { name: 'NetFix Tech', specialty: 'IT/Electrical', rating: 4.9, jobs: 18 },
 ];
 
-const priorityStyles = {
+const priorityStyles: Record<string, string> = {
   urgent: 'bg-rose-500 text-white border-rose-500',
   high: 'bg-amber-500 text-white border-amber-500',
   normal: 'bg-sky-500 text-white border-sky-500',
+  medium: 'bg-sky-500 text-white border-sky-500',
   low: 'bg-slate-500 text-white border-slate-500',
 };
 
-const priorityLabels = {
+const priorityLabels: Record<string, string> = {
   urgent: 'URGENT',
   high: 'HIGH',
   normal: 'NORMAL',
+  medium: 'NORMAL',
   low: 'LOW',
 };
 
-const statusStyles = {
+const statusStyles: Record<string, string> = {
+  open: 'bg-amber-500 text-white',
   pending: 'bg-amber-500 text-white',
   assigned: 'bg-sky-500 text-white',
   in_progress: 'bg-emerald-500 text-white',
   completed: 'bg-emerald-600 text-white',
 };
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
+  open: 'Open',
   pending: 'Pending',
   assigned: 'Assigned',
   in_progress: 'In Progress',
   completed: 'Completed',
-};
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-    minimumFractionDigits: 0,
-  }).format(amount);
 };
 
 const Maintenance = () => {
@@ -178,13 +96,28 @@ const Maintenance = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
+  // Fetch maintenance issues from Supabase
+  const { data: issues = [], isLoading: issuesLoading, refetch } = useQuery({
+    queryKey: ['maintenance_issues'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('maintenance_issues')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as MaintenanceIssue[];
+    },
+    enabled: !!user,
+  });
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
 
-  if (loading) {
+  if (loading || issuesLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -196,23 +129,19 @@ const Maintenance = () => {
     return null;
   }
 
-  const filteredIssues = maintenanceIssues.filter(issue => {
+  const filteredIssues = issues.filter(issue => {
     const matchesSearch = 
       issue.property.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      issue.issue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       issue.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      issue.category.toLowerCase().includes(searchQuery.toLowerCase());
+      issue.issue_type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || issue.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || issue.priority === priorityFilter;
-    const matchesCategory = categoryFilter === 'all' || issue.category.toLowerCase() === categoryFilter.toLowerCase();
+    const matchesCategory = categoryFilter === 'all' || issue.issue_type.toLowerCase() === categoryFilter.toLowerCase();
     return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
   });
 
-  const categories = [...new Set(maintenanceIssues.map(i => i.category))];
-
-  const totalCost = maintenanceIssues
-    .filter(i => i.status === 'completed')
-    .reduce((sum, i) => sum + i.cost, 0);
+  const categories = [...new Set(issues.map(i => i.issue_type))];
 
   const handleAction = (action: string, issueId: string) => {
     toast({
@@ -275,11 +204,11 @@ const Maintenance = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 mb-8">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mb-8">
             {[
               {
                 label: 'Total Issues',
-                value: maintenanceIssues.length,
+                value: issues.length,
                 subtext: 'All time',
                 icon: Wrench,
                 color: 'text-foreground',
@@ -289,7 +218,7 @@ const Maintenance = () => {
               },
               {
                 label: 'Urgent',
-                value: maintenanceIssues.filter(i => i.priority === 'urgent').length,
+                value: issues.filter(i => i.priority === 'urgent').length,
                 subtext: 'High priority',
                 icon: AlertTriangle,
                 color: 'text-rose-600 dark:text-rose-400',
@@ -299,7 +228,7 @@ const Maintenance = () => {
               },
               {
                 label: 'Pending',
-                value: maintenanceIssues.filter(i => i.status === 'pending').length,
+                value: issues.filter(i => i.status === 'pending' || i.status === 'open').length,
                 subtext: 'Not assigned',
                 icon: Clock,
                 color: 'text-amber-600 dark:text-amber-400',
@@ -309,7 +238,7 @@ const Maintenance = () => {
               },
               {
                 label: 'In Progress',
-                value: maintenanceIssues.filter(i => i.status === 'in_progress').length,
+                value: issues.filter(i => i.status === 'in_progress').length,
                 subtext: 'Being fixed',
                 icon: Loader2,
                 color: 'text-sky-600 dark:text-sky-400',
@@ -319,21 +248,11 @@ const Maintenance = () => {
               },
               {
                 label: 'Completed',
-                value: maintenanceIssues.filter(i => i.status === 'completed').length,
+                value: issues.filter(i => i.status === 'completed').length,
                 subtext: 'Resolved',
                 icon: CheckCircle2,
                 color: 'text-emerald-600 dark:text-emerald-400',
                 gradient: 'from-emerald-500/20 to-emerald-500/5',
-                filterValue: 'completed',
-                filterType: 'status',
-              },
-              {
-                label: 'Total Cost',
-                value: formatCurrency(totalCost),
-                subtext: 'Completed jobs',
-                icon: Banknote,
-                color: 'text-accent',
-                gradient: 'from-accent/20 to-accent/5',
                 filterValue: 'completed',
                 filterType: 'status',
               },
@@ -522,35 +441,31 @@ const Maintenance = () => {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium text-foreground">{issue.issue}</p>
-                            <p className="text-xs text-muted-foreground">By: {issue.reportedBy}</p>
+                            <p className="font-medium text-foreground">{issue.title}</p>
+                            <p className="text-xs text-muted-foreground">{issue.issue_type}</p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge
                             className={cn(
                               'text-xs font-semibold border',
-                              priorityStyles[issue.priority as keyof typeof priorityStyles]
+                              priorityStyles[issue.priority] || priorityStyles.normal
                             )}
                           >
-                            {priorityLabels[issue.priority as keyof typeof priorityLabels]}
+                            {priorityLabels[issue.priority] || issue.priority.toUpperCase()}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {issue.assignedTo ? (
-                            <span className="text-foreground">{issue.assignedTo}</span>
-                          ) : (
-                            <span className="text-rose-500 dark:text-rose-400 font-medium">Unassigned</span>
-                          )}
+                          <span className="text-rose-500 dark:text-rose-400 font-medium">Unassigned</span>
                         </TableCell>
                         <TableCell>
                           <Badge
                             className={cn(
                               'text-xs font-medium',
-                              statusStyles[issue.status as keyof typeof statusStyles]
+                              statusStyles[issue.status] || statusStyles.open
                             )}
                           >
-                            {statusLabels[issue.status as keyof typeof statusLabels]}
+                            {statusLabels[issue.status] || issue.status}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -573,7 +488,11 @@ const Maintenance = () => {
         </main>
 
         {/* Report Issue Dialog */}
-        <ReportIssueDialog open={reportDialogOpen} onOpenChange={setReportDialogOpen} />
+        <ReportIssueDialog 
+          open={reportDialogOpen} 
+          onOpenChange={setReportDialogOpen} 
+          onSuccess={() => refetch()}
+        />
       </div>
     </div>
   );
