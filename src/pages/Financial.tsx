@@ -292,25 +292,19 @@ const Financial = () => {
                 {monthlyTrend.map((month) => (
                   <div 
                     key={month.month}
-                    className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-center space-y-3"
+                    className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left space-y-3"
                   >
                     <h4 className="font-display font-bold text-foreground">{month.month}</h4>
                     <div className="space-y-1 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Revenue</span>
-                      </div>
+                      <span className="text-muted-foreground">Revenue</span>
                       <p className="font-medium text-foreground">{formatCurrency(month.revenue)}</p>
                     </div>
                     <div className="space-y-1 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Expenses</span>
-                      </div>
+                      <span className="text-muted-foreground">Expenses</span>
                       <p className="font-medium text-destructive">{formatCurrency(month.expenses)}</p>
                     </div>
                     <div className="space-y-1 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Profit</span>
-                      </div>
+                      <span className="text-muted-foreground">Profit</span>
                       <p className="font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(month.profit)}</p>
                     </div>
                     <div className="pt-2 border-t border-border">
