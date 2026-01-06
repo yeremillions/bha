@@ -387,7 +387,12 @@ const Maintenance = () => {
                 <Users className="h-5 w-5 text-muted-foreground" />
                 <CardTitle className="text-lg font-display">Preferred Vendors</CardTitle>
               </div>
-              <Button variant="ghost" size="sm" className="text-accent hover:text-accent/80">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-accent hover:text-accent/80"
+                onClick={() => navigate('/dashboard/vendors')}
+              >
                 Manage Vendors
               </Button>
             </CardHeader>
@@ -396,8 +401,22 @@ const Maintenance = () => {
                 {vendors.map((vendor, index) => (
                   <div
                     key={vendor.name}
-                    className="group relative rounded-xl border border-border/50 bg-gradient-to-br from-card to-muted/30 p-4 text-center transition-all duration-300 hover:shadow-md hover:border-accent/30 animate-fade-in"
+                    className="group relative rounded-xl border border-border/50 bg-gradient-to-br from-card to-muted/30 p-4 text-center transition-all duration-300 hover:shadow-md hover:border-accent/30 animate-fade-in cursor-pointer"
                     style={{ animationDelay: `${index * 100}ms` }}
+                    onClick={() => {
+                      // Map vendor name to ID for navigation
+                      const vendorIdMap: Record<string, string> = {
+                        'John AC Services': 'V001',
+                        'PowerFix Solutions': 'V002',
+                        'AquaMaint Ltd': 'V003',
+                        'TilePro Services': 'V004',
+                        'NetFix Tech': 'V005',
+                      };
+                      const vendorId = vendorIdMap[vendor.name];
+                      if (vendorId) {
+                        navigate(`/dashboard/vendors/${vendorId}`);
+                      }
+                    }}
                   >
                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent">
                       <Wrench className="h-5 w-5" />
