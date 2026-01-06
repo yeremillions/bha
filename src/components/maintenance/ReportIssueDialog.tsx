@@ -102,9 +102,9 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-xl font-display">Report Maintenance Issue</DialogTitle>
+          <DialogTitle className="text-xl font-display text-foreground">Report Maintenance Issue</DialogTitle>
           <DialogDescription>
             Create a new maintenance ticket. Fill in all required fields.
           </DialogDescription>
