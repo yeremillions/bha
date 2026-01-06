@@ -158,7 +158,7 @@ const Vendors = () => {
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'recent' | 'all'>('recent');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 4;
 
   // Sort vendors by most recently used (completed jobs + pending jobs as proxy for activity)
   const recentlyUsedVendors = [...vendorsData]
