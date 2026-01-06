@@ -15,6 +15,8 @@ import Housekeeping from "./pages/Housekeeping";
 import Bar from "./pages/Bar";
 import Maintenance from "./pages/Maintenance";
 import MaintenanceDetails from "./pages/MaintenanceDetails";
+import Vendors from "./pages/Vendors";
+import VendorDetails from "./pages/VendorDetails";
 import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -40,6 +42,8 @@ const App = () => (
               <Route path="/dashboard/bar" element={<Bar />} />
               <Route path="/dashboard/maintenance" element={<Maintenance />} />
               <Route path="/dashboard/maintenance/:id" element={<MaintenanceDetails />} />
+              <Route path="/dashboard/vendors" element={<Vendors />} />
+              <Route path="/dashboard/vendors/:id" element={<VendorDetails />} />
               <Route path="/dashboard/reports" element={<Reports />} />
               <Route path="/auth" element={<Auth />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
