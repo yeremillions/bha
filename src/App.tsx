@@ -13,6 +13,7 @@ import BookingDetails from "./pages/BookingDetails";
 import Calendar from "./pages/Calendar";
 import Housekeeping from "./pages/Housekeeping";
 import Bar from "./pages/Bar";
+import BarTabDetails from "./pages/BarTabDetails";
 import Maintenance from "./pages/Maintenance";
 import MaintenanceDetails from "./pages/MaintenanceDetails";
 import Vendors from "./pages/Vendors";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/dashboard/calendar" element={<Calendar />} />
               <Route path="/dashboard/housekeeping" element={<Housekeeping />} />
               <Route path="/dashboard/bar" element={<Bar />} />
+              <Route path="/dashboard/bar/:id" element={<BarTabDetails />} />
               <Route path="/dashboard/maintenance" element={<Maintenance />} />
               <Route path="/dashboard/maintenance/:id" element={<MaintenanceDetails />} />
               <Route path="/dashboard/vendors" element={<Vendors />} />
