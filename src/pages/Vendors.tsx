@@ -147,6 +147,12 @@ const Vendors = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'recent' | 'all'>('recent');
+
+  // Sort vendors by most recently used (completed jobs + pending jobs as proxy for activity)
+  const recentlyUsedVendors = [...vendorsData]
+    .sort((a, b) => (b.completedJobs + b.pendingJobs) - (a.completedJobs + a.pendingJobs))
+    .slice(0, 4);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -166,7 +172,10 @@ const Vendors = () => {
     return null;
   }
 
-  const filteredVendors = vendorsData.filter(vendor => {
+  // Base vendors list based on view mode
+  const baseVendors = viewMode === 'recent' ? recentlyUsedVendors : vendorsData;
+
+  const filteredVendors = baseVendors.filter(vendor => {
     const matchesSearch =
       vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vendor.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -310,9 +319,39 @@ const Vendors = () => {
             ))}
           </div>
 
-          {/* Filters */}
+          {/* View Toggle & Filters */}
           <div className="relative rounded-2xl border border-border/50 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-sm p-4 mb-6 animate-fade-in">
-            <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex flex-col gap-4">
+              {/* View Toggle Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === 'recent' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('recent')}
+                  className={cn(
+                    'gap-2 transition-all',
+                    viewMode === 'recent' && 'bg-accent hover:bg-accent/90'
+                  )}
+                >
+                  <Clock className="h-4 w-4" />
+                  Recently Used
+                </Button>
+                <Button
+                  variant={viewMode === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('all')}
+                  className={cn(
+                    'gap-2 transition-all',
+                    viewMode === 'all' && 'bg-accent hover:bg-accent/90'
+                  )}
+                >
+                  <Users className="h-4 w-4" />
+                  All Vendors
+                </Button>
+              </div>
+
+              {/* Search & Filters */}
+              <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -345,6 +384,7 @@ const Vendors = () => {
                   ))}
                 </SelectContent>
               </Select>
+              </div>
             </div>
           </div>
 
