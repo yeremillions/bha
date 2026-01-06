@@ -171,6 +171,11 @@ const Vendors = () => {
     }
   }, [user, loading, navigate]);
 
+  // Reset to first page when filters change - must be before early returns
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, specialtyFilter, viewMode]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -200,11 +205,6 @@ const Vendors = () => {
   const totalPages = Math.ceil(filteredVendors.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedVendors = filteredVendors.slice(startIndex, startIndex + itemsPerPage);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter, specialtyFilter, viewMode]);
 
   const totalVendors = vendorsData.length;
   const activeVendors = vendorsData.filter(v => v.status === 'active').length;
