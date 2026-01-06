@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      maintenance_issues: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_urls: string[] | null
+          issue_type: string
+          location: string | null
+          priority: string
+          property: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          issue_type: string
+          location?: string | null
+          priority?: string
+          property: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          issue_type?: string
+          location?: string | null
+          priority?: string
+          property?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
