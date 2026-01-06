@@ -41,6 +41,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 // Mock vendors data with extended information
 const vendorsData = [
@@ -148,6 +157,8 @@ const Vendors = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'recent' | 'all'>('recent');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   // Sort vendors by most recently used (completed jobs + pending jobs as proxy for activity)
   const recentlyUsedVendors = [...vendorsData]
@@ -184,6 +195,16 @@ const Vendors = () => {
     const matchesSpecialty = specialtyFilter === 'all' || vendor.specialty === specialtyFilter;
     return matchesSearch && matchesStatus && matchesSpecialty;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredVendors.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedVendors = filteredVendors.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, specialtyFilter, viewMode]);
 
   const totalVendors = vendorsData.length;
   const activeVendors = vendorsData.filter(v => v.status === 'active').length;
@@ -390,7 +411,7 @@ const Vendors = () => {
 
           {/* Vendors Grid */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredVendors.map((vendor, index) => (
+            {paginatedVendors.map((vendor, index) => (
               <Card
                 key={vendor.id}
                 className={cn(
@@ -494,6 +515,68 @@ const Vendors = () => {
               <h3 className="text-lg font-semibold text-foreground mb-1">No vendors found</h3>
               <p className="text-sm text-muted-foreground max-w-md">
                 Try adjusting your search or filters to find the vendor you're looking for.
+              </p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8 animate-fade-in">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={cn(
+                        'cursor-pointer',
+                        currentPage === 1 && 'pointer-events-none opacity-50'
+                      )}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    // Show first page, last page, current page and neighbors
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    // Show ellipsis
+                    if (page === currentPage - 2 || page === currentPage + 2) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={cn(
+                        'cursor-pointer',
+                        currentPage === totalPages && 'pointer-events-none opacity-50'
+                      )}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+              <p className="text-center text-sm text-muted-foreground mt-2">
+                Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredVendors.length)} of {filteredVendors.length} vendors
               </p>
             </div>
           )}
