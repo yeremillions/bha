@@ -45,6 +45,7 @@ type ReportIssueFormData = z.infer<typeof reportIssueSchema>;
 interface ReportIssueDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 const properties = [
@@ -72,7 +73,7 @@ const priorities = [
   { value: 'low', label: 'Low - When convenient' },
 ];
 
-export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps) {
+export function ReportIssueDialog({ open, onOpenChange, onSuccess }: ReportIssueDialogProps) {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -167,16 +168,37 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
   };
 
   const onSubmit = async (data: ReportIssueFormData) => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to report an issue',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       // Upload images if any
       const imageUrls = await uploadImages();
       
-      // Simulate API call (in real app, save to database)
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('Issue reported:', { ...data, images: imageUrls });
+      // Save to database
+      const { error } = await supabase
+        .from('maintenance_issues')
+        .insert({
+          user_id: user.id,
+          property: data.property,
+          issue_type: data.category,
+          priority: data.priority,
+          title: data.issue.substring(0, 100),
+          description: data.issue,
+          location: data.location || null,
+          image_urls: imageUrls,
+          status: 'pending',
+        });
+
+      if (error) throw error;
       
       toast({
         title: 'Issue Reported',
@@ -186,8 +208,10 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
       form.reset();
       setSelectedImages([]);
       setImagePreviews([]);
+      onSuccess?.();
       onOpenChange(false);
     } catch (error) {
+      console.error('Error submitting issue:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to submit issue',
