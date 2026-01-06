@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,7 @@ const statCards = [
 ];
 
 export default function Bar() {
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("tabs");
   const [searchTerm, setSearchTerm] = useState("");
@@ -309,8 +311,9 @@ export default function Bar() {
                       {filteredTabs.map((tab, index) => (
                         <TableRow 
                           key={tab.id} 
-                          className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
+                          className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
                           style={{ animationDelay: `${index * 50}ms` }}
+                          onClick={() => navigate(`/dashboard/bar/${tab.id}`)}
                         >
                           <TableCell className="font-medium text-foreground">{tab.guestName}</TableCell>
                           <TableCell>
@@ -327,22 +330,22 @@ export default function Bar() {
                           <TableCell>{getTabStatusBadge(tab.status)}</TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="bg-popover border-border z-50">
-                                <DropdownMenuItem className="gap-2">
+                                <DropdownMenuItem className="gap-2" onClick={(e) => { e.stopPropagation(); }}>
                                   <Plus className="h-4 w-4" /> Add Items
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2">
+                                <DropdownMenuItem className="gap-2" onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/bar/${tab.id}`); }}>
                                   <CreditCard className="h-4 w-4" /> View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 text-emerald-400">
+                                <DropdownMenuItem className="gap-2 text-emerald-400" onClick={(e) => e.stopPropagation()}>
                                   <CheckCircle2 className="h-4 w-4" /> Close Tab
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 text-destructive">
+                                <DropdownMenuItem className="gap-2 text-destructive" onClick={(e) => e.stopPropagation()}>
                                   <XCircle className="h-4 w-4" /> Void Tab
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
