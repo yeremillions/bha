@@ -31,6 +31,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { AddItemsDialog } from "@/components/bar/AddItemsDialog";
 
 // Mock data - in real app this would come from database
 const mockTabs = [
@@ -58,9 +59,46 @@ export default function BarTabDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [addedItems, setAddedItems] = useState<Array<{
+    id: number;
+    tabId: number;
+    item: string;
+    category: string;
+    quantity: number;
+    unitPrice: number;
+    amount: number;
+    time: string;
+  }>>([]);
 
   const tab = mockTabs.find(t => t.id === Number(id));
-  const tabItems = mockTabItems.filter(item => item.tabId === Number(id));
+  const baseTabItems = mockTabItems.filter(item => item.tabId === Number(id));
+  const tabItems = [...baseTabItems, ...addedItems];
+
+  const handleItemsAdded = (items: Array<{ id: number; name: string; category: string; price: number; quantity: number }>) => {
+    const now = new Date();
+    const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    const newItems = items.map((item, index) => ({
+      id: Date.now() + index,
+      tabId: Number(id),
+      item: item.name,
+      category: item.category,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      amount: item.price * item.quantity,
+      time: timeString,
+    }));
+    
+    setAddedItems(prev => [...prev, ...newItems]);
+    
+    const totalAdded = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    toast({
+      title: "Items Added",
+      description: `Added ${items.reduce((sum, i) => sum + i.quantity, 0)} items (₦${totalAdded.toLocaleString()}) to the tab`,
+    });
+  };
+
+  const totalAmount = tabItems.reduce((sum, item) => sum + item.amount, 0);
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -150,10 +188,16 @@ export default function BarTabDetails() {
             <div className="flex flex-wrap gap-2">
               {tab.status === 'open' && (
                 <>
-                  <Button variant="outline" className="gap-2" onClick={() => toast({ title: "Add Items", description: "Add items dialog coming soon" })}>
-                    <Plus className="h-4 w-4" />
-                    Add Items
-                  </Button>
+                  <AddItemsDialog
+                    trigger={
+                      <Button variant="outline" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Items
+                      </Button>
+                    }
+                    guestName={tab.guestName}
+                    onItemsAdded={handleItemsAdded}
+                  />
                   <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={() => toast({ title: "Close Tab", description: "Tab closure coming soon" })}>
                     <CheckCircle2 className="h-4 w-4" />
                     Close Tab
@@ -169,7 +213,7 @@ export default function BarTabDetails() {
               { label: "Guest", value: tab.guestName, icon: User, gradient: "from-accent/20 to-accent/5" },
               { label: "Apartment", value: tab.apartment, icon: Home, gradient: "from-sky-500/20 to-sky-500/5" },
               { label: "Total Items", value: `${tabItems.length} items`, icon: Receipt, gradient: "from-emerald-500/20 to-emerald-500/5" },
-              { label: "Total Amount", value: `₦${tab.amount.toLocaleString()}`, icon: CreditCard, gradient: "from-amber-500/20 to-amber-500/5" },
+              { label: "Total Amount", value: `₦${totalAmount.toLocaleString()}`, icon: CreditCard, gradient: "from-amber-500/20 to-amber-500/5" },
             ].map((stat, index) => (
               <div
                 key={stat.label}
@@ -255,7 +299,7 @@ export default function BarTabDetails() {
               <div className="p-4 border-t border-border/50 flex justify-end">
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="text-2xl font-display font-bold text-foreground">₦{tab.amount.toLocaleString()}</p>
+                  <p className="text-2xl font-display font-bold text-foreground">₦{totalAmount.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
