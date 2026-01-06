@@ -297,24 +297,70 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
               />
             </div>
 
-            {/* Row 2: Location */}
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Specific Location</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., Master bedroom, Kitchen, Lobby"
-                      className="bg-background/50 border-border/50"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Row 2: Location and Image Upload */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Specific Location</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Master bedroom, Kitchen, Lobby"
+                        className="bg-background/50 border-border/50"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <FormLabel>Attach Photos</FormLabel>
+                <div className="flex flex-wrap gap-2">
+                  {imagePreviews.map((preview, index) => (
+                    <div
+                      key={index}
+                      className="relative group h-9 w-9 rounded-md overflow-hidden border border-border/50 bg-muted"
+                    >
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute inset-0 bg-destructive/80 text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {selectedImages.length < 5 && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-9 px-3 rounded-md border border-dashed border-border/50 bg-background/50 hover:bg-muted/50 hover:border-accent/50 transition-colors flex items-center gap-2 text-muted-foreground text-sm"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>Upload</span>
+                    </button>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Row 3: Issue Description */}
             <FormField
@@ -334,58 +380,6 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
                 </FormItem>
               )}
             />
-
-            {/* Row 4: Image Upload */}
-            <div className="space-y-2">
-              <FormLabel>Attach Photos</FormLabel>
-              <div className="flex flex-wrap gap-3">
-                {/* Image Previews */}
-                {imagePreviews.map((preview, index) => (
-                  <div
-                    key={index}
-                    className="relative group h-20 w-20 rounded-lg overflow-hidden border border-border/50 bg-muted"
-                  >
-                    <img
-                      src={preview}
-                      alt={`Preview ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-
-                {/* Upload Button */}
-                {selectedImages.length < 5 && (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="h-20 w-20 rounded-lg border-2 border-dashed border-border/50 bg-background/50 hover:bg-muted/50 hover:border-accent/50 transition-colors flex flex-col items-center justify-center gap-1 text-muted-foreground"
-                  >
-                    <Upload className="h-5 w-5" />
-                    <span className="text-xs">Upload</span>
-                  </button>
-                )}
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageSelect}
-                  className="hidden"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Up to 5 images, max 5MB each
-              </p>
-            </div>
-
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-2">
               <Button
