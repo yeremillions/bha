@@ -41,6 +41,306 @@ export type Database = {
         }
         Relationships: []
       }
+      bookings: {
+        Row: {
+          id: string
+          booking_number: string
+          property_id: string
+          customer_id: string
+          check_in_date: string
+          check_out_date: string
+          nights: number
+          num_guests: number
+          guest_names: string[]
+          base_amount: number
+          cleaning_fee: number
+          tax_amount: number
+          discount_amount: number
+          total_amount: number
+          status: string
+          payment_status: string
+          special_requests: string | null
+          arrival_time: string | null
+          booked_via: string
+          source: string | null
+          created_at: string
+          updated_at: string
+          cancelled_at: string | null
+          cancellation_reason: string | null
+        }
+        Insert: {
+          id?: string
+          booking_number?: string
+          property_id: string
+          customer_id: string
+          check_in_date: string
+          check_out_date: string
+          num_guests: number
+          guest_names?: string[]
+          base_amount: number
+          cleaning_fee?: number
+          tax_amount?: number
+          discount_amount?: number
+          total_amount: number
+          status?: string
+          payment_status?: string
+          special_requests?: string | null
+          arrival_time?: string | null
+          booked_via?: string
+          source?: string | null
+          created_at?: string
+          updated_at?: string
+          cancelled_at?: string | null
+          cancellation_reason?: string | null
+        }
+        Update: {
+          id?: string
+          booking_number?: string
+          property_id?: string
+          customer_id?: string
+          check_in_date?: string
+          check_out_date?: string
+          num_guests?: number
+          guest_names?: string[]
+          base_amount?: number
+          cleaning_fee?: number
+          tax_amount?: number
+          discount_amount?: number
+          total_amount?: number
+          status?: string
+          payment_status?: string
+          special_requests?: string | null
+          arrival_time?: string | null
+          booked_via?: string
+          source?: string | null
+          created_at?: string
+          updated_at?: string
+          cancelled_at?: string | null
+          cancellation_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      customers: {
+        Row: {
+          id: string
+          user_id: string | null
+          full_name: string
+          email: string
+          phone: string | null
+          whatsapp: string | null
+          date_of_birth: string | null
+          nationality: string | null
+          id_type: string | null
+          id_number: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          preferences: Json
+          vip_status: boolean
+          total_bookings: number
+          total_spent: number
+          average_rating: number
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          full_name: string
+          email: string
+          phone?: string | null
+          whatsapp?: string | null
+          date_of_birth?: string | null
+          nationality?: string | null
+          id_type?: string | null
+          id_number?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          preferences?: Json
+          vip_status?: boolean
+          total_bookings?: number
+          total_spent?: number
+          average_rating?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          full_name?: string
+          email?: string
+          phone?: string | null
+          whatsapp?: string | null
+          date_of_birth?: string | null
+          nationality?: string | null
+          id_type?: string | null
+          id_number?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          preferences?: Json
+          vip_status?: boolean
+          total_bookings?: number
+          total_spent?: number
+          average_rating?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      properties: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          description: string | null
+          location: string
+          address: string | null
+          bedrooms: number
+          bathrooms: number
+          max_guests: number
+          base_price_per_night: number
+          cleaning_fee: number
+          amenities: string[]
+          images: string[]
+          status: string
+          featured: boolean
+          rating: number
+          review_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          description?: string | null
+          location: string
+          address?: string | null
+          bedrooms: number
+          bathrooms: number
+          max_guests: number
+          base_price_per_night: number
+          cleaning_fee?: number
+          amenities?: string[]
+          images?: string[]
+          status?: string
+          featured?: boolean
+          rating?: number
+          review_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          description?: string | null
+          location?: string
+          address?: string | null
+          bedrooms?: number
+          bathrooms?: number
+          max_guests?: number
+          base_price_per_night?: number
+          cleaning_fee?: number
+          amenities?: string[]
+          images?: string[]
+          status?: string
+          featured?: boolean
+          rating?: number
+          review_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          id: string
+          booking_id: string | null
+          customer_id: string | null
+          transaction_type: string
+          category: string | null
+          amount: number
+          payment_method: string | null
+          payment_reference: string | null
+          status: string
+          description: string | null
+          metadata: Json
+          created_at: string
+          processed_at: string | null
+        }
+        Insert: {
+          id?: string
+          booking_id?: string | null
+          customer_id?: string | null
+          transaction_type: string
+          category?: string | null
+          amount: number
+          payment_method?: string | null
+          payment_reference?: string | null
+          status?: string
+          description?: string | null
+          metadata?: Json
+          created_at?: string
+          processed_at?: string | null
+        }
+        Update: {
+          id?: string
+          booking_id?: string | null
+          customer_id?: string | null
+          transaction_type?: string
+          category?: string | null
+          amount?: number
+          payment_method?: string | null
+          payment_reference?: string | null
+          status?: string
+          description?: string | null
+          metadata?: Json
+          created_at?: string
+          processed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       maintenance_issues: {
         Row: {
           created_at: string
