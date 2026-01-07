@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useProperties, useCreateProperty, useDeleteProperty } from '@/hooks/useProperties';
 import { cn } from '@/lib/utils';
 import { 
   Plus, 
@@ -80,105 +81,8 @@ const amenityDescriptions = {
   kitchen: 'Full Kitchen: Fridge, Microwave, Gas Cooker, Cooking Utensils',
 };
 
-// Mock property data
-const properties = [
-  {
-    id: '1',
-    name: 'Luxury 3-Bedroom Penthouse',
-    type: 'Penthouse',
-    location: 'Victoria Island, Lagos',
-    bedrooms: 3,
-    bathrooms: 2,
-    maxGuests: 6,
-    pricePerNight: 75000,
-    rating: 4.9,
-    reviews: 24,
-    status: 'available',
-    occupancy: 85,
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop',
-    amenities: ['security', 'power', 'wifi', 'entertainment', 'kitchen'],
-  },
-  {
-    id: '2',
-    name: 'Executive Studio Suite',
-    type: 'Studio',
-    location: 'Lekki Phase 1, Lagos',
-    bedrooms: 1,
-    bathrooms: 1,
-    maxGuests: 2,
-    pricePerNight: 35000,
-    rating: 4.7,
-    reviews: 18,
-    status: 'occupied',
-    occupancy: 92,
-    image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&h=400&fit=crop',
-    amenities: ['security', 'power', 'wifi', 'entertainment'],
-  },
-  {
-    id: '3',
-    name: 'Cozy 2-Bedroom Apartment',
-    type: 'Apartment',
-    location: 'Ikoyi, Lagos',
-    bedrooms: 2,
-    bathrooms: 2,
-    maxGuests: 4,
-    pricePerNight: 55000,
-    rating: 4.8,
-    reviews: 31,
-    status: 'available',
-    occupancy: 78,
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop',
-    amenities: ['security', 'power', 'wifi', 'kitchen'],
-  },
-  {
-    id: '4',
-    name: 'Family Home with Garden',
-    type: 'House',
-    location: 'Ikeja GRA, Lagos',
-    bedrooms: 4,
-    bathrooms: 3,
-    maxGuests: 8,
-    pricePerNight: 95000,
-    rating: 4.6,
-    reviews: 12,
-    status: 'maintenance',
-    occupancy: 65,
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop',
-    amenities: ['security', 'power', 'wifi', 'entertainment', 'kitchen'],
-  },
-  {
-    id: '5',
-    name: 'Modern Loft Space',
-    type: 'Loft',
-    location: 'Victoria Island, Lagos',
-    bedrooms: 1,
-    bathrooms: 1,
-    maxGuests: 2,
-    pricePerNight: 45000,
-    rating: 4.9,
-    reviews: 27,
-    status: 'available',
-    occupancy: 88,
-    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&h=400&fit=crop',
-    amenities: ['power', 'wifi', 'entertainment'],
-  },
-  {
-    id: '6',
-    name: 'Beachfront Villa',
-    type: 'Villa',
-    location: 'Lekki, Lagos',
-    bedrooms: 5,
-    bathrooms: 4,
-    maxGuests: 10,
-    pricePerNight: 150000,
-    rating: 5.0,
-    reviews: 8,
-    status: 'available',
-    occupancy: 72,
-    image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&h=400&fit=crop',
-    amenities: ['security', 'power', 'wifi', 'entertainment', 'kitchen'],
-  },
-];
+// Status and payment styles
+
 
 const statusStyles = {
   available: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
@@ -193,7 +97,7 @@ const statusLabels = {
 };
 
 const Properties = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -202,18 +106,66 @@ const Properties = () => {
   const [sortBy, setSortBy] = useState<string>('name-asc');
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const handleAddProperty = (propertyData: PropertyFormData) => {
-    // For now, just log the data - in a real app, this would save to the database
-    console.log('New property:', propertyData);
+  // Fetch properties from database
+  const { data: properties = [], isLoading, error } = useProperties({
+    status: statusFilter,
+    search: searchQuery,
+  });
+
+  // Create and delete mutations
+  const createProperty = useCreateProperty();
+  const deleteProperty = useDeleteProperty();
+
+  const handleAddProperty = async (propertyData: PropertyFormData) => {
+    await createProperty.mutateAsync({
+      name: propertyData.name,
+      type: propertyData.type,
+      description: propertyData.description,
+      location: propertyData.location,
+      address: propertyData.address,
+      bedrooms: propertyData.bedrooms,
+      bathrooms: propertyData.bathrooms,
+      max_guests: propertyData.maxGuests,
+      base_price_per_night: propertyData.pricePerNight,
+      cleaning_fee: propertyData.cleaningFee,
+      amenities: propertyData.amenities,
+      images: propertyData.images,
+      status: 'available',
+      featured: propertyData.featured,
+    });
+    setShowAddForm(false);
+  };
+
+  const handleDeleteProperty = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this property?')) {
+      await deleteProperty.mutateAsync(id);
+    }
   };
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate]);
 
-  if (loading) {
+  // Client-side sorting (search and status filtering handled by database)
+  const filteredProperties = useMemo(() => {
+    const sorted = [...properties].sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'price-desc':
+          return b.base_price_per_night - a.base_price_per_night;
+        case 'capacity-desc':
+          return b.max_guests - a.max_guests;
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }, [properties, sortBy]);
+
+  if (authLoading || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -225,25 +177,13 @@ const Properties = () => {
     return null;
   }
 
-  const filteredProperties = properties
-    .filter(property => {
-      const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           property.location.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || property.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'name-asc':
-          return a.name.localeCompare(b.name);
-        case 'price-desc':
-          return b.pricePerNight - a.pricePerNight;
-        case 'capacity-desc':
-          return b.maxGuests - a.maxGuests;
-        default:
-          return 0;
-      }
-    });
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-destructive">Error loading properties. Please try again.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
@@ -323,14 +263,14 @@ const Properties = () => {
                 delay: 2,
                 filterValue: 'occupied'
               },
-              { 
-                label: 'Avg. Occupancy', 
-                value: `${Math.round(properties.reduce((acc, p) => acc + p.occupancy, 0) / properties.length)}%`, 
-                color: 'text-foreground',
+              {
+                label: 'Maintenance',
+                value: properties.filter(p => p.status === 'maintenance').length,
+                color: 'text-amber-600 dark:text-amber-400',
                 gradient: 'from-amber-500/20 to-amber-500/5',
-                showTrend: true,
+                showTrend: false,
                 delay: 3,
-                filterValue: null
+                filterValue: 'maintenance'
               },
             ].map((stat) => (
               <button
@@ -460,7 +400,7 @@ const Properties = () => {
                   {/* Image */}
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img
-                      src={property.image}
+                      src={property.images[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop'}
                       alt={property.name}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
@@ -498,17 +438,20 @@ const Properties = () => {
                           Edit Property
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => handleDeleteProperty(property.id)}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    
+
                     {/* Price */}
                     <div className="absolute bottom-3 left-3">
                       <p className="text-white font-display font-bold text-lg">
-                        ₦{property.pricePerNight.toLocaleString()}
+                        ₦{property.base_price_per_night.toLocaleString()}
                         <span className="text-sm font-normal opacity-80">/night</span>
                       </p>
                     </div>
@@ -542,10 +485,10 @@ const Properties = () => {
                       </div>
                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        <span>{property.maxGuests}</span>
+                        <span>{property.max_guests}</span>
                       </div>
                       <div className="ml-auto text-xs text-muted-foreground">
-                        {property.reviews} reviews
+                        {property.review_count} reviews
                       </div>
                     </div>
                     
@@ -586,30 +529,6 @@ const Properties = () => {
                         )}
                       </div>
                     </TooltipProvider>
-                    
-                    {/* Occupancy bar - Color coded */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">Occupancy</span>
-                        <span className={cn(
-                          "font-medium",
-                          property.occupancy >= 80 ? "text-emerald-600 dark:text-emerald-400" :
-                          property.occupancy >= 50 ? "text-amber-600 dark:text-amber-400" :
-                          "text-rose-600 dark:text-rose-400"
-                        )}>{property.occupancy}%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div 
-                          className={cn(
-                            "h-full transition-all duration-500 group-hover:animate-pulse",
-                            property.occupancy >= 80 ? "bg-gradient-to-r from-emerald-500 to-emerald-400" :
-                            property.occupancy >= 50 ? "bg-gradient-to-r from-amber-500 to-amber-400" :
-                            "bg-gradient-to-r from-rose-500 to-rose-400"
-                          )}
-                          style={{ width: `${property.occupancy}%` }}
-                        />
-                      </div>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -626,7 +545,7 @@ const Properties = () => {
                     {/* Image */}
                     <div className="relative h-20 w-28 rounded-xl overflow-hidden shrink-0">
                       <img
-                        src={property.image}
+                        src={property.images[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop'}
                         alt={property.name}
                         className="h-full w-full object-cover"
                       />
@@ -663,7 +582,7 @@ const Properties = () => {
                         </div>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Users className="h-3 w-3" />
-                          <span>{property.maxGuests} guests</span>
+                          <span>{property.max_guests} guests</span>
                         </div>
                       </div>
                     </div>
@@ -675,23 +594,11 @@ const Properties = () => {
                           <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
                           <span className="font-semibold text-sm">{property.rating}</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">{property.reviews} reviews</p>
+                        <p className="text-[10px] text-muted-foreground">{property.review_count} reviews</p>
                       </div>
                       <div className="text-center">
-                        <p className="font-display font-bold text-sm">₦{property.pricePerNight.toLocaleString()}</p>
+                        <p className="font-display font-bold text-sm">₦{property.base_price_per_night.toLocaleString()}</p>
                         <p className="text-[10px] text-muted-foreground">per night</p>
-                      </div>
-                      <div className="w-20">
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">Occ.</span>
-                          <span className="font-medium">{property.occupancy}%</span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-accent to-gold-light"
-                            style={{ width: `${property.occupancy}%` }}
-                          />
-                        </div>
                       </div>
                     </div>
                     
@@ -712,7 +619,10 @@ const Properties = () => {
                           Edit Property
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => handleDeleteProperty(property.id)}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
