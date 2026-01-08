@@ -36,11 +36,11 @@ INSERT INTO public.bookings (id, booking_number, property_id, customer_id, check
 
 -- Insert 5 Sample Transactions
 INSERT INTO public.transactions (id, booking_id, customer_id, transaction_type, category, amount, payment_method, payment_reference, status, description, processed_at) VALUES
-('t1111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 'c1111111-1111-1111-1111-111111111111', 'booking', 'accommodation', 154000, 'paystack', 'PSK_REF_12345678', 'completed', 'Payment for booking BK001', '2024-12-20 10:30:00+00'),
-('t3333333-3333-3333-3333-333333333333', 'b3333333-3333-3333-3333-333333333333', 'c3333333-3333-3333-3333-333333333333', 'booking', 'accommodation', 106000, 'bank_transfer', 'TRF_987654321', 'completed', 'Payment for booking BK003', '2024-12-18 14:15:00+00'),
-('t4444444-4444-4444-4444-444444444444', 'b4444444-4444-4444-4444-444444444444', 'c4444444-4444-4444-4444-444444444444', 'booking', 'accommodation', 250000, 'card', 'CARD_456789123', 'completed', 'Payment for booking BK004', '2024-12-25 09:00:00+00'),
-('t5555555-5555-5555-5555-555555555555', 'b5555555-5555-5555-5555-555555555555', 'c5555555-5555-5555-5555-555555555555', 'booking', 'accommodation', 106000, 'paystack', 'PSK_REF_98765432', 'completed', 'Payment for booking BK005', '2024-12-13 16:45:00+00'),
-('t6666666-6666-6666-6666-666666666666', 'b6666666-6666-6666-6666-666666666666', 'c6666666-6666-6666-6666-666666666666', 'refund', 'accommodation', 106000, 'paystack', 'PSK_REFUND_123456', 'completed', 'Refund for cancelled booking BK006', '2024-12-20 11:00:00+00');
+('11111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 'c1111111-1111-1111-1111-111111111111', 'booking', 'accommodation', 154000, 'paystack', 'PSK_REF_12345678', 'completed', 'Payment for booking BK001', '2024-12-20 10:30:00+00'),
+('33333333-3333-3333-3333-333333333333', 'b3333333-3333-3333-3333-333333333333', 'c3333333-3333-3333-3333-333333333333', 'booking', 'accommodation', 106000, 'bank_transfer', 'TRF_987654321', 'completed', 'Payment for booking BK003', '2024-12-18 14:15:00+00'),
+('44444444-4444-4444-4444-444444444444', 'b4444444-4444-4444-4444-444444444444', 'c4444444-4444-4444-4444-444444444444', 'booking', 'accommodation', 250000, 'card', 'CARD_456789123', 'completed', 'Payment for booking BK004', '2024-12-25 09:00:00+00'),
+('55555555-5555-5555-5555-555555555555', 'b5555555-5555-5555-5555-555555555555', 'c5555555-5555-5555-5555-555555555555', 'booking', 'accommodation', 106000, 'paystack', 'PSK_REF_98765432', 'completed', 'Payment for booking BK005', '2024-12-13 16:45:00+00'),
+('66666666-6666-6666-6666-666666666666', 'b6666666-6666-6666-6666-666666666666', 'c6666666-6666-6666-6666-666666666666', 'refund', 'accommodation', 106000, 'paystack', 'PSK_REFUND_123456', 'completed', 'Refund for cancelled booking BK006', '2024-12-20 11:00:00+00');
 
 -- Update customer statistics based on bookings
 UPDATE public.customers c SET
