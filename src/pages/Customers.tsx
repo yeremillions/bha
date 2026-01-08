@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useCustomers, useDeleteCustomer, useToggleVIPStatus } from '@/hooks/useCustomers';
 import { cn } from '@/lib/utils';
 import {
   Search,
@@ -42,76 +43,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
 
-// Mock customers data
-const customersData = [
-  {
-    id: 'CUST001',
-    name: 'Adebayo Johnson',
-    email: 'adebayo.j@email.com',
-    phone: '+234 803 123 4567',
-    status: 'VIP',
-    bookings: 5,
-    totalSpent: 1850000,
-    rating: 5,
-    lastBooking: '2024-12-24',
-  },
-  {
-    id: 'CUST002',
-    name: 'Grace Eze',
-    email: 'grace.eze@email.com',
-    phone: '+234 809 456 7890',
-    status: 'VIP',
-    bookings: 8,
-    totalSpent: 3250000,
-    rating: 5,
-    lastBooking: '2024-12-27',
-  },
-  {
-    id: 'CUST003',
-    name: 'Tunde Williams',
-    email: 'tunde.w@email.com',
-    phone: '+234 807 345 6789',
-    status: 'Regular',
-    bookings: 3,
-    totalSpent: 680000,
-    rating: 4,
-    lastBooking: '2024-12-19',
-  },
-  {
-    id: 'CUST004',
-    name: 'Chioma Okafor',
-    email: 'chioma.ok@email.com',
-    phone: '+234 805 234 5678',
-    status: 'Regular',
-    bookings: 2,
-    totalSpent: 560000,
-    rating: 5,
-    lastBooking: '2024-12-22',
-  },
-  {
-    id: 'CUST005',
-    name: 'Ibrahim Musa',
-    email: 'ibrahim.m@email.com',
-    phone: '+234 810 567 8901',
-    status: 'New',
-    bookings: 1,
-    totalSpent: 450000,
-    rating: 5,
-    lastBooking: '2024-12-14',
-  },
-  {
-    id: 'CUST006',
-    name: 'Folake Adeyemi',
-    email: 'folake.a@email.com',
-    phone: '+234 811 678 9012',
-    status: 'Regular',
-    bookings: 4,
-    totalSpent: 1120000,
-    rating: 4,
-    lastBooking: '2024-11-17',
-  },
-];
-
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
@@ -129,21 +60,72 @@ const formatDate = (dateString: string) => {
 };
 
 const Customers = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Fetch customers from database
+  const { data: allCustomers = [], isLoading: customersLoading, error } = useCustomers();
+  const deleteCustomer = useDeleteCustomer();
+  const toggleVIPStatus = useToggleVIPStatus();
+
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate]);
 
-  if (loading) {
+  // Client-side filtering
+  const filteredCustomers = useMemo(() => {
+    return allCustomers.filter(customer => {
+      const matchesSearch = !searchQuery ||
+        customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.phone?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+  }, [allCustomers, searchQuery]);
+
+  // Stats calculations
+  const stats = useMemo(() => {
+    const totalCustomers = allCustomers.length;
+    const vipCustomers = allCustomers.filter(c => c.vip_status).length;
+    const newCustomers = allCustomers.filter(c => c.total_bookings <= 1).length;
+    const totalBookings = allCustomers.reduce((sum, c) => sum + (c.total_bookings || 0), 0);
+    const avgBookings = totalCustomers > 0 ? Math.round(totalBookings / totalCustomers) : 0;
+    const totalRevenue = allCustomers.reduce((sum, c) => sum + (c.total_spent || 0), 0);
+
+    return {
+      totalCustomers,
+      vipCustomers,
+      newCustomers,
+      avgBookings,
+      totalRevenue,
+    };
+  }, [allCustomers]);
+
+  // Top 5 customers by spending
+  const topCustomers = useMemo(() => {
+    return [...allCustomers]
+      .sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0))
+      .slice(0, 5);
+  }, [allCustomers]);
+
+  // Show loading state
+  if (authLoading || customersLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-destructive">Error loading customers: {error.message}</div>
       </div>
     );
   }
@@ -152,36 +134,14 @@ const Customers = () => {
     return null;
   }
 
-  const filteredCustomers = customersData.filter(customer => {
-    const matchesSearch =
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.id.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
-
-  // Stats calculations
-  const totalCustomers = customersData.length;
-  const vipCustomers = customersData.filter(c => c.status === 'VIP').length;
-  const newCustomers = customersData.filter(c => c.status === 'New').length;
-  const totalBookings = customersData.reduce((sum, c) => sum + c.bookings, 0);
-  const avgBookings = Math.round(totalBookings / totalCustomers);
-  const totalRevenue = customersData.reduce((sum, c) => sum + c.totalSpent, 0);
-
-  // Top 5 customers by spending
-  const topCustomers = [...customersData]
-    .sort((a, b) => b.totalSpent - a.totalSpent)
-    .slice(0, 5);
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'VIP':
-        return <Badge className="bg-amber-500/20 text-amber-600 border-amber-500/30">VIP</Badge>;
-      case 'New':
-        return <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30">New</Badge>;
-      default:
-        return <Badge className="bg-sky-500/20 text-sky-600 border-sky-500/30">Regular</Badge>;
+  const getStatusBadge = (vipStatus: boolean, bookingCount: number) => {
+    if (vipStatus) {
+      return <Badge className="bg-amber-500/20 text-amber-600 border-amber-500/30">VIP</Badge>;
     }
+    if (bookingCount <= 1) {
+      return <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30">New</Badge>;
+    }
+    return <Badge className="bg-sky-500/20 text-sky-600 border-sky-500/30">Regular</Badge>;
   };
 
   const renderStars = (rating: number) => {
@@ -200,7 +160,32 @@ const Customers = () => {
     );
   };
 
-  const handleAction = (action: string, customerId: string) => {
+  const handleAction = async (action: string, customerId: string, customerName: string, isVIP: boolean) => {
+    if (action === 'View') {
+      navigate(`/dashboard/customers/${customerId}`);
+      return;
+    }
+
+    if (action === 'Edit') {
+      toast({
+        title: 'Edit Customer',
+        description: `Editing functionality coming soon for ${customerName}`,
+      });
+      return;
+    }
+
+    if (action === 'Toggle VIP') {
+      await toggleVIPStatus.mutateAsync({ id: customerId, vipStatus: !isVIP });
+      return;
+    }
+
+    if (action === 'Delete') {
+      if (window.confirm(`Are you sure you want to delete ${customerName}? This cannot be undone.`)) {
+        await deleteCustomer.mutateAsync(customerId);
+      }
+      return;
+    }
+
     toast({
       title: action,
       description: `Action "${action}" triggered for customer ${customerId}`,
@@ -246,21 +231,21 @@ const Customers = () => {
             {[
               {
                 label: 'Total Customers',
-                value: totalCustomers,
+                value: stats.totalCustomers,
                 subtext: 'Registered guests',
                 icon: Users,
                 gradient: 'from-accent/20 to-accent/5',
               },
               {
                 label: 'VIP Guests',
-                value: vipCustomers,
+                value: stats.vipCustomers,
                 subtext: 'Premium customers',
                 icon: Crown,
                 gradient: 'from-amber-500/20 to-amber-500/5',
               },
               {
                 label: 'New Guests',
-                value: newCustomers,
+                value: stats.newCustomers,
                 subtext: 'First-time bookers',
                 icon: UserPlus,
                 color: 'text-emerald-600 dark:text-emerald-400',
@@ -268,14 +253,14 @@ const Customers = () => {
               },
               {
                 label: 'Avg Bookings',
-                value: avgBookings,
+                value: stats.avgBookings,
                 subtext: 'Per customer',
                 icon: Calendar,
                 gradient: 'from-sky-500/20 to-sky-500/5',
               },
               {
                 label: 'Total Revenue',
-                value: formatCurrency(totalRevenue),
+                value: formatCurrency(stats.totalRevenue),
                 subtext: 'All customers',
                 icon: DollarSign,
                 color: 'text-amber-600 dark:text-amber-400',
@@ -336,20 +321,20 @@ const Customers = () => {
                         {index + 1}
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground">{customer.name}</p>
+                        <p className="font-semibold text-foreground">{customer.full_name}</p>
                         <div className="flex items-center gap-3 mt-1">
                           <Badge variant="outline" className="text-xs">
-                            {customer.bookings} bookings
+                            {customer.total_bookings || 0} bookings
                           </Badge>
-                          {renderStars(customer.rating)}
+                          {renderStars(Math.round(customer.average_rating || 0))}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-amber-600 dark:text-amber-400">
-                        {formatCurrency(customer.totalSpent)}
+                        {formatCurrency(customer.total_spent || 0)}
                       </p>
-                      {getStatusBadge(customer.status)}
+                      {getStatusBadge(customer.vip_status, customer.total_bookings || 0)}
                     </div>
                   </div>
                 ))}
@@ -378,13 +363,11 @@ const Customers = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-border/50">
-                      <TableHead className="text-muted-foreground font-medium">ID</TableHead>
                       <TableHead className="text-muted-foreground font-medium">Name & Contact</TableHead>
                       <TableHead className="text-muted-foreground font-medium">Status</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-center">Bookings</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-right">Total Spent</TableHead>
                       <TableHead className="text-muted-foreground font-medium">Rating</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Last Booking</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -392,35 +375,32 @@ const Customers = () => {
                     {filteredCustomers.map((customer, index) => (
                       <TableRow
                         key={customer.id}
-                        className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
+                        className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
+                        onClick={() => handleAction('View', customer.id, customer.full_name, customer.vip_status)}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <TableCell className="font-mono text-sm text-muted-foreground">
-                          {customer.id}
-                        </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-semibold text-foreground">{customer.name}</p>
+                            <p className="font-semibold text-foreground">{customer.full_name}</p>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                               <Mail className="h-3 w-3" />
                               {customer.email}
                             </div>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                              <Phone className="h-3 w-3" />
-                              {customer.phone}
-                            </div>
+                            {customer.phone && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                                <Phone className="h-3 w-3" />
+                                {customer.phone}
+                              </div>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                        <TableCell className="text-center font-medium">{customer.bookings}</TableCell>
+                        <TableCell>{getStatusBadge(customer.vip_status, customer.total_bookings || 0)}</TableCell>
+                        <TableCell className="text-center font-medium">{customer.total_bookings || 0}</TableCell>
                         <TableCell className="text-right font-semibold text-foreground">
-                          {formatCurrency(customer.totalSpent)}
+                          {formatCurrency(customer.total_spent || 0)}
                         </TableCell>
-                        <TableCell>{renderStars(customer.rating)}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatDate(customer.lastBooking)}
-                        </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell>{renderStars(Math.round(customer.average_rating || 0))}</TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -428,16 +408,20 @@ const Customers = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-popover border-border">
-                              <DropdownMenuItem onClick={() => handleAction('View', customer.id)}>
+                              <DropdownMenuItem onClick={() => handleAction('View', customer.id, customer.full_name, customer.vip_status)}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAction('Edit', customer.id)}>
+                              <DropdownMenuItem onClick={() => handleAction('Edit', customer.id, customer.full_name, customer.vip_status)}>
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit Customer
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAction('Toggle VIP', customer.id, customer.full_name, customer.vip_status)}>
+                                <Crown className="h-4 w-4 mr-2" />
+                                {customer.vip_status ? 'Remove VIP Status' : 'Make VIP'}
+                              </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleAction('Delete', customer.id)}
+                                onClick={() => handleAction('Delete', customer.id, customer.full_name, customer.vip_status)}
                                 className="text-destructive"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
@@ -452,7 +436,7 @@ const Customers = () => {
                 </Table>
               </div>
               <div className="p-4 border-t border-border/50 text-center text-sm text-muted-foreground">
-                Showing {filteredCustomers.length} of {customersData.length} customers
+                Showing {filteredCustomers.length} of {allCustomers.length} customers
               </div>
             </CardContent>
           </Card>

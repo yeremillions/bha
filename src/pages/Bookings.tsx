@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useBookings, useUpdateBookingStatus, useCancelBooking, type BookingStatus } from '@/hooks/useBookings';
 import { cn } from '@/lib/utils';
 import {
-  Search, 
+  Search,
   Filter,
   Download,
   MoreHorizontal,
@@ -50,82 +51,6 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 
-// Mock booking data
-const bookings = [
-  {
-    id: 'BK001',
-    guestName: 'Adebayo Johnson',
-    guestEmail: 'adebayo.j@email.com',
-    property: 'Luxury 3-Bedroom Penthouse',
-    checkIn: '2024-12-24',
-    checkOut: '2024-12-27',
-    guests: 4,
-    amount: 495000,
-    status: 'confirmed',
-    payment: 'paid',
-  },
-  {
-    id: 'BK002',
-    guestName: 'Chioma Okafor',
-    guestEmail: 'chioma.ok@email.com',
-    property: 'Cozy 2-Bedroom Apartment',
-    checkIn: '2024-12-22',
-    checkOut: '2024-12-25',
-    guests: 3,
-    amount: 308000,
-    status: 'pending',
-    payment: 'pending',
-  },
-  {
-    id: 'BK003',
-    guestName: 'Tunde Williams',
-    guestEmail: 'tunde.w@email.com',
-    property: 'Executive Studio Suite',
-    checkIn: '2024-12-19',
-    checkOut: '2024-12-21',
-    guests: 2,
-    amount: 242000,
-    status: 'checked_in',
-    payment: 'paid',
-  },
-  {
-    id: 'BK004',
-    guestName: 'Grace Eze',
-    guestEmail: 'grace.eze@email.com',
-    property: 'Family 4-Bedroom Home',
-    checkIn: '2024-12-27',
-    checkOut: '2025-01-01',
-    guests: 8,
-    amount: 1430000,
-    status: 'confirmed',
-    payment: 'paid',
-  },
-  {
-    id: 'BK005',
-    guestName: 'Ibrahim Musa',
-    guestEmail: 'ibrahim.m@email.com',
-    property: 'Luxury Penthouse',
-    checkIn: '2024-12-14',
-    checkOut: '2024-12-16',
-    guests: 5,
-    amount: 450000,
-    status: 'completed',
-    payment: 'paid',
-  },
-  {
-    id: 'BK006',
-    guestName: 'Folake Adeyemi',
-    guestEmail: 'folake.a@email.com',
-    property: 'Cozy 2-Bedroom',
-    checkIn: '2024-12-21',
-    checkOut: '2024-12-23',
-    guests: 2,
-    amount: 280000,
-    status: 'cancelled',
-    payment: 'refunded',
-  },
-];
-
 const statusStyles = {
   confirmed: 'bg-emerald-500 text-white border-emerald-500',
   pending: 'bg-amber-500 text-white border-amber-500',
@@ -171,13 +96,18 @@ const formatCurrency = (amount: number) => {
 };
 
 const Bookings = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+
+  // Fetch bookings from database
+  const { data: allBookings = [], isLoading: bookingsLoading, error } = useBookings();
+  const updateBookingStatus = useUpdateBookingStatus();
+  const cancelBooking = useCancelBooking();
 
   // Update search query when URL params change
   useEffect(() => {
@@ -188,12 +118,72 @@ const Bookings = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate]);
 
-  if (loading) {
+  // Client-side filtering
+  const filteredBookings = useMemo(() => {
+    return allBookings.filter(booking => {
+      // Search filter
+      const matchesSearch = !searchQuery ||
+        booking.booking_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.customer?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.customer?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.property?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.special_requests?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
+
+      // Payment filter
+      const matchesPayment = paymentFilter === 'all' || booking.payment_status === paymentFilter;
+
+      return matchesSearch && matchesStatus && matchesPayment;
+    });
+  }, [allBookings, searchQuery, statusFilter, paymentFilter]);
+
+  // Calculate total revenue
+  const totalRevenue = useMemo(() => {
+    return allBookings
+      .filter(b => b.payment_status === 'paid')
+      .reduce((sum, b) => sum + (b.total_amount || 0), 0);
+  }, [allBookings]);
+
+  // Handle various booking actions
+  const handleAction = async (action: string, bookingId: string) => {
+    if (action === 'View Details') {
+      navigate(`/dashboard/bookings/${bookingId}`);
+      return;
+    }
+
+    if (action === 'Check In') {
+      await updateBookingStatus.mutateAsync({ id: bookingId, status: 'checked_in' });
+      return;
+    }
+
+    if (action === 'Confirm') {
+      await updateBookingStatus.mutateAsync({ id: bookingId, status: 'confirmed' });
+      return;
+    }
+
+    if (action === 'Cancel Booking') {
+      if (window.confirm('Are you sure you want to cancel this booking?')) {
+        await cancelBooking.mutateAsync({ id: bookingId, refund: true });
+      }
+      return;
+    }
+
+    // Placeholder for other actions
+    toast({
+      title: action,
+      description: `Action "${action}" triggered for booking ${bookingId}`,
+    });
+  };
+
+  // Show loading state
+  if (authLoading || bookingsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -201,35 +191,18 @@ const Bookings = () => {
     );
   }
 
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-destructive">Error loading bookings: {error.message}</div>
+      </div>
+    );
+  }
+
   if (!user) {
     return null;
   }
-
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = 
-      booking.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.guestEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.property.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
-    const matchesPayment = paymentFilter === 'all' || booking.payment === paymentFilter;
-    return matchesSearch && matchesStatus && matchesPayment;
-  });
-
-  const totalRevenue = bookings
-    .filter(b => b.payment === 'paid')
-    .reduce((sum, b) => sum + b.amount, 0);
-
-  const handleAction = (action: string, bookingId: string) => {
-    if (action === 'View Details') {
-      navigate(`/dashboard/bookings/${bookingId}`);
-      return;
-    }
-    toast({
-      title: action,
-      description: `Action "${action}" triggered for booking ${bookingId}`,
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
@@ -278,9 +251,9 @@ const Bookings = () => {
           {/* Stats Cards */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mb-8">
             {[
-              { 
-                label: 'Total Bookings', 
-                value: bookings.length, 
+              {
+                label: 'Total Bookings',
+                value: allBookings.length,
                 subtext: 'All time',
                 icon: Calendar,
                 color: 'text-foreground',
@@ -288,9 +261,9 @@ const Bookings = () => {
                 filterValue: 'all',
                 filterType: 'status'
               },
-              { 
-                label: 'Confirmed', 
-                value: bookings.filter(b => b.status === 'confirmed').length, 
+              {
+                label: 'Confirmed',
+                value: allBookings.filter(b => b.status === 'confirmed').length,
                 subtext: 'Upcoming stays',
                 icon: CheckCircle2,
                 color: 'text-emerald-600 dark:text-emerald-400',
@@ -298,9 +271,9 @@ const Bookings = () => {
                 filterValue: 'confirmed',
                 filterType: 'status'
               },
-              { 
-                label: 'Pending', 
-                value: bookings.filter(b => b.status === 'pending').length, 
+              {
+                label: 'Pending',
+                value: allBookings.filter(b => b.status === 'pending').length,
                 subtext: 'Awaiting confirmation',
                 icon: Clock,
                 color: 'text-amber-600 dark:text-amber-400',
@@ -308,9 +281,9 @@ const Bookings = () => {
                 filterValue: 'pending',
                 filterType: 'status'
               },
-              { 
-                label: 'Checked In', 
-                value: bookings.filter(b => b.status === 'checked_in').length, 
+              {
+                label: 'Checked In',
+                value: allBookings.filter(b => b.status === 'checked_in').length,
                 subtext: 'Currently occupied',
                 icon: Users,
                 color: 'text-sky-600 dark:text-sky-400',
@@ -318,9 +291,9 @@ const Bookings = () => {
                 filterValue: 'checked_in',
                 filterType: 'status'
               },
-              { 
-                label: 'Total Revenue', 
-                value: formatCurrency(totalRevenue), 
+              {
+                label: 'Total Revenue',
+                value: formatCurrency(totalRevenue),
                 subtext: 'From paid bookings',
                 icon: Banknote,
                 color: 'text-accent',
@@ -435,38 +408,38 @@ const Bookings = () => {
                 <TableBody>
                   {filteredBookings.length > 0 ? (
                     filteredBookings.map((booking, index) => (
-                      <TableRow 
+                      <TableRow
                         key={booking.id}
                         onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
                         className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <TableCell className="font-medium text-foreground">{booking.id}</TableCell>
+                        <TableCell className="font-medium text-foreground">{booking.booking_number}</TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium text-foreground">{booking.guestName}</p>
-                            <p className="text-xs text-muted-foreground">{booking.guestEmail}</p>
+                            <p className="font-medium text-foreground">{booking.customer?.full_name || 'N/A'}</p>
+                            <p className="text-xs text-muted-foreground">{booking.customer?.email || 'N/A'}</p>
                           </div>
                         </TableCell>
-                        <TableCell className="text-foreground">{booking.property}</TableCell>
+                        <TableCell className="text-foreground">{booking.property?.name || 'N/A'}</TableCell>
                         <TableCell>
                           <div className="text-sm">
                             <p className="text-muted-foreground whitespace-nowrap">
                               <span className="text-xs">In:</span>{' '}
-                              <span className="text-foreground">{formatDate(booking.checkIn)}</span>
+                              <span className="text-foreground">{formatDate(booking.check_in_date)}</span>
                             </p>
                             <p className="text-muted-foreground whitespace-nowrap">
                               <span className="text-xs">Out:</span>{' '}
-                              <span className="text-foreground">{formatDate(booking.checkOut)}</span>
+                              <span className="text-foreground">{formatDate(booking.check_out_date)}</span>
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell className="text-center text-foreground">{booking.guests}</TableCell>
+                        <TableCell className="text-center text-foreground">{booking.num_guests}</TableCell>
                         <TableCell className="font-medium text-foreground">
-                          {formatCurrency(booking.amount)}
+                          {formatCurrency(booking.total_amount)}
                         </TableCell>
                         <TableCell>
-                          <Badge 
+                          <Badge
                             className={cn(
                               'capitalize border-0 whitespace-nowrap',
                               statusStyles[booking.status as keyof typeof statusStyles]
@@ -565,7 +538,7 @@ const Bookings = () => {
               </Table>
             </div>
             <div className="p-4 border-t border-border/50 text-sm text-muted-foreground">
-              Showing {filteredBookings.length} of {bookings.length} bookings
+              Showing {filteredBookings.length} of {allBookings.length} bookings
             </div>
           </div>
         </main>
