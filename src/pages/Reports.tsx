@@ -14,6 +14,7 @@ const Reports = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
@@ -45,11 +46,13 @@ const Reports = () => {
         <div className="absolute top-1/2 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      <AdminSidebar 
+      <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} 
         collapsed={sidebarCollapsed} 
         onToggle={handleToggleSidebar} 
       />
-      <AdminHeader />
+      <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
       
       <main 
         className={cn(

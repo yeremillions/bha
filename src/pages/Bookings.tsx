@@ -100,6 +100,7 @@ const Bookings = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
@@ -213,7 +214,9 @@ const Bookings = () => {
       </div>
       
       {/* Sidebar */}
-      <AdminSidebar 
+      <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} 
         collapsed={sidebarCollapsed} 
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
       />
@@ -226,7 +229,7 @@ const Bookings = () => {
         )}
       >
         {/* Header */}
-        <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
         {/* Page Content */}
         <main className="p-6 lg:p-8">

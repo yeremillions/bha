@@ -59,6 +59,7 @@ export default function BarTabDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [addedItems, setAddedItems] = useState<Array<{
     id: number;
     tabId: number;
@@ -148,6 +149,8 @@ export default function BarTabDetails() {
 
       {/* Sidebar */}
       <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
@@ -160,7 +163,7 @@ export default function BarTabDetails() {
         )}
       >
         {/* Header */}
-        <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
         {/* Page Content */}
         <main className="p-6 lg:p-8">

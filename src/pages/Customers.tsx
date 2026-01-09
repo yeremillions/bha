@@ -63,6 +63,7 @@ const Customers = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch customers from database
@@ -202,6 +203,8 @@ const Customers = () => {
 
       {/* Sidebar */}
       <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
@@ -214,7 +217,7 @@ const Customers = () => {
         )}
       >
         {/* Header */}
-        <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
         {/* Page Content */}
         <main className="p-6 lg:p-8">

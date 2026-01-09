@@ -14,12 +14,15 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AdminSidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 const navItems = [
@@ -35,7 +38,7 @@ const navItems = [
   { title: 'Settings', url: '/dashboard/settings', icon: Settings },
 ];
 
-export const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
+export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }: AdminSidebarProps) => {
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -45,12 +48,28 @@ export const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
   };
 
   return (
-    <aside
-      className={cn(
-        'fixed left-0 top-0 z-40 h-screen transition-all duration-300 hidden lg:block',
-        collapsed ? 'w-20' : 'w-64'
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={onMobileClose}
+        />
       )}
-    >
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-50 h-screen transition-transform duration-300',
+          // Desktop: always visible, can be collapsed
+          'lg:block lg:transition-all',
+          collapsed ? 'lg:w-20' : 'lg:w-64',
+          // Mobile: slide in/out based on mobileOpen
+          'lg:translate-x-0',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          'w-64' // Mobile always full width when open
+        )}
+      >
       {/* Gradient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy to-navy-light" />
       
@@ -64,9 +83,9 @@ export const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
         {/* Logo */}
         <div className={cn(
           'flex h-20 items-center border-b border-white/10 px-6',
-          collapsed && 'justify-center px-4'
+          collapsed && 'lg:justify-center lg:px-4'
         )}>
-          <Link to="/dashboard" className="flex items-center gap-3">
+          <Link to="/dashboard" className="flex items-center gap-3" onClick={onMobileClose}>
             <div className="relative flex h-10 w-10 items-center justify-center shrink-0">
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent to-gold-light animate-pulse-glow" />
               <div className="relative flex h-full w-full items-center justify-center rounded-xl bg-navy">
@@ -80,6 +99,16 @@ export const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
               </div>
             )}
           </Link>
+
+          {/* Mobile close button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto lg:hidden text-cream/60 hover:text-cream hover:bg-white/10"
+            onClick={onMobileClose}
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Navigation */}
@@ -91,6 +120,7 @@ export const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
                 <Link
                   key={item.title}
                   to={item.url}
+                  onClick={onMobileClose}
                   className={cn(
                     'group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
                     active
@@ -127,18 +157,19 @@ export const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
           {/* Back to Website */}
           <Link
             to="/"
+            onClick={onMobileClose}
             className="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-cream/60 hover:text-cream hover:bg-white/5 transition-all duration-200"
           >
             <Home className="h-5 w-5 shrink-0 group-hover:text-accent transition-colors" />
             {!collapsed && <span>Back to Website</span>}
           </Link>
           
-          {/* Collapse toggle */}
+          {/* Collapse toggle - Desktop only */}
           <Button
             variant="ghost"
             size="sm"
             className={cn(
-              'mt-2 w-full justify-center text-cream/60 hover:text-cream hover:bg-white/5',
+              'mt-2 w-full justify-center text-cream/60 hover:text-cream hover:bg-white/5 hidden lg:flex',
               collapsed && 'px-0'
             )}
             onClick={onToggle}
@@ -155,5 +186,6 @@ export const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
         </div>
       </div>
     </aside>
+    </>
   );
 };

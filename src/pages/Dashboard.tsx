@@ -18,6 +18,7 @@ const Dashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -46,7 +47,9 @@ const Dashboard = () => {
       </div>
       
       {/* Sidebar */}
-      <AdminSidebar 
+      <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} 
         collapsed={sidebarCollapsed} 
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
       />
@@ -59,7 +62,7 @@ const Dashboard = () => {
         )}
       >
         {/* Header */}
-        <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
         {/* Page Content */}
         <main className="p-6 lg:p-8">

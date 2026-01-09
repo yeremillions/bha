@@ -68,6 +68,7 @@ const Calendar = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // January 2026
   const [selectedProperty, setSelectedProperty] = useState('all');
   const [selectedDayBookings, setSelectedDayBookings] = useState<BookingItem[]>([]);
@@ -224,7 +225,9 @@ const Calendar = () => {
       </div>
       
       {/* Sidebar */}
-      <AdminSidebar 
+      <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} 
         collapsed={sidebarCollapsed} 
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
       />
@@ -237,7 +240,7 @@ const Calendar = () => {
         )}
       >
         {/* Header */}
-        <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
         {/* Page Content */}
         <main className="p-6 lg:p-8">

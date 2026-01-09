@@ -177,6 +177,7 @@ const BookingDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -197,9 +198,11 @@ const BookingDetails = () => {
   if (!booking) {
     return (
       <div className="min-h-screen flex bg-background">
-        <AdminSidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <div className="flex-1 flex flex-col">
-          <AdminHeader />
+          <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
           <main className="flex-1 p-6">
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <XCircle className="h-16 w-16 text-muted-foreground" />
@@ -221,10 +224,12 @@ const BookingDetails = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <AdminSidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+      <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={cn("flex-1 flex flex-col transition-all duration-300", sidebarCollapsed ? "ml-16" : "ml-64")}>
-        <AdminHeader />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
         
         <main className="flex-1 p-6">
           {/* Header */}
