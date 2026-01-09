@@ -123,18 +123,21 @@ const Settings = () => {
   const saveHandler = getSaveHandler();
 
   return (
-    <div className="min-h-screen bg-background flex w-full">
+    <div className="min-h-screen flex bg-background">
       <AdminSidebar
         mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)} 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        onMobileClose={() => setMobileMenuOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      
-      <div className="flex-1 flex flex-col min-h-screen">
+
+      <div className={cn(
+        "flex-1 transition-all duration-300",
+        sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
+      )}>
         <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
-        
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
+
+        <main className="p-6 lg:p-8">
           {/* Page Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
