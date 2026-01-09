@@ -389,8 +389,172 @@ const Bookings = () => {
             </div>
           </div>
 
-          {/* Bookings Table */}
-          <div className="relative rounded-2xl border border-border/50 bg-card overflow-hidden animate-fade-in">
+          {/* Bookings List - Mobile Card View */}
+          <div className="md:hidden space-y-4 animate-fade-in">
+            {filteredBookings.length > 0 ? (
+              filteredBookings.map((booking, index) => (
+                <div
+                  key={booking.id}
+                  onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
+                  className="relative rounded-2xl border border-border/50 bg-card p-4 cursor-pointer hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  {/* Header with Booking ID and Status */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Booking ID</p>
+                      <p className="font-semibold text-foreground">{booking.booking_number}</p>
+                    </div>
+                    <Badge
+                      className={cn(
+                        'capitalize border-0',
+                        statusStyles[booking.status as keyof typeof statusStyles]
+                      )}
+                    >
+                      {statusLabels[booking.status as keyof typeof statusLabels]}
+                    </Badge>
+                  </div>
+
+                  {/* Guest Info */}
+                  <div className="mb-3 pb-3 border-b border-border/50">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-sm font-medium text-foreground">
+                        {booking.customer?.full_name || 'N/A'}
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-6">
+                      {booking.customer?.email || 'N/A'}
+                    </p>
+                  </div>
+
+                  {/* Property */}
+                  <div className="mb-3">
+                    <p className="text-xs text-muted-foreground mb-1">Property</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {booking.property?.name || 'N/A'}
+                    </p>
+                  </div>
+
+                  {/* Dates and Guests */}
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Check-in</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {formatDate(booking.check_in_date)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Check-out</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {formatDate(booking.check_out_date)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Amount and Guest Count */}
+                  <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      <span className="text-sm">{booking.num_guests} guests</span>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground">
+                      {formatCurrency(booking.total_amount)}
+                    </p>
+                  </div>
+
+                  {/* Actions Button */}
+                  <div className="absolute top-4 right-4" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          className="gap-2"
+                          onClick={() => handleAction('View Details', booking.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2"
+                          onClick={() => handleAction('Edit Booking', booking.id)}
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit Booking
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2"
+                          onClick={() => handleAction('Reschedule', booking.id)}
+                        >
+                          <CalendarClock className="h-4 w-4" />
+                          Reschedule
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {booking.status === 'confirmed' && (
+                          <DropdownMenuItem
+                            className="gap-2"
+                            onClick={() => handleAction('Check In', booking.id)}
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Mark as Checked In
+                          </DropdownMenuItem>
+                        )}
+                        {booking.status === 'pending' && (
+                          <DropdownMenuItem
+                            className="gap-2"
+                            onClick={() => handleAction('Confirm', booking.id)}
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Confirm Booking
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          className="gap-2"
+                          onClick={() => handleAction('Send Message', booking.id)}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Send Message
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2"
+                          onClick={() => handleAction('Generate Invoice', booking.id)}
+                        >
+                          <FileText className="h-4 w-4" />
+                          Generate Invoice
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="gap-2 text-destructive focus:text-destructive"
+                          onClick={() => handleAction('Cancel Booking', booking.id)}
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Cancel Booking
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="relative rounded-2xl border border-border/50 bg-card p-8">
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <Calendar className="h-8 w-8 mb-2 opacity-50" />
+                  <p>No bookings found</p>
+                  <p className="text-sm">Try adjusting your filters</p>
+                </div>
+              </div>
+            )}
+            <div className="p-4 text-sm text-muted-foreground text-center">
+              Showing {filteredBookings.length} of {allBookings.length} bookings
+            </div>
+          </div>
+
+          {/* Bookings Table - Desktop View */}
+          <div className="hidden md:block relative rounded-2xl border border-border/50 bg-card overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border/50">
               <h3 className="font-semibold text-foreground">All Bookings</h3>
             </div>
@@ -459,21 +623,21 @@ const Bookings = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => handleAction('View Details', booking.id)}
                               >
                                 <Eye className="h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => handleAction('Edit Booking', booking.id)}
                               >
                                 <Edit className="h-4 w-4" />
                                 Edit Booking
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => handleAction('Reschedule', booking.id)}
                               >
@@ -482,7 +646,7 @@ const Bookings = () => {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               {booking.status === 'confirmed' && (
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="gap-2"
                                   onClick={() => handleAction('Check In', booking.id)}
                                 >
@@ -491,7 +655,7 @@ const Bookings = () => {
                                 </DropdownMenuItem>
                               )}
                               {booking.status === 'pending' && (
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="gap-2"
                                   onClick={() => handleAction('Confirm', booking.id)}
                                 >
@@ -499,14 +663,14 @@ const Bookings = () => {
                                   Confirm Booking
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => handleAction('Send Message', booking.id)}
                               >
                                 <MessageSquare className="h-4 w-4" />
                                 Send Message
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => handleAction('Generate Invoice', booking.id)}
                               >
@@ -514,7 +678,7 @@ const Bookings = () => {
                                 Generate Invoice
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="gap-2 text-destructive focus:text-destructive"
                                 onClick={() => handleAction('Cancel Booking', booking.id)}
                               >
