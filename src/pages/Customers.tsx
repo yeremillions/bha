@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
+import { LoadMoreButton, Pagination } from '@/components/ui/pagination-controls';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-NG', {
@@ -66,6 +67,11 @@ const Customers = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Pagination state
+  const [mobileDisplayCount, setMobileDisplayCount] = useState(15);
+  const [desktopCurrentPage, setDesktopCurrentPage] = useState(1);
+  const [desktopItemsPerPage, setDesktopItemsPerPage] = useState(30);
+
   // Fetch customers from database
   const { data: allCustomers = [], isLoading: customersLoading, error } = useCustomers();
   const deleteCustomer = useDeleteCustomer();
@@ -87,6 +93,26 @@ const Customers = () => {
       return matchesSearch;
     });
   }, [allCustomers, searchQuery]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setMobileDisplayCount(15);
+    setDesktopCurrentPage(1);
+  }, [searchQuery]);
+
+  // Paginated data for mobile (Load More pattern)
+  const mobileCustomers = useMemo(() => {
+    return filteredCustomers.slice(0, mobileDisplayCount);
+  }, [filteredCustomers, mobileDisplayCount]);
+
+  // Paginated data for desktop (Page-based)
+  const desktopCustomers = useMemo(() => {
+    const startIndex = (desktopCurrentPage - 1) * desktopItemsPerPage;
+    const endIndex = startIndex + desktopItemsPerPage;
+    return filteredCustomers.slice(startIndex, endIndex);
+  }, [filteredCustomers, desktopCurrentPage, desktopItemsPerPage]);
+
+  const totalDesktopPages = Math.ceil(filteredCustomers.length / desktopItemsPerPage);
 
   // Stats calculations
   const stats = useMemo(() => {
@@ -362,7 +388,7 @@ const Customers = () => {
               </div>
             </div>
 
-            {filteredCustomers.map((customer, index) => (
+            {mobileCustomers.map((customer, index) => (
               <div
                 key={customer.id}
                 onClick={() => handleAction('View', customer.id, customer.full_name, customer.vip_status)}
@@ -441,8 +467,16 @@ const Customers = () => {
               </div>
             ))}
 
+            {/* Load More Button */}
+            <LoadMoreButton
+              onClick={() => setMobileDisplayCount(prev => prev + 15)}
+              hasMore={mobileDisplayCount < filteredCustomers.length}
+              currentCount={mobileCustomers.length}
+              totalCount={filteredCustomers.length}
+            />
+
             <div className="p-4 text-sm text-muted-foreground text-center">
-              Showing {filteredCustomers.length} of {allCustomers.length} customers
+              Showing {mobileCustomers.length} of {filteredCustomers.length} customers
             </div>
           </div>
 
@@ -476,7 +510,7 @@ const Customers = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCustomers.map((customer, index) => (
+                    {desktopCustomers.map((customer, index) => (
                       <TableRow
                         key={customer.id}
                         className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
@@ -539,9 +573,19 @@ const Customers = () => {
                   </TableBody>
                 </Table>
               </div>
-              <div className="p-4 border-t border-border/50 text-center text-sm text-muted-foreground">
-                Showing {filteredCustomers.length} of {allCustomers.length} customers
-              </div>
+
+              {/* Desktop Pagination */}
+              <Pagination
+                currentPage={desktopCurrentPage}
+                totalPages={totalDesktopPages}
+                onPageChange={setDesktopCurrentPage}
+                itemsPerPage={desktopItemsPerPage}
+                totalItems={filteredCustomers.length}
+                onItemsPerPageChange={(newItemsPerPage) => {
+                  setDesktopItemsPerPage(newItemsPerPage);
+                  setDesktopCurrentPage(1);
+                }}
+              />
             </CardContent>
           </Card>
         </main>
