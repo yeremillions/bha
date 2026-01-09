@@ -224,8 +224,153 @@ const Housekeeping = () => {
             </div>
           </div>
 
-          {/* Cleaning Tasks Table */}
-          <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+          {/* Cleaning Tasks - Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            <div className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="h-5 w-5 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground">Cleaning Tasks</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="flex-1 bg-background">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                  <SelectTrigger className="flex-1 bg-background">
+                    <SelectValue placeholder="All Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priority</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {filteredTasks.length === 0 ? (
+              <div className="rounded-2xl border border-border/50 bg-card p-8">
+                <Sparkles className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground text-center">No tasks match your filters</p>
+              </div>
+            ) : (
+              filteredTasks.map((task, index) => {
+                const priority = priorityConfig[task.priority as keyof typeof priorityConfig];
+                const status = statusConfig[task.status as keyof typeof statusConfig];
+
+                return (
+                  <div
+                    key={task.id}
+                    className="relative rounded-2xl border border-border/50 bg-card p-4 animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    {/* Header with ID and Priority */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Task ID</p>
+                        <p className="font-semibold text-foreground">{task.id}</p>
+                      </div>
+                      <Badge variant="outline" className={cn('text-xs', priority.className)}>
+                        {priority.label}
+                      </Badge>
+                    </div>
+
+                    {/* Property and Type */}
+                    <div className="mb-3 pb-3 border-b border-border/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="h-2 w-2 rounded-full bg-accent" />
+                        <p className="font-medium text-foreground">{task.property}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{task.type}</p>
+                    </div>
+
+                    {/* Assignment and Schedule */}
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Assigned To</p>
+                        <p className={cn(
+                          "text-sm font-medium",
+                          task.assignee === 'Unassigned' && 'text-amber-600 dark:text-amber-400'
+                        )}>
+                          {task.assignee}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Duration</p>
+                        <p className="text-sm font-medium text-foreground">{task.duration} min</p>
+                      </div>
+                    </div>
+
+                    {/* Scheduled Time */}
+                    <div className="mb-3">
+                      <p className="text-xs text-muted-foreground mb-1">Scheduled</p>
+                      <p className="text-sm font-medium text-foreground">{task.scheduled}</p>
+                    </div>
+
+                    {/* Status and Actions */}
+                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <Badge className={cn('text-xs', status.className)}>
+                        {status.label}
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 bg-popover">
+                          <DropdownMenuItem className="gap-2">
+                            <Eye className="h-4 w-4" /> View Details
+                          </DropdownMenuItem>
+                          {task.status === 'unassigned' && (
+                            <DropdownMenuItem className="gap-2">
+                              <UserPlus className="h-4 w-4" /> Assign Staff
+                            </DropdownMenuItem>
+                          )}
+                          {task.status === 'pending' && (
+                            <DropdownMenuItem className="gap-2">
+                              <Play className="h-4 w-4" /> Start Task
+                            </DropdownMenuItem>
+                          )}
+                          {task.status === 'in_progress' && (
+                            <>
+                              <DropdownMenuItem className="gap-2">
+                                <Pause className="h-4 w-4" /> Pause Task
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2 text-emerald-600">
+                                <CheckCircle2 className="h-4 w-4" /> Mark Complete
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="gap-2 text-destructive">
+                            <XCircle className="h-4 w-4" /> Cancel Task
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+            <div className="p-4 text-sm text-muted-foreground text-center">
+              Showing {filteredTasks.length} of {tasks.length} tasks
+            </div>
+          </div>
+
+          {/* Cleaning Tasks - Desktop Table View */}
+          <div className="hidden md:block rounded-2xl border border-border/50 bg-card overflow-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 border-b border-border/50">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-muted-foreground" />
@@ -257,20 +402,20 @@ const Housekeeping = () => {
                 </Select>
               </div>
             </div>
-            
+
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="font-semibold">ID</TableHead>
-                    <TableHead className="font-semibold">Property</TableHead>
-                    <TableHead className="font-semibold">Type</TableHead>
-                    <TableHead className="font-semibold">Priority</TableHead>
-                    <TableHead className="font-semibold">Assigned To</TableHead>
-                    <TableHead className="font-semibold">Scheduled</TableHead>
-                    <TableHead className="font-semibold">Duration</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="font-semibold text-right">Actions</TableHead>
+                    <TableHead className="font-semibold w-[80px]">ID</TableHead>
+                    <TableHead className="font-semibold w-[150px]">Property</TableHead>
+                    <TableHead className="font-semibold w-[140px]">Type</TableHead>
+                    <TableHead className="font-semibold w-[100px]">Priority</TableHead>
+                    <TableHead className="font-semibold w-[140px]">Assigned To</TableHead>
+                    <TableHead className="font-semibold w-[140px]">Scheduled</TableHead>
+                    <TableHead className="font-semibold w-[100px]">Duration</TableHead>
+                    <TableHead className="font-semibold w-[120px]">Status</TableHead>
+                    <TableHead className="font-semibold text-right w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -285,9 +430,9 @@ const Housekeeping = () => {
                     filteredTasks.map((task, index) => {
                       const priority = priorityConfig[task.priority as keyof typeof priorityConfig];
                       const status = statusConfig[task.status as keyof typeof statusConfig];
-                      
+
                       return (
-                        <TableRow 
+                        <TableRow
                           key={task.id}
                           className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
                           style={{ animationDelay: `${index * 50}ms` }}
@@ -364,7 +509,7 @@ const Housekeeping = () => {
                 </TableBody>
               </Table>
             </div>
-            
+
             <div className="p-4 border-t border-border/50 text-center">
               <p className="text-sm text-muted-foreground">
                 Showing {filteredTasks.length} of {tasks.length} tasks
