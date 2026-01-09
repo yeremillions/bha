@@ -115,31 +115,32 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
         )}
       >
       {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy to-navy-light" />
-      
+      <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy-light to-navy" />
+
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 h-60 w-60 rounded-full bg-accent/5 blur-3xl" />
+        <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-accent/20 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-20 -right-20 h-60 w-60 rounded-full bg-gold/15 blur-3xl" />
+        <div className="absolute top-1/2 right-0 h-32 w-32 rounded-full bg-accent/10 blur-2xl" />
       </div>
       
       <div className="relative h-full flex flex-col">
         {/* Logo */}
         <div className={cn(
-          'flex h-20 items-center border-b border-white/10 px-6',
+          'flex h-20 items-center border-b border-accent/20 px-6',
           collapsed && 'lg:justify-center lg:px-4'
         )}>
           <Link to="/dashboard" className="flex items-center gap-3" onClick={onMobileClose}>
             <div className="relative flex h-10 w-10 items-center justify-center shrink-0">
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent to-gold-light animate-pulse-glow" />
-              <div className="relative flex h-full w-full items-center justify-center rounded-xl bg-navy">
-                <Building2 className="h-5 w-5 text-accent" />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent via-gold to-gold-light animate-pulse-glow shadow-lg shadow-accent/50" />
+              <div className="relative flex h-full w-full items-center justify-center rounded-xl bg-navy border border-accent/30">
+                <Building2 className="h-5 w-5 text-accent drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
               </div>
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <span className="font-display text-lg font-bold text-cream">Brooklyn</span>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-accent">Hills</span>
+                <span className="font-display text-lg font-bold text-cream drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">Brooklyn</span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-bold">Hills</span>
               </div>
             )}
           </Link>
@@ -148,10 +149,10 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
           <Button
             variant="ghost"
             size="icon"
-            className="ml-auto lg:hidden text-cream/60 hover:text-cream hover:bg-white/10"
+            className="ml-auto lg:hidden text-cream/70 hover:text-accent hover:bg-white/10 hover:shadow-lg hover:shadow-accent/20 transition-all"
             onClick={onMobileClose}
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 hover:rotate-90 transition-transform" />
           </Button>
         </div>
 
@@ -163,12 +164,12 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
                 <div key={section.title} className="space-y-1">
                   {/* Section header */}
                   {!collapsed && (
-                    <h3 className="px-4 text-[10px] uppercase tracking-wider text-cream/40 font-semibold mb-2">
+                    <h3 className="px-4 text-[10px] uppercase tracking-wider text-gold/70 font-bold mb-2 drop-shadow-sm">
                       {section.title}
                     </h3>
                   )}
                   {collapsed && sectionIndex > 0 && (
-                    <div className="h-px bg-white/10 my-2 mx-4" />
+                    <div className="h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent my-2 mx-4" />
                   )}
 
                   {/* Section items */}
@@ -182,26 +183,28 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
                         className={cn(
                           'group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
                           active
-                            ? 'text-navy bg-gradient-to-r from-accent to-gold-light shadow-lg shadow-accent/30'
-                            : 'text-cream/70 hover:text-cream hover:bg-white/5'
+                            ? 'text-navy bg-gradient-to-r from-accent via-gold to-gold-light shadow-xl shadow-accent/50 border border-gold/30'
+                            : 'text-cream/80 hover:text-cream hover:bg-white/10 hover:shadow-lg hover:shadow-accent/20'
                         )}
                       >
                         {/* Active indicator */}
                         {active && (
-                          <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-8 w-1 rounded-r-full bg-accent animate-pulse" />
+                          <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-10 w-1.5 rounded-r-full bg-gradient-to-b from-accent to-gold shadow-lg shadow-accent/50 animate-pulse" />
                         )}
 
                         <div className="relative">
                           <item.icon className={cn(
                             'h-5 w-5 shrink-0 transition-all duration-200',
-                            active ? 'text-navy' : 'text-cream/60 group-hover:text-accent group-hover:scale-110 group-hover:rotate-12'
+                            active
+                              ? 'text-navy drop-shadow-md'
+                              : 'text-cream/70 group-hover:text-accent group-hover:scale-125 group-hover:rotate-12 group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]'
                           )} />
 
                           {/* Badge indicator */}
                           {item.badge && (
                             <span className={cn(
-                              'absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold',
-                              active ? 'bg-navy text-accent' : 'bg-rose-500 text-white animate-pulse'
+                              'absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold shadow-lg',
+                              active ? 'bg-navy text-accent border border-accent/50' : 'bg-rose-500 text-white animate-pulse shadow-rose-500/50'
                             )}>
                               {item.badge}
                             </span>
@@ -214,8 +217,10 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
 
                         {!collapsed && item.badge && (
                           <span className={cn(
-                            'flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold',
-                            active ? 'bg-navy/20 text-navy' : 'bg-rose-500 text-white'
+                            'flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold shadow-md',
+                            active
+                              ? 'bg-navy/30 text-navy border border-navy/50'
+                              : 'bg-rose-500 text-white shadow-rose-500/50 animate-pulse'
                           )}>
                             {item.badge}
                           </span>
@@ -223,13 +228,13 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
 
                         {/* Hover glow */}
                         {!active && (
-                          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent/0 via-accent/10 to-accent/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent/0 via-accent/20 to-gold/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                         )}
 
                         {/* Shimmer effect on hover */}
                         {!active && (
                           <div className="absolute inset-0 rounded-xl overflow-hidden">
-                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                           </div>
                         )}
                       </Link>
@@ -242,10 +247,10 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
                           <TooltipTrigger asChild>
                             {navLink}
                           </TooltipTrigger>
-                          <TooltipContent side="right" className="bg-navy border-accent/20">
+                          <TooltipContent side="right" className="bg-navy border-accent/30 shadow-xl">
                             <p className="font-medium text-cream">{item.title}</p>
                             {item.badge && (
-                              <p className="text-xs text-accent">{item.badge} pending</p>
+                              <p className="text-xs text-gold font-semibold">{item.badge} pending</p>
                             )}
                           </TooltipContent>
                         </Tooltip>
@@ -261,7 +266,7 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
         </nav>
 
         {/* Bottom section */}
-        <div className="border-t border-white/10 p-3">
+        <div className="border-t border-accent/20 p-3">
           <TooltipProvider delayDuration={0}>
             {/* Back to Website */}
             {collapsed ? (
@@ -270,12 +275,12 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
                   <Link
                     to="/"
                     onClick={onMobileClose}
-                    className="group flex items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-cream/60 hover:text-cream hover:bg-white/5 transition-all duration-200"
+                    className="group flex items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-cream/70 hover:text-cream hover:bg-white/10 hover:shadow-lg hover:shadow-accent/20 transition-all duration-200"
                   >
-                    <Home className="h-5 w-5 shrink-0 group-hover:text-accent group-hover:scale-110 transition-all" />
+                    <Home className="h-5 w-5 shrink-0 group-hover:text-accent group-hover:scale-125 group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] transition-all" />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="bg-navy border-accent/20">
+                <TooltipContent side="right" className="bg-navy border-accent/30 shadow-xl">
                   <p className="font-medium text-cream">Back to Website</p>
                 </TooltipContent>
               </Tooltip>
@@ -283,9 +288,9 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
               <Link
                 to="/"
                 onClick={onMobileClose}
-                className="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-cream/60 hover:text-cream hover:bg-white/5 transition-all duration-200"
+                className="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-cream/70 hover:text-cream hover:bg-white/10 hover:shadow-lg hover:shadow-accent/20 transition-all duration-200"
               >
-                <Home className="h-5 w-5 shrink-0 group-hover:text-accent group-hover:scale-110 transition-all" />
+                <Home className="h-5 w-5 shrink-0 group-hover:text-accent group-hover:scale-125 group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] transition-all" />
                 <span>Back to Website</span>
               </Link>
             )}
@@ -297,23 +302,23 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    'mt-2 w-full justify-center text-cream/60 hover:text-cream hover:bg-white/5 hidden lg:flex transition-all duration-200',
+                    'mt-2 w-full justify-center text-cream/70 hover:text-accent hover:bg-white/10 hover:shadow-lg hover:shadow-accent/20 hidden lg:flex transition-all duration-200 border border-transparent hover:border-accent/20',
                     collapsed && 'px-0'
                   )}
                   onClick={onToggle}
                 >
                   {collapsed ? (
-                    <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1 drop-shadow-sm" />
                   ) : (
                     <>
-                      <ChevronLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
+                      <ChevronLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1 drop-shadow-sm" />
                       <span>Collapse</span>
                     </>
                   )}
                 </Button>
               </TooltipTrigger>
               {collapsed && (
-                <TooltipContent side="right" className="bg-navy border-accent/20">
+                <TooltipContent side="right" className="bg-navy border-accent/30 shadow-xl">
                   <p className="font-medium text-cream">Expand sidebar</p>
                 </TooltipContent>
               )}
