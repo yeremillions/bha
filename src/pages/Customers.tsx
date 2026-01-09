@@ -345,8 +345,109 @@ const Customers = () => {
             </CardContent>
           </Card>
 
-          {/* All Customers Table */}
-          <Card className="border-border/50 bg-card animate-fade-in">
+          {/* All Customers - Mobile Card View */}
+          <div className="md:hidden space-y-4 animate-fade-in">
+            <div className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-foreground">All Customers</h3>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search customers..."
+                  className="pl-10 bg-background/50 border-border/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {filteredCustomers.map((customer, index) => (
+              <div
+                key={customer.id}
+                onClick={() => handleAction('View', customer.id, customer.full_name, customer.vip_status)}
+                className="relative rounded-2xl border border-border/50 bg-card p-4 cursor-pointer hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                {/* Header with Name and Status */}
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="font-semibold text-foreground text-lg">{customer.full_name}</p>
+                    {getStatusBadge(customer.vip_status, customer.total_bookings || 0)}
+                  </div>
+                  <div className="absolute top-4 right-4" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-popover border-border">
+                        <DropdownMenuItem onClick={() => handleAction('View', customer.id, customer.full_name, customer.vip_status)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('Edit', customer.id, customer.full_name, customer.vip_status)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Customer
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('Toggle VIP', customer.id, customer.full_name, customer.vip_status)}>
+                          <Crown className="h-4 w-4 mr-2" />
+                          {customer.vip_status ? 'Remove VIP Status' : 'Make VIP'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleAction('Delete', customer.id, customer.full_name, customer.vip_status)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+
+                {/* Contact Info */}
+                <div className="mb-3 pb-3 border-b border-border/50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">{customer.email}</p>
+                  </div>
+                  {customer.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  <div className="text-center p-2 rounded-lg bg-muted/30">
+                    <p className="text-xs text-muted-foreground mb-1">Bookings</p>
+                    <p className="text-lg font-bold text-foreground">{customer.total_bookings || 0}</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-muted/30">
+                    <p className="text-xs text-muted-foreground mb-1">Spent</p>
+                    <p className="text-sm font-bold text-foreground">{formatCurrency(customer.total_spent || 0)}</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-muted/30">
+                    <p className="text-xs text-muted-foreground mb-1">Rating</p>
+                    <div className="flex justify-center">
+                      {renderStars(Math.round(customer.average_rating || 0))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="p-4 text-sm text-muted-foreground text-center">
+              Showing {filteredCustomers.length} of {allCustomers.length} customers
+            </div>
+          </div>
+
+          {/* All Customers - Desktop Table View */}
+          <Card className="hidden md:block border-border/50 bg-card animate-fade-in">
             <CardHeader className="border-b border-border/50">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <CardTitle>All Customers</CardTitle>
@@ -366,12 +467,12 @@ const Customers = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-border/50">
-                      <TableHead className="text-muted-foreground font-medium">Name & Contact</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Status</TableHead>
-                      <TableHead className="text-muted-foreground font-medium text-center">Bookings</TableHead>
-                      <TableHead className="text-muted-foreground font-medium text-right">Total Spent</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Rating</TableHead>
-                      <TableHead className="text-muted-foreground font-medium text-right">Actions</TableHead>
+                      <TableHead className="text-muted-foreground font-medium w-[280px]">Name & Contact</TableHead>
+                      <TableHead className="text-muted-foreground font-medium w-[120px]">Status</TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-center w-[100px]">Bookings</TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-right w-[140px]">Total Spent</TableHead>
+                      <TableHead className="text-muted-foreground font-medium w-[120px]">Rating</TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-right w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

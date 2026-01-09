@@ -410,18 +410,94 @@ const Maintenance = () => {
             </div>
           </div>
 
-          {/* Maintenance Table */}
-          <div className="relative rounded-2xl border border-border/50 bg-card overflow-hidden animate-fade-in">
+          {/* Maintenance List - Mobile Card View */}
+          <div className="md:hidden space-y-4 animate-fade-in">
+            {filteredIssues.length > 0 ? (
+              filteredIssues.map((issue, index) => (
+                <div
+                  key={issue.id}
+                  onClick={() => navigate(`/dashboard/maintenance/${issue.id}`)}
+                  className="relative rounded-2xl border border-border/50 bg-card p-4 cursor-pointer hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  {/* Header with ID and Priority */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Issue ID</p>
+                      <p className="font-semibold text-foreground">{issue.id}</p>
+                    </div>
+                    <Badge
+                      className={cn(
+                        'text-xs font-semibold border',
+                        priorityStyles[issue.priority] || priorityStyles.normal
+                      )}
+                    >
+                      {priorityLabels[issue.priority] || issue.priority.toUpperCase()}
+                    </Badge>
+                  </div>
+
+                  {/* Property */}
+                  <div className="mb-3 pb-3 border-b border-border/50">
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-full bg-accent/10 flex items-center justify-center">
+                        <span className="text-xs">🏠</span>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Property</p>
+                        <p className="font-medium text-foreground">{issue.property}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Issue Details */}
+                  <div className="mb-3">
+                    <p className="text-xs text-muted-foreground mb-1">Issue</p>
+                    <p className="font-medium text-foreground mb-1">{issue.title}</p>
+                    <Badge variant="outline" className="text-xs">
+                      {issue.issue_type}
+                    </Badge>
+                  </div>
+
+                  {/* Status and Assignment */}
+                  <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Assigned To</p>
+                      <p className="text-sm font-medium text-rose-500 dark:text-rose-400">Unassigned</p>
+                    </div>
+                    <Badge
+                      className={cn(
+                        'text-xs font-medium',
+                        statusStyles[issue.status] || statusStyles.open
+                      )}
+                    >
+                      {statusLabels[issue.status] || issue.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="relative rounded-2xl border border-border/50 bg-card p-8">
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <Wrench className="h-8 w-8 mb-2 opacity-50" />
+                  <p>No maintenance issues found</p>
+                  <p className="text-sm">Try adjusting your filters</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Maintenance Table - Desktop View */}
+          <div className="hidden md:block relative rounded-2xl border border-border/50 bg-card overflow-hidden animate-fade-in">
             <div className="overflow-x-auto">
               <Table className="w-full">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border/50">
-                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">ID</TableHead>
-                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Property</TableHead>
-                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap min-w-[200px]">Issue</TableHead>
-                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Priority</TableHead>
-                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Assigned To</TableHead>
-                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap">Status</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap w-[100px]">ID</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap w-[180px]">Property</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap w-[250px]">Issue</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap w-[120px]">Priority</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap w-[150px]">Assigned To</TableHead>
+                    <TableHead className="text-muted-foreground font-medium whitespace-nowrap w-[120px]">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

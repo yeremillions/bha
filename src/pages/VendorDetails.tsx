@@ -467,8 +467,78 @@ const VendorDetails = () => {
             </Card>
           </div>
 
-          {/* Job History */}
-          <Card className="border-border/50 animate-fade-in" style={{ animationDelay: '300ms' }}>
+          {/* Job History - Mobile Card View */}
+          <div className="md:hidden space-y-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
+            <div className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="font-semibold text-foreground">Job History</h3>
+                </div>
+                <Button variant="outline" size="sm">
+                  View All
+                </Button>
+              </div>
+            </div>
+
+            {jobHistory.map((job, index) => (
+              <div
+                key={job.id}
+                onClick={() => navigate(`/dashboard/maintenance/${job.id}`)}
+                className="relative rounded-2xl border border-border/50 bg-card p-4 cursor-pointer hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                {/* Header with ID and Priority */}
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Job ID</p>
+                    <p className="font-mono text-sm font-semibold text-foreground">{job.id}</p>
+                  </div>
+                  <Badge className={cn('text-xs', priorityStyles[job.priority])}>
+                    {job.priority.toUpperCase()}
+                  </Badge>
+                </div>
+
+                {/* Property */}
+                <div className="mb-3 pb-3 border-b border-border/50">
+                  <p className="text-xs text-muted-foreground mb-1">Property</p>
+                  <p className="font-medium text-foreground">{job.property}</p>
+                </div>
+
+                {/* Issue Description */}
+                <div className="mb-3">
+                  <p className="text-xs text-muted-foreground mb-1">Issue</p>
+                  <p className="text-sm text-foreground">{job.issue}</p>
+                </div>
+
+                {/* Date and Status */}
+                <div className="flex items-center justify-between pt-3 border-t border-border/50 mb-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Date</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {new Date(job.date).toLocaleDateString('en-NG', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                  <Badge className={cn('text-xs', statusStyles[job.status])}>
+                    {statusLabels[job.status]}
+                  </Badge>
+                </div>
+
+                {/* Cost */}
+                <div className="pt-3 border-t border-border/50">
+                  <p className="text-xs text-muted-foreground mb-1">Cost</p>
+                  <p className="text-lg font-bold text-foreground">{formatCurrency(job.cost)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Job History - Desktop Table View */}
+          <Card className="hidden md:block border-border/50 animate-fade-in" style={{ animationDelay: '300ms' }}>
             <CardHeader className="flex flex-row items-center justify-between pb-4">
               <CardTitle className="text-lg font-display flex items-center gap-2">
                 <Clock className="h-5 w-5 text-muted-foreground" />
@@ -483,13 +553,13 @@ const VendorDetails = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="font-semibold">ID</TableHead>
-                      <TableHead className="font-semibold">Property</TableHead>
-                      <TableHead className="font-semibold">Issue</TableHead>
-                      <TableHead className="font-semibold">Date</TableHead>
-                      <TableHead className="font-semibold">Priority</TableHead>
-                      <TableHead className="font-semibold">Status</TableHead>
-                      <TableHead className="font-semibold text-right">Cost</TableHead>
+                      <TableHead className="font-semibold w-[80px]">ID</TableHead>
+                      <TableHead className="font-semibold w-[200px]">Property</TableHead>
+                      <TableHead className="font-semibold w-[250px]">Issue</TableHead>
+                      <TableHead className="font-semibold w-[120px]">Date</TableHead>
+                      <TableHead className="font-semibold w-[100px]">Priority</TableHead>
+                      <TableHead className="font-semibold w-[120px]">Status</TableHead>
+                      <TableHead className="font-semibold text-right w-[120px]">Cost</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
