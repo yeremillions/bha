@@ -64,6 +64,7 @@ const formatFullCurrency = (amount: number) => {
 
 const Financial = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [period, setPeriod] = useState('this-month');
 
   const totalRevenue = 2310000;
@@ -73,10 +74,12 @@ const Financial = () => {
 
   return (
     <div className="min-h-screen bg-background font-body">
-      <AdminSidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+      <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
-        <AdminHeader />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
         
         <main className="p-4 md:p-6 lg:p-8 space-y-6">
           {/* Page Header */}

@@ -67,6 +67,7 @@ const MaintenanceDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Fetch issue from Supabase
   const { data: issue, isLoading: issueLoading } = useQuery({
@@ -101,9 +102,11 @@ const MaintenanceDetails = () => {
   if (!issue) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-        <AdminSidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <div className={cn('transition-all duration-300', sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')}>
-          <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+          <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
           <main className="flex-1 p-6">
             <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
               <XCircle className="h-16 w-16 text-muted-foreground" />
@@ -128,10 +131,12 @@ const MaintenanceDetails = () => {
         <div className="absolute top-1/2 -left-40 h-96 w-96 rounded-full bg-accent/3 blur-3xl" />
       </div>
 
-      <AdminSidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+      <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={cn('relative transition-all duration-300', sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')}>
-        <AdminHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
         
         <main className="p-6 lg:p-8">
           {/* Header */}

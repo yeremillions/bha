@@ -97,6 +97,7 @@ const inventoryStatusConfig = {
 
 const Housekeeping = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
 
@@ -108,13 +109,15 @@ const Housekeeping = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <AdminSidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+      <AdminSidebar
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={cn(
         "flex-1 transition-all duration-300",
         sidebarCollapsed ? "ml-20" : "ml-64"
       )}>
-        <AdminHeader />
+        <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
         
         <main className="p-6 lg:p-8 space-y-8">
           {/* Page Header */}
