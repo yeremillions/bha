@@ -50,6 +50,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
+import { LoadMoreButton, Pagination } from '@/components/ui/pagination-controls';
 
 const statusStyles = {
   confirmed: 'bg-emerald-500 text-white border-emerald-500',
@@ -105,6 +106,11 @@ const Bookings = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
 
+  // Pagination state
+  const [mobileDisplayCount, setMobileDisplayCount] = useState(20);
+  const [desktopCurrentPage, setDesktopCurrentPage] = useState(1);
+  const [desktopItemsPerPage, setDesktopItemsPerPage] = useState(50);
+
   // Fetch bookings from database
   const { data: allBookings = [], isLoading: bookingsLoading, error } = useBookings();
   const updateBookingStatus = useUpdateBookingStatus();
@@ -144,6 +150,26 @@ const Bookings = () => {
       return matchesSearch && matchesStatus && matchesPayment;
     });
   }, [allBookings, searchQuery, statusFilter, paymentFilter]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setMobileDisplayCount(20);
+    setDesktopCurrentPage(1);
+  }, [searchQuery, statusFilter, paymentFilter]);
+
+  // Paginated data for mobile (Load More pattern)
+  const mobileBookings = useMemo(() => {
+    return filteredBookings.slice(0, mobileDisplayCount);
+  }, [filteredBookings, mobileDisplayCount]);
+
+  // Paginated data for desktop (Page-based)
+  const desktopBookings = useMemo(() => {
+    const startIndex = (desktopCurrentPage - 1) * desktopItemsPerPage;
+    const endIndex = startIndex + desktopItemsPerPage;
+    return filteredBookings.slice(startIndex, endIndex);
+  }, [filteredBookings, desktopCurrentPage, desktopItemsPerPage]);
+
+  const totalDesktopPages = Math.ceil(filteredBookings.length / desktopItemsPerPage);
 
   // Calculate total revenue
   const totalRevenue = useMemo(() => {
@@ -391,8 +417,8 @@ const Bookings = () => {
 
           {/* Bookings List - Mobile Card View */}
           <div className="md:hidden space-y-4 animate-fade-in">
-            {filteredBookings.length > 0 ? (
-              filteredBookings.map((booking, index) => (
+            {mobileBookings.length > 0 ? (
+              mobileBookings.map((booking, index) => (
                 <div
                   key={booking.id}
                   onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
@@ -548,8 +574,17 @@ const Bookings = () => {
                 </div>
               </div>
             )}
+
+            {/* Load More Button */}
+            <LoadMoreButton
+              onClick={() => setMobileDisplayCount(prev => prev + 20)}
+              hasMore={mobileDisplayCount < filteredBookings.length}
+              currentCount={mobileBookings.length}
+              totalCount={filteredBookings.length}
+            />
+
             <div className="p-4 text-sm text-muted-foreground text-center">
-              Showing {filteredBookings.length} of {allBookings.length} bookings
+              Showing {mobileBookings.length} of {filteredBookings.length} bookings
             </div>
           </div>
 
@@ -573,8 +608,8 @@ const Bookings = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBookings.length > 0 ? (
-                    filteredBookings.map((booking, index) => (
+                  {desktopBookings.length > 0 ? (
+                    desktopBookings.map((booking, index) => (
                       <TableRow
                         key={booking.id}
                         onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
@@ -704,9 +739,19 @@ const Bookings = () => {
                 </TableBody>
               </Table>
             </div>
-            <div className="p-4 border-t border-border/50 text-sm text-muted-foreground">
-              Showing {filteredBookings.length} of {allBookings.length} bookings
-            </div>
+
+            {/* Desktop Pagination */}
+            <Pagination
+              currentPage={desktopCurrentPage}
+              totalPages={totalDesktopPages}
+              onPageChange={setDesktopCurrentPage}
+              itemsPerPage={desktopItemsPerPage}
+              totalItems={filteredBookings.length}
+              onItemsPerPageChange={(newItemsPerPage) => {
+                setDesktopItemsPerPage(newItemsPerPage);
+                setDesktopCurrentPage(1);
+              }}
+            />
           </div>
         </main>
       </div>
