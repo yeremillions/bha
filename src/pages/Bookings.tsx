@@ -180,8 +180,60 @@ const Bookings = () => {
 
   // Handle various booking actions
   const handleAction = async (action: string, bookingId: string) => {
+    const booking = allBookings.find(b => b.id === bookingId);
+
     if (action === 'View Details') {
       navigate(`/dashboard/bookings/${bookingId}`);
+      return;
+    }
+
+    if (action === 'Edit Booking') {
+      navigate(`/dashboard/bookings/${bookingId}`);
+      toast({
+        title: 'Edit Booking',
+        description: 'Opening booking details where you can make changes.',
+      });
+      return;
+    }
+
+    if (action === 'Reschedule') {
+      navigate(`/dashboard/bookings/${bookingId}`);
+      toast({
+        title: 'Reschedule Booking',
+        description: 'Opening booking details to reschedule dates.',
+      });
+      return;
+    }
+
+    if (action === 'Send Message') {
+      if (booking?.customer?.email) {
+        toast({
+          title: 'Contact Guest',
+          description: `Guest email: ${booking.customer.email}${booking.customer.phone ? `\nPhone: ${booking.customer.phone}` : ''}`,
+          duration: 5000,
+        });
+      } else {
+        toast({
+          title: 'Contact Information Unavailable',
+          description: 'No contact details found for this guest.',
+          variant: 'destructive',
+        });
+      }
+      return;
+    }
+
+    if (action === 'Generate Invoice') {
+      toast({
+        title: 'Generating Invoice',
+        description: `Preparing invoice for booking ${booking?.booking_number || bookingId}...`,
+      });
+      // TODO: Implement invoice generation
+      setTimeout(() => {
+        toast({
+          title: 'Invoice Ready',
+          description: 'Invoice generation feature coming soon.',
+        });
+      }, 1500);
       return;
     }
 
@@ -196,16 +248,31 @@ const Bookings = () => {
     }
 
     if (action === 'Cancel Booking') {
-      if (window.confirm('Are you sure you want to cancel this booking?')) {
+      if (window.confirm('Are you sure you want to cancel this booking? This will refund the payment.')) {
         await cancelBooking.mutateAsync({ id: bookingId, refund: true });
       }
       return;
     }
 
-    // Placeholder for other actions
+    if (action === 'Export') {
+      toast({
+        title: 'Exporting Bookings',
+        description: 'Preparing CSV export...',
+      });
+      // TODO: Implement export functionality
+      setTimeout(() => {
+        toast({
+          title: 'Export Ready',
+          description: 'Export feature coming soon.',
+        });
+      }, 1500);
+      return;
+    }
+
+    // Fallback for any unhandled actions
     toast({
       title: action,
-      description: `Action "${action}" triggered for booking ${bookingId}`,
+      description: 'This feature is coming soon.',
     });
   };
 
