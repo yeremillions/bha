@@ -99,6 +99,9 @@ const BookingDetails = () => {
     status: '' as 'pending' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled',
   });
 
+  // Track if form has unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   // Initialize form when booking loads or edit mode starts
   useEffect(() => {
     if (booking && isEditing) {
@@ -110,8 +113,36 @@ const BookingDetails = () => {
         payment_status: booking.payment_status,
         status: booking.status,
       });
+      setHasUnsavedChanges(false);
     }
   }, [booking, isEditing]);
+
+  // Track changes to form
+  useEffect(() => {
+    if (booking && isEditing) {
+      const changed =
+        editForm.check_in_date !== booking.check_in_date ||
+        editForm.check_out_date !== booking.check_out_date ||
+        editForm.num_guests !== booking.num_guests ||
+        editForm.special_requests !== (booking.special_requests || '') ||
+        editForm.payment_status !== booking.payment_status ||
+        editForm.status !== booking.status;
+      setHasUnsavedChanges(changed);
+    }
+  }, [editForm, booking, isEditing]);
+
+  // Warn before leaving page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -125,7 +156,24 @@ const BookingDetails = () => {
   };
 
   const handleCancelEdit = () => {
-    setIsEditing(false);
+    if (hasUnsavedChanges) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+        setIsEditing(false);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setIsEditing(false);
+    }
+  };
+
+  const handleBackClick = () => {
+    if (hasUnsavedChanges) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to leave this page?')) {
+        navigate('/dashboard/bookings');
+      }
+    } else {
+      navigate('/dashboard/bookings');
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -137,6 +185,7 @@ const BookingDetails = () => {
         updates: editForm,
       });
       setIsEditing(false);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Failed to update booking:', error);
     }
@@ -248,7 +297,7 @@ const BookingDetails = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/bookings')}>
+              <Button variant="ghost" size="icon" onClick={handleBackClick}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
