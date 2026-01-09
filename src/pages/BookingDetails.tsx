@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useBooking, useUpdateBookingStatus, useCancelBooking } from '@/hooks/useBookings';
+import { useBooking, useUpdateBooking, useUpdateBookingStatus, useCancelBooking } from '@/hooks/useBookings';
 import { cn } from '@/lib/utils';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
@@ -9,6 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   ArrowLeft,
   Calendar,
@@ -27,6 +37,8 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Save,
+  X as CancelIcon,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
@@ -69,17 +81,66 @@ const BookingDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Fetch booking data from database
   const { data: booking, isLoading: bookingLoading, error } = useBooking(id);
+  const updateBooking = useUpdateBooking();
   const updateBookingStatus = useUpdateBookingStatus();
   const cancelBooking = useCancelBooking();
+
+  // Edit form state
+  const [editForm, setEditForm] = useState({
+    check_in_date: '',
+    check_out_date: '',
+    num_guests: 0,
+    special_requests: '',
+    payment_status: '' as 'pending' | 'paid' | 'refunded' | 'partial',
+    status: '' as 'pending' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled',
+  });
+
+  // Initialize form when booking loads or edit mode starts
+  useEffect(() => {
+    if (booking && isEditing) {
+      setEditForm({
+        check_in_date: booking.check_in_date,
+        check_out_date: booking.check_out_date,
+        num_guests: booking.num_guests,
+        special_requests: booking.special_requests || '',
+        payment_status: booking.payment_status,
+        status: booking.status,
+      });
+    }
+  }, [booking, isEditing]);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
+
+  // Handle edit mode toggle
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!booking) return;
+
+    try {
+      await updateBooking.mutateAsync({
+        id: booking.id,
+        updates: editForm,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update booking:', error);
+    }
+  };
 
   // Handle status updates
   const handleCheckIn = async () => {
@@ -203,24 +264,53 @@ const BookingDetails = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <Button variant="outline" size="sm">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Message Guest
-              </Button>
-              <Button variant="outline" size="sm">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-destructive hover:text-destructive"
-                onClick={handleCancel}
-                disabled={cancelBooking.isPending}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
+              {isEditing ? (
+                <>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleSaveEdit}
+                    disabled={updateBooking.isPending}
+                  >
+                    {updateBooking.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Save Changes
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    disabled={updateBooking.isPending}
+                  >
+                    <CancelIcon className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Message Guest
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleEditClick}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={handleCancel}
+                    disabled={cancelBooking.isPending}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -290,7 +380,7 @@ const BookingDetails = () => {
                     <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
                       <Home className="h-5 w-5 text-accent" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm text-muted-foreground">Property</p>
                       <p className="font-medium">{booking.property?.name || 'N/A'}</p>
                       {booking.property?.address && (
@@ -308,40 +398,75 @@ const BookingDetails = () => {
                     </div>
                   </div>
                   <Separator />
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-emerald-600" />
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="check_in_date">Check-in Date</Label>
+                          <Input
+                            id="check_in_date"
+                            type="date"
+                            value={editForm.check_in_date}
+                            onChange={(e) => setEditForm({ ...editForm, check_in_date: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="check_out_date">Check-out Date</Label>
+                          <Input
+                            id="check_out_date"
+                            type="date"
+                            value={editForm.check_out_date}
+                            onChange={(e) => setEditForm({ ...editForm, check_out_date: e.target.value })}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Check-in</p>
-                        <p className="font-medium">{format(checkInDate, 'MMM d, yyyy')}</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="num_guests">Number of Guests</Label>
+                        <Input
+                          id="num_guests"
+                          type="number"
+                          min="1"
+                          value={editForm.num_guests}
+                          onChange={(e) => setEditForm({ ...editForm, num_guests: parseInt(e.target.value) || 0 })}
+                        />
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-rose-500/10 flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-rose-600" />
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                          <Calendar className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Check-in</p>
+                          <p className="font-medium">{format(checkInDate, 'MMM d, yyyy')}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Check-out</p>
-                        <p className="font-medium">{format(checkOutDate, 'MMM d, yyyy')}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-rose-500/10 flex items-center justify-center">
+                          <Calendar className="h-5 w-5 text-rose-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Check-out</p>
+                          <p className="font-medium">{format(checkOutDate, 'MMM d, yyyy')}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Duration</p>
+                          <p className="font-medium">{nights} {nights === 1 ? 'night' : 'nights'}</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                        <Clock className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Duration</p>
-                        <p className="font-medium">{nights} {nights === 1 ? 'night' : 'nights'}</p>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
 
               {/* Special Requests */}
-              {booking.special_requests && (
+              {(booking.special_requests || isEditing) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -350,7 +475,69 @@ const BookingDetails = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm bg-muted/50 p-4 rounded-lg">{booking.special_requests}</p>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="special_requests">Special Requests</Label>
+                        <Textarea
+                          id="special_requests"
+                          placeholder="Enter any special requests or notes..."
+                          value={editForm.special_requests}
+                          onChange={(e) => setEditForm({ ...editForm, special_requests: e.target.value })}
+                          rows={4}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-sm bg-muted/50 p-4 rounded-lg">{booking.special_requests}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Status & Payment (Edit Mode Only) */}
+              {isEditing && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5" />
+                      Status & Payment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Booking Status</Label>
+                      <Select
+                        value={editForm.status}
+                        onValueChange={(value: any) => setEditForm({ ...editForm, status: value })}
+                      >
+                        <SelectTrigger id="status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="confirmed">Confirmed</SelectItem>
+                          <SelectItem value="checked_in">Checked In</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="payment_status">Payment Status</Label>
+                      <Select
+                        value={editForm.payment_status}
+                        onValueChange={(value: any) => setEditForm({ ...editForm, payment_status: value })}
+                      >
+                        <SelectTrigger id="payment_status">
+                          <SelectValue placeholder="Select payment status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="paid">Paid</SelectItem>
+                          <SelectItem value="partial">Partial</SelectItem>
+                          <SelectItem value="refunded">Refunded</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </CardContent>
                 </Card>
               )}
