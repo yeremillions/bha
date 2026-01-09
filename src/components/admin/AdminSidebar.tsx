@@ -60,12 +60,12 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 h-screen transition-transform duration-300',
-          // Desktop: always visible, can be collapsed
-          'lg:block lg:transition-all',
+          'fixed left-0 top-0 h-screen transition-transform duration-300',
+          // Desktop: always visible, can be collapsed, lower z-index
+          'lg:block lg:transition-all lg:z-10',
           collapsed ? 'lg:w-20' : 'lg:w-64',
-          // Mobile: slide in/out based on mobileOpen
-          'lg:translate-x-0',
+          // Mobile: slide in/out based on mobileOpen, higher z-index
+          'lg:translate-x-0 z-50',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           'w-64' // Mobile always full width when open
         )}
