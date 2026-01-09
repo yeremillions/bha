@@ -1,6 +1,5 @@
-import { Bell, Menu, User, LogOut, Search, Sun, Moon } from 'lucide-react';
+import { Bell, Menu, User, LogOut, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +11,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
+import { AdminSearchBar } from '@/components/admin/AdminSearchBar';
 
 interface AdminHeaderProps {
   onMenuClick?: () => void;
@@ -44,15 +44,8 @@ export const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
           </Button>
           
           {/* Search bar */}
-          <div className="hidden md:flex items-center relative">
-            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search anything..." 
-              className="w-72 pl-10 bg-muted/50 border-transparent focus:border-accent/50 focus:bg-background transition-all"
-            />
-            <kbd className="absolute right-3 pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-              ⌘K
-            </kbd>
+          <div className="hidden md:flex items-center">
+            <AdminSearchBar />
           </div>
         </div>
 
