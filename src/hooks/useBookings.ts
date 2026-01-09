@@ -196,6 +196,7 @@ export const useBookingByNumber = (bookingNumber: string | undefined) => {
 
 /**
  * Check if a property is available for given dates
+ * Two bookings overlap if: booking1.check_in < booking2.check_out AND booking1.check_out > booking2.check_in
  */
 export const checkAvailability = async ({
   propertyId,
@@ -209,7 +210,8 @@ export const checkAvailability = async ({
       .select('*')
       .eq('property_id', propertyId)
       .not('status', 'eq', 'cancelled')
-      .or(`check_in_date.lte.${checkOutDate},check_out_date.gte.${checkInDate}`);
+      .lt('check_in_date', checkOutDate)   // Booking starts before new checkout
+      .gt('check_out_date', checkInDate);  // Booking ends after new checkin
 
     if (excludeBookingId) {
       query = query.neq('id', excludeBookingId);
