@@ -192,228 +192,224 @@ const Housekeeping = () => {
             ))}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Tasks Table */}
-            <div className="lg:col-span-2">
-              <Card className="border-border/50 bg-card">
-                <CardHeader className="border-b border-border/50">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <CardTitle>Cleaning Tasks</CardTitle>
-                    <div className="flex gap-2">
-                      <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Status</SelectItem>
-                          <SelectItem value="unassigned">Unassigned</SelectItem>
-                          <SelectItem value="assigned">Assigned</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Priority" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Priority</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="low">Low</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="hover:bg-transparent border-border/50">
-                          <TableHead>Task #</TableHead>
-                          <TableHead>Property</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Priority</TableHead>
-                          <TableHead>Assigned To</TableHead>
-                          <TableHead>Scheduled</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredTasks.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                              No tasks found
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredTasks.map((task) => (
-                            <TableRow key={task.id} className="border-border/50 hover:bg-muted/30 transition-colors">
-                              <TableCell className="font-medium">{task.task_number}</TableCell>
-                              <TableCell>{task.property?.name || 'N/A'}</TableCell>
-                              <TableCell>{taskTypeLabels[task.task_type as keyof typeof taskTypeLabels]}</TableCell>
-                              <TableCell>
-                                <Badge className={priorityConfig[task.priority as keyof typeof priorityConfig].className}>
-                                  {priorityConfig[task.priority as keyof typeof priorityConfig].label}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{task.staff?.full_name || 'Unassigned'}</TableCell>
-                              <TableCell>{format(new Date(task.scheduled_for), 'MMM d, h:mm a')}</TableCell>
-                              <TableCell>
-                                <Badge className={statusConfig[task.status as keyof typeof statusConfig].className}>
-                                  {statusConfig[task.status as keyof typeof statusConfig].label}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="bg-popover border-border">
-                                    {task.status === 'unassigned' && (
-                                      <DropdownMenuItem onClick={() => handleAutoAssign(task.id)}>
-                                        Auto-Assign
-                                      </DropdownMenuItem>
-                                    )}
-                                    {task.status === 'assigned' && (
-                                      <DropdownMenuItem onClick={() => handleStatusUpdate(task.id, 'in_progress')}>
-                                        Start Task
-                                      </DropdownMenuItem>
-                                    )}
-                                    {task.status === 'in_progress' && (
-                                      <DropdownMenuItem onClick={() => handleStatusUpdate(task.id, 'completed')}>
-                                        Mark Complete
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem>
-                                      Reassign
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          {/* Staff Overview and Inventory Alerts Row */}
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Staff Overview */}
+            <Card className="border-border/50 bg-card">
+              <CardHeader className="border-b border-border/50">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Staff Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {/* Add Staff Button - Own Row */}
+                <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Staff Member
+                </Button>
 
-            {/* Right Column - Staff & Inventory */}
-            <div className="space-y-6">
-              {/* Staff Overview */}
-              <Card className="border-border/50 bg-card">
-                <CardHeader className="border-b border-border/50">
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Staff Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-4">
-                  {/* Add Staff Button - Own Row */}
-                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Staff Member
-                  </Button>
-
-                  {/* Staff List */}
-                  <div className="space-y-3">
-                    {staffStats.map((member) => (
-                      <div
-                        key={member.id}
-                        className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground">{member.full_name}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="flex items-center gap-1">
-                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                                <span className="text-xs text-muted-foreground">{member.rating.toFixed(1)}</span>
-                              </div>
-                              <span className="text-xs text-muted-foreground">•</span>
-                              <span className="text-xs text-muted-foreground">
-                                {member.total_tasks_completed} total
-                              </span>
+                {/* Staff List */}
+                <div className="space-y-3">
+                  {staffStats.map((member) => (
+                    <div
+                      key={member.id}
+                      className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground">{member.full_name}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                              <span className="text-xs text-muted-foreground">{member.rating.toFixed(1)}</span>
                             </div>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-xs text-muted-foreground">
+                              {member.total_tasks_completed} total
+                            </span>
                           </div>
-                          <Badge variant="outline" className="ml-2">
-                            {member.tasksToday} today
-                          </Badge>
                         </div>
-                        {member.phone && (
-                          <p className="text-xs text-muted-foreground">{member.phone}</p>
-                        )}
+                        <Badge variant="outline" className="ml-2">
+                          {member.tasksToday} today
+                        </Badge>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      {member.phone && (
+                        <p className="text-xs text-muted-foreground">{member.phone}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Inventory Alerts */}
-              <Card className="border-border/50 bg-card">
-                <CardHeader className="border-b border-border/50">
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5" />
-                    Inventory Alerts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-3">
-                  {/* Sample Inventory Items */}
-                  <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
-                    <div className="flex items-start justify-between mb-1">
-                      <p className="font-medium text-rose-600 dark:text-rose-400">Towel Sets</p>
-                      <Badge className="bg-rose-500 text-white">Critical</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Current: 3</span>
-                      <span className="text-muted-foreground">Threshold: 8</span>
-                    </div>
+            {/* Inventory Alerts */}
+            <Card className="border-border/50 bg-card">
+              <CardHeader className="border-b border-border/50">
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Inventory Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                {/* Sample Inventory Items */}
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                  <div className="flex items-start justify-between mb-1">
+                    <p className="font-medium text-rose-600 dark:text-rose-400">Towel Sets</p>
+                    <Badge className="bg-rose-500 text-white">Critical</Badge>
                   </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Current: 3</span>
+                    <span className="text-muted-foreground">Threshold: 8</span>
+                  </div>
+                </div>
 
-                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <div className="flex items-start justify-between mb-1">
-                      <p className="font-medium text-amber-600 dark:text-amber-400">Bed Linens (Queen)</p>
-                      <Badge className="bg-amber-500 text-white">Low Stock</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Current: 5</span>
-                      <span className="text-muted-foreground">Threshold: 10</span>
-                    </div>
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <div className="flex items-start justify-between mb-1">
+                    <p className="font-medium text-amber-600 dark:text-amber-400">Bed Linens (Queen)</p>
+                    <Badge className="bg-amber-500 text-white">Low Stock</Badge>
                   </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Current: 5</span>
+                    <span className="text-muted-foreground">Threshold: 10</span>
+                  </div>
+                </div>
 
-                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <div className="flex items-start justify-between mb-1">
-                      <p className="font-medium text-amber-600 dark:text-amber-400">Toilet Paper (Rolls)</p>
-                      <Badge className="bg-amber-500 text-white">Low Stock</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Current: 15</span>
-                      <span className="text-muted-foreground">Threshold: 20</span>
-                    </div>
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <div className="flex items-start justify-between mb-1">
+                    <p className="font-medium text-amber-600 dark:text-amber-400">Toilet Paper (Rolls)</p>
+                    <Badge className="bg-amber-500 text-white">Low Stock</Badge>
                   </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Current: 15</span>
+                    <span className="text-muted-foreground">Threshold: 20</span>
+                  </div>
+                </div>
 
-                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                    <div className="flex items-start justify-between mb-1">
-                      <p className="font-medium text-emerald-600 dark:text-emerald-400">Cleaning Supplies</p>
-                      <Badge className="bg-emerald-500 text-white">In Stock</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Current: 12</span>
-                      <span className="text-muted-foreground">Threshold: 10</span>
-                    </div>
+                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="flex items-start justify-between mb-1">
+                    <p className="font-medium text-emerald-600 dark:text-emerald-400">Cleaning Supplies</p>
+                    <Badge className="bg-emerald-500 text-white">In Stock</Badge>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Current: 12</span>
+                    <span className="text-muted-foreground">Threshold: 10</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+
+          {/* Cleaning Tasks Table - Full Width */}
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <CardTitle>Cleaning Tasks</CardTitle>
+                <div className="flex gap-2">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      <SelectItem value="assigned">Assigned</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Priority</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent border-border/50">
+                      <TableHead>Task #</TableHead>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Assigned To</TableHead>
+                      <TableHead>Scheduled</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTasks.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                          No tasks found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredTasks.map((task) => (
+                        <TableRow key={task.id} className="border-border/50 hover:bg-muted/30 transition-colors">
+                          <TableCell className="font-medium">{task.task_number}</TableCell>
+                          <TableCell>{task.property?.name || 'N/A'}</TableCell>
+                          <TableCell>{taskTypeLabels[task.task_type as keyof typeof taskTypeLabels]}</TableCell>
+                          <TableCell>
+                            <Badge className={priorityConfig[task.priority as keyof typeof priorityConfig].className}>
+                              {priorityConfig[task.priority as keyof typeof priorityConfig].label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{task.staff?.full_name || 'Unassigned'}</TableCell>
+                          <TableCell>{format(new Date(task.scheduled_for), 'MMM d, h:mm a')}</TableCell>
+                          <TableCell>
+                            <Badge className={statusConfig[task.status as keyof typeof statusConfig].className}>
+                              {statusConfig[task.status as keyof typeof statusConfig].label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-popover border-border">
+                                {task.status === 'unassigned' && (
+                                  <DropdownMenuItem onClick={() => handleAutoAssign(task.id)}>
+                                    Auto-Assign
+                                  </DropdownMenuItem>
+                                )}
+                                {task.status === 'assigned' && (
+                                  <DropdownMenuItem onClick={() => handleStatusUpdate(task.id, 'in_progress')}>
+                                    Start Task
+                                  </DropdownMenuItem>
+                                )}
+                                {task.status === 'in_progress' && (
+                                  <DropdownMenuItem onClick={() => handleStatusUpdate(task.id, 'completed')}>
+                                    Mark Complete
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem>
+                                  Reassign
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </main>
       </div>
     </div>
