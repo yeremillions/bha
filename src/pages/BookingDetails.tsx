@@ -196,8 +196,17 @@ const BookingDetails = () => {
     if (!booking) return;
     try {
       await updateBookingStatus.mutateAsync({ id: booking.id, status: 'checked_in' });
+      toast({
+        title: 'Guest Checked In',
+        description: 'The guest has been successfully checked in.',
+      });
     } catch (error) {
       console.error('Failed to check in:', error);
+      toast({
+        title: 'Error Checking In',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -205,19 +214,37 @@ const BookingDetails = () => {
     if (!booking) return;
     try {
       await updateBookingStatus.mutateAsync({ id: booking.id, status: 'completed' });
+      toast({
+        title: 'Guest Checked Out',
+        description: 'The guest has been successfully checked out.',
+      });
     } catch (error) {
       console.error('Failed to check out:', error);
+      toast({
+        title: 'Error Checking Out',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleCancel = async () => {
     if (!booking) return;
-    if (window.confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to cancel this booking? This will refund the payment and cannot be undone.')) {
       try {
         await cancelBooking.mutateAsync({ id: booking.id, refund: true });
+        toast({
+          title: 'Booking Cancelled',
+          description: 'The booking has been successfully cancelled.',
+        });
         navigate('/dashboard/bookings');
       } catch (error) {
         console.error('Failed to cancel booking:', error);
+        toast({
+          title: 'Error Cancelling Booking',
+          description: error instanceof Error ? error.message : 'An unexpected error occurred while cancelling the booking.',
+          variant: 'destructive',
+        });
       }
     }
   };

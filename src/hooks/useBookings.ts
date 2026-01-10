@@ -457,7 +457,7 @@ export const useCancelBooking = () => {
 
       if (error) {
         console.error('Error cancelling booking:', error);
-        throw new Error(`Failed to cancel booking: ${error.message}`);
+        throw new Error(error.message || 'Failed to cancel booking');
       }
 
       return data as BookingWithDetails;
@@ -466,17 +466,11 @@ export const useCancelBooking = () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
-      toast({
-        title: 'Booking cancelled',
-        description: `Booking ${data.booking_number} has been cancelled.`,
-      });
+      // Note: Success toast is handled by the component to avoid duplicate toasts
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error cancelling booking',
-        description: error.message,
-        variant: 'destructive',
-      });
+      // Note: Error toast is handled by the component for better control
+      console.error('Cancel booking mutation error:', error);
     },
   });
 };
