@@ -16,6 +16,8 @@ import {
   ChevronRight,
   X,
   ChartBar,
+  BriefcaseBusiness,
+  Package,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -63,6 +65,8 @@ const navSections: NavSection[] = [
     title: 'Operations',
     items: [
       { title: 'Housekeeping', url: '/dashboard/housekeeping', icon: Sparkles, badge: 5 },
+      { title: 'Staff', url: '/dashboard/staff', icon: BriefcaseBusiness },
+      { title: 'Inventory', url: '/dashboard/inventory', icon: Package },
       { title: 'Maintenance', url: '/dashboard/maintenance', icon: Wrench, badge: 2 },
       { title: 'Bar Management', url: '/dashboard/bar', icon: Wine },
     ],

@@ -12,6 +12,8 @@ import Properties from "./pages/Properties";
 import Bookings from "./pages/Bookings";
 import BookingDetails from "./pages/BookingDetails";
 import Housekeeping from "./pages/Housekeeping";
+import Staff from "./pages/Staff";
+import Inventory from "./pages/Inventory";
 import Maintenance from "./pages/Maintenance";
 import MaintenanceDetails from "./pages/MaintenanceDetails";
 import Bar from "./pages/Bar";
@@ -44,6 +46,8 @@ const App = () => (
               <Route path="/dashboard/bookings/:id" element={<BookingDetails />} />
               <Route path="/dashboard/calendar" element={<Calendar />} />
               <Route path="/dashboard/housekeeping" element={<Housekeeping />} />
+              <Route path="/dashboard/staff" element={<Staff />} />
+              <Route path="/dashboard/inventory" element={<Inventory />} />
               <Route path="/dashboard/bar" element={<Bar />} />
               <Route path="/dashboard/bar/:id" element={<BarTabDetails />} />
               <Route path="/dashboard/maintenance" element={<Maintenance />} />
