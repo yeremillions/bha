@@ -1041,9 +1041,9 @@ const Housekeeping = () => {
                 <SelectValue placeholder="Select staff member" />
               </SelectTrigger>
               <SelectContent>
-                {staff.filter(s => s.status === 'active').map((member) => (
+                {staffStats.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
-                    {member.full_name} ({member.tasksToday || 0} tasks today)
+                    {member.full_name} ({member.tasksToday} tasks today)
                   </SelectItem>
                 ))}
               </SelectContent>
