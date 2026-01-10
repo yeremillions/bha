@@ -39,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Table,
   TableBody,
@@ -73,6 +74,10 @@ const CustomerDetails = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Dialog state
+  const [cancelEditDialogOpen, setCancelEditDialogOpen] = useState(false);
+  const [leavePageDialogOpen, setLeavePageDialogOpen] = useState(false);
 
   // Fetch customer and their bookings
   const { data: customer, isLoading: customerLoading, error } = useCustomer(id);
@@ -172,12 +177,14 @@ const CustomerDetails = () => {
 
   const handleBackClick = () => {
     if (hasUnsavedChanges) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to leave this page?')) {
-        navigate('/dashboard/customers');
-      }
+      setLeavePageDialogOpen(true);
     } else {
       navigate('/dashboard/customers');
     }
+  };
+
+  const confirmLeavePage = () => {
+    navigate('/dashboard/customers');
   };
 
   const handleEditClick = () => {
@@ -186,28 +193,30 @@ const CustomerDetails = () => {
 
   const handleCancelEdit = () => {
     if (hasUnsavedChanges) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
-        setIsEditing(false);
-        setHasUnsavedChanges(false);
-        // Reset form to original values
-        if (customer) {
-          setEditForm({
-            full_name: customer.full_name || '',
-            email: customer.email || '',
-            phone: customer.phone || '',
-            whatsapp: customer.whatsapp || '',
-            date_of_birth: customer.date_of_birth || '',
-            nationality: customer.nationality || '',
-            id_type: (customer.id_type as 'passport' | 'drivers_license' | 'national_id') || '',
-            id_number: customer.id_number || '',
-            emergency_contact_name: customer.emergency_contact_name || '',
-            emergency_contact_phone: customer.emergency_contact_phone || '',
-            notes: customer.notes || '',
-          });
-        }
-      }
+      setCancelEditDialogOpen(true);
     } else {
       setIsEditing(false);
+    }
+  };
+
+  const confirmCancelEdit = () => {
+    setIsEditing(false);
+    setHasUnsavedChanges(false);
+    // Reset form to original values
+    if (customer) {
+      setEditForm({
+        full_name: customer.full_name || '',
+        email: customer.email || '',
+        phone: customer.phone || '',
+        whatsapp: customer.whatsapp || '',
+        date_of_birth: customer.date_of_birth || '',
+        nationality: customer.nationality || '',
+        id_type: (customer.id_type as 'passport' | 'drivers_license' | 'national_id') || '',
+        id_number: customer.id_number || '',
+        emergency_contact_name: customer.emergency_contact_name || '',
+        emergency_contact_phone: customer.emergency_contact_phone || '',
+        notes: customer.notes || '',
+      });
     }
   };
 
@@ -794,6 +803,29 @@ const CustomerDetails = () => {
           </div>
         </main>
       </div>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        open={cancelEditDialogOpen}
+        onOpenChange={setCancelEditDialogOpen}
+        onConfirm={confirmCancelEdit}
+        title="Discard Changes?"
+        description="You have unsaved changes. Are you sure you want to cancel editing? Your changes will be lost."
+        confirmText="Discard Changes"
+        cancelText="Keep Editing"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={leavePageDialogOpen}
+        onOpenChange={setLeavePageDialogOpen}
+        onConfirm={confirmLeavePage}
+        title="Leave Page?"
+        description="You have unsaved changes. Are you sure you want to leave this page? Your changes will be lost."
+        confirmText="Leave Page"
+        cancelText="Stay"
+        variant="destructive"
+      />
     </div>
   );
 };

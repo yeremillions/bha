@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Select,
   SelectContent,
@@ -82,6 +83,11 @@ const BookingDetails = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Dialog state
+  const [cancelEditDialogOpen, setCancelEditDialogOpen] = useState(false);
+  const [leavePageDialogOpen, setLeavePageDialogOpen] = useState(false);
+  const [cancelBookingDialogOpen, setCancelBookingDialogOpen] = useState(false);
 
   // Fetch booking data from database
   const { data: booking, isLoading: bookingLoading, error } = useBooking(id);
@@ -157,23 +163,27 @@ const BookingDetails = () => {
 
   const handleCancelEdit = () => {
     if (hasUnsavedChanges) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
-        setIsEditing(false);
-        setHasUnsavedChanges(false);
-      }
+      setCancelEditDialogOpen(true);
     } else {
       setIsEditing(false);
     }
   };
 
+  const confirmCancelEdit = () => {
+    setIsEditing(false);
+    setHasUnsavedChanges(false);
+  };
+
   const handleBackClick = () => {
     if (hasUnsavedChanges) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to leave this page?')) {
-        navigate('/dashboard/bookings');
-      }
+      setLeavePageDialogOpen(true);
     } else {
       navigate('/dashboard/bookings');
     }
+  };
+
+  const confirmLeavePage = () => {
+    navigate('/dashboard/bookings');
   };
 
   const handleSaveEdit = async () => {
@@ -228,25 +238,28 @@ const BookingDetails = () => {
     }
   };
 
-  const handleCancel = async () => {
+  const handleCancel = () => {
     if (!booking) return;
-    if (window.confirm('Are you sure you want to cancel this booking? This action cannot be undone. Note: Any required refunds must be processed manually.')) {
-      try {
-        await cancelBooking.mutateAsync(booking.id);
-        toast({
-          title: 'Booking Cancelled',
-          description: 'The booking has been cancelled. Process any required refunds through the Refunds section.',
-          duration: 6000,
-        });
-        navigate('/dashboard/bookings');
-      } catch (error) {
-        console.error('Failed to cancel booking:', error);
-        toast({
-          title: 'Error Cancelling Booking',
-          description: error instanceof Error ? error.message : 'An unexpected error occurred while cancelling the booking.',
-          variant: 'destructive',
-        });
-      }
+    setCancelBookingDialogOpen(true);
+  };
+
+  const confirmCancelBooking = async () => {
+    if (!booking) return;
+    try {
+      await cancelBooking.mutateAsync(booking.id);
+      toast({
+        title: 'Booking Cancelled',
+        description: 'The booking has been cancelled. Process any required refunds through the Refunds section.',
+        duration: 6000,
+      });
+      navigate('/dashboard/bookings');
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+      toast({
+        title: 'Error Cancelling Booking',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred while cancelling the booking.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -718,6 +731,40 @@ const BookingDetails = () => {
           </div>
         </main>
       </div>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        open={cancelEditDialogOpen}
+        onOpenChange={setCancelEditDialogOpen}
+        onConfirm={confirmCancelEdit}
+        title="Discard Changes?"
+        description="You have unsaved changes. Are you sure you want to cancel editing? Your changes will be lost."
+        confirmText="Discard Changes"
+        cancelText="Keep Editing"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={leavePageDialogOpen}
+        onOpenChange={setLeavePageDialogOpen}
+        onConfirm={confirmLeavePage}
+        title="Leave Page?"
+        description="You have unsaved changes. Are you sure you want to leave this page? Your changes will be lost."
+        confirmText="Leave Page"
+        cancelText="Stay"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={cancelBookingDialogOpen}
+        onOpenChange={setCancelBookingDialogOpen}
+        onConfirm={confirmCancelBooking}
+        title="Cancel Booking?"
+        description="Are you sure you want to cancel this booking? This action cannot be undone. Note: Any required refunds must be processed manually."
+        confirmText="Cancel Booking"
+        cancelText="Keep Booking"
+        variant="destructive"
+      />
     </div>
   );
 };
