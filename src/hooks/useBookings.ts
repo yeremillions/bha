@@ -435,17 +435,19 @@ export const useUpdateBooking = () => {
 
 /**
  * Cancel a booking
+ * Note: This does NOT automatically refund. Payment status remains unchanged.
+ * Refunds must be processed manually through the refunds workflow.
  */
 export const useCancelBooking = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, refund = false }: { id: string; refund?: boolean }) => {
+    mutationFn: async (id: string) => {
       const { data, error } = await supabase
         .from('bookings')
         .update({
           status: 'cancelled',
-          payment_status: refund ? 'refunded' : 'paid',
+          // Note: payment_status is NOT changed - refunds are handled separately
         })
         .eq('id', id)
         .select(`
