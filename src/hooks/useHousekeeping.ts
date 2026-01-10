@@ -414,6 +414,82 @@ export const useCreateStaff = () => {
   });
 };
 
+/**
+ * Update staff member
+ */
+export const useUpdateStaff = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<NewStaff> }) => {
+      const { data, error } = await supabase
+        .from('housekeeping_staff')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating staff:', error);
+        throw new Error(`Failed to update staff: ${error.message}`);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-staff'] });
+      toast({
+        title: 'Staff Updated',
+        description: 'Staff member has been updated successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Updating Staff',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+/**
+ * Delete staff member
+ */
+export const useDeleteStaff = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('housekeeping_staff')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting staff:', error);
+        throw new Error(`Failed to delete staff: ${error.message}`);
+      }
+
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-staff'] });
+      toast({
+        title: 'Staff Deleted',
+        description: 'Staff member has been removed.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Deleting Staff',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
 // ============================================================================
 // SYSTEM SETTINGS HOOKS
 // ============================================================================
