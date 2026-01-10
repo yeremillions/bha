@@ -491,6 +491,185 @@ export type Database = {
         }
         Relationships: []
       }
+      housekeeping_staff: {
+        Row: {
+          id: string
+          full_name: string
+          phone: string | null
+          email: string | null
+          status: string
+          rating: number
+          total_tasks_completed: number
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          full_name: string
+          phone?: string | null
+          email?: string | null
+          status?: string
+          rating?: number
+          total_tasks_completed?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string
+          phone?: string | null
+          email?: string | null
+          status?: string
+          rating?: number
+          total_tasks_completed?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      housekeeping_tasks: {
+        Row: {
+          id: string
+          task_number: string
+          property_id: string
+          booking_id: string | null
+          task_type: string
+          priority: string
+          status: string
+          assigned_to: string | null
+          assigned_at: string | null
+          assignment_method: string | null
+          scheduled_for: string
+          started_at: string | null
+          completed_at: string | null
+          estimated_duration_minutes: number
+          actual_duration_minutes: number | null
+          description: string | null
+          special_instructions: string | null
+          completion_notes: string | null
+          checklist: Json
+          inspection_required: boolean
+          inspection_passed: boolean | null
+          inspected_by: string | null
+          inspected_at: string | null
+          quality_rating: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          task_number: string
+          property_id: string
+          booking_id?: string | null
+          task_type: string
+          priority?: string
+          status?: string
+          assigned_to?: string | null
+          assigned_at?: string | null
+          assignment_method?: string | null
+          scheduled_for: string
+          started_at?: string | null
+          completed_at?: string | null
+          estimated_duration_minutes?: number
+          actual_duration_minutes?: number | null
+          description?: string | null
+          special_instructions?: string | null
+          completion_notes?: string | null
+          checklist?: Json
+          inspection_required?: boolean
+          inspection_passed?: boolean | null
+          inspected_by?: string | null
+          inspected_at?: string | null
+          quality_rating?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          task_number?: string
+          property_id?: string
+          booking_id?: string | null
+          task_type?: string
+          priority?: string
+          status?: string
+          assigned_to?: string | null
+          assigned_at?: string | null
+          assignment_method?: string | null
+          scheduled_for?: string
+          started_at?: string | null
+          completed_at?: string | null
+          estimated_duration_minutes?: number
+          actual_duration_minutes?: number | null
+          description?: string | null
+          special_instructions?: string | null
+          completion_notes?: string | null
+          checklist?: Json
+          inspection_required?: boolean
+          inspection_passed?: boolean | null
+          inspected_by?: string | null
+          inspected_at?: string | null
+          quality_rating?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "housekeeping_tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "housekeeping_tasks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "housekeeping_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "housekeeping_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "housekeeping_tasks_inspected_by_fkey"
+            columns: ["inspected_by"]
+            isOneToOne: false
+            referencedRelation: "housekeeping_staff"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      system_settings: {
+        Row: {
+          id: string
+          setting_key: string
+          setting_value: Json
+          description: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          setting_key: string
+          setting_value: Json
+          description?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          description?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,0 +1,477 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import type { Tables } from '@/integrations/supabase/types';
+
+// Types
+export type HousekeepingTask = Tables<'housekeeping_tasks'> & {
+  property?: Tables<'properties'>;
+  booking?: Tables<'bookings'>;
+  staff?: Tables<'housekeeping_staff'>;
+};
+
+export type HousekeepingStaff = Tables<'housekeeping_staff'>;
+export type SystemSetting = Tables<'system_settings'>;
+
+export interface TaskFilters {
+  status?: string;
+  priority?: string;
+  assignedTo?: string;
+  propertyId?: string;
+  taskType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface NewTask {
+  property_id: string;
+  booking_id?: string;
+  task_type: 'checkout_clean' | 'turnover' | 'regular_clean' | 'deep_clean' | 'inspection' | 'maintenance_support';
+  priority?: 'urgent' | 'high' | 'normal' | 'low';
+  scheduled_for: string;
+  description?: string;
+  special_instructions?: string;
+  estimated_duration_minutes?: number;
+}
+
+export interface UpdateTask {
+  status?: 'unassigned' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+  assigned_to?: string | null;
+  started_at?: string;
+  completed_at?: string;
+  actual_duration_minutes?: number;
+  completion_notes?: string;
+  quality_rating?: number;
+}
+
+export interface NewStaff {
+  full_name: string;
+  phone?: string;
+  email?: string;
+  status?: 'active' | 'inactive' | 'on_leave';
+  notes?: string;
+}
+
+// ============================================================================
+// HOUSEKEEPING TASKS HOOKS
+// ============================================================================
+
+/**
+ * Fetch all housekeeping tasks with optional filters
+ */
+export const useHousekeepingTasks = (filters?: TaskFilters) => {
+  return useQuery({
+    queryKey: ['housekeeping-tasks', filters],
+    queryFn: async () => {
+      let query = supabase
+        .from('housekeeping_tasks')
+        .select(`
+          *,
+          property:properties(*),
+          booking:bookings(*),
+          staff:housekeeping_staff!housekeeping_tasks_assigned_to_fkey(*)
+        `)
+        .order('scheduled_for', { ascending: true });
+
+      // Apply filters
+      if (filters?.status) {
+        query = query.eq('status', filters.status);
+      }
+      if (filters?.priority) {
+        query = query.eq('priority', filters.priority);
+      }
+      if (filters?.assignedTo) {
+        query = query.eq('assigned_to', filters.assignedTo);
+      }
+      if (filters?.propertyId) {
+        query = query.eq('property_id', filters.propertyId);
+      }
+      if (filters?.taskType) {
+        query = query.eq('task_type', filters.taskType);
+      }
+      if (filters?.dateFrom) {
+        query = query.gte('scheduled_for', filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        query = query.lte('scheduled_for', filters.dateTo);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching housekeeping tasks:', error);
+        throw new Error(`Failed to fetch tasks: ${error.message}`);
+      }
+
+      return data as HousekeepingTask[];
+    },
+  });
+};
+
+/**
+ * Fetch a single housekeeping task by ID
+ */
+export const useHousekeepingTask = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['housekeeping-task', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Task ID is required');
+
+      const { data, error } = await supabase
+        .from('housekeeping_tasks')
+        .select(`
+          *,
+          property:properties(*),
+          booking:bookings(*),
+          staff:housekeeping_staff!housekeeping_tasks_assigned_to_fkey(*)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching task:', error);
+        throw new Error(`Failed to fetch task: ${error.message}`);
+      }
+
+      return data as HousekeepingTask;
+    },
+    enabled: !!id,
+  });
+};
+
+/**
+ * Create a new housekeeping task
+ */
+export const useCreateTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (newTask: NewTask) => {
+      // Generate task number
+      const { data: taskNumberData } = await supabase.rpc('generate_task_number');
+
+      const { data, error } = await supabase
+        .from('housekeeping_tasks')
+        .insert([{
+          ...newTask,
+          task_number: taskNumberData,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating task:', error);
+        throw new Error(`Failed to create task: ${error.message}`);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      toast({
+        title: 'Task Created',
+        description: 'Housekeeping task has been created successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Creating Task',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+/**
+ * Update a housekeeping task
+ */
+export const useUpdateTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: UpdateTask }) => {
+      const { data, error} = await supabase
+        .from('housekeeping_tasks')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task:', error);
+        throw new Error(`Failed to update task: ${error.message}`);
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-task', data.id] });
+      toast({
+        title: 'Task Updated',
+        description: 'Task has been updated successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Updating Task',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+/**
+ * Assign task to staff member
+ */
+export const useAssignTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ taskId, staffId }: { taskId: string; staffId: string }) => {
+      const { data, error } = await supabase
+        .from('housekeeping_tasks')
+        .update({
+          assigned_to: staffId,
+          assigned_at: new Date().toISOString(),
+          assignment_method: 'manual',
+          status: 'assigned',
+        })
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error assigning task:', error);
+        throw new Error(`Failed to assign task: ${error.message}`);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      toast({
+        title: 'Task Assigned',
+        description: 'Task has been assigned to staff member.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Assigning Task',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+/**
+ * Auto-assign task using the database function
+ */
+export const useAutoAssignTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      const { data, error } = await supabase.rpc('auto_assign_housekeeping_task', {
+        task_id: taskId,
+      });
+
+      if (error) {
+        console.error('Error auto-assigning task:', error);
+        throw new Error(`Failed to auto-assign task: ${error.message}`);
+      }
+
+      if (!data) {
+        throw new Error('No available staff members found');
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      toast({
+        title: 'Task Auto-Assigned',
+        description: 'Task has been automatically assigned to available staff.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Auto-Assigning Task',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+/**
+ * Delete a housekeeping task
+ */
+export const useDeleteTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('housekeeping_tasks')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting task:', error);
+        throw new Error(`Failed to delete task: ${error.message}`);
+      }
+
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      toast({
+        title: 'Task Deleted',
+        description: 'Housekeeping task has been deleted.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Deleting Task',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// ============================================================================
+// HOUSEKEEPING STAFF HOOKS
+// ============================================================================
+
+/**
+ * Fetch all housekeeping staff
+ */
+export const useHousekeepingStaff = (status?: string) => {
+  return useQuery({
+    queryKey: ['housekeeping-staff', status],
+    queryFn: async () => {
+      let query = supabase
+        .from('housekeeping_staff')
+        .select('*')
+        .order('full_name', { ascending: true });
+
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching staff:', error);
+        throw new Error(`Failed to fetch staff: ${error.message}`);
+      }
+
+      return data as HousekeepingStaff[];
+    },
+  });
+};
+
+/**
+ * Create a new staff member
+ */
+export const useCreateStaff = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (newStaff: NewStaff) => {
+      const { data, error } = await supabase
+        .from('housekeeping_staff')
+        .insert([newStaff])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating staff:', error);
+        throw new Error(`Failed to create staff: ${error.message}`);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-staff'] });
+      toast({
+        title: 'Staff Added',
+        description: 'New staff member has been added successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Adding Staff',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// ============================================================================
+// SYSTEM SETTINGS HOOKS
+// ============================================================================
+
+/**
+ * Get system setting by key
+ */
+export const useSystemSetting = (key: string) => {
+  return useQuery({
+    queryKey: ['system-setting', key],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('*')
+        .eq('setting_key', key)
+        .single();
+
+      if (error) {
+        console.error('Error fetching setting:', error);
+        throw new Error(`Failed to fetch setting: ${error.message}`);
+      }
+
+      return data as SystemSetting;
+    },
+  });
+};
+
+/**
+ * Update system setting
+ */
+export const useUpdateSystemSetting = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: any }) => {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .update({ setting_value: value })
+        .eq('setting_key', key)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating setting:', error);
+        throw new Error(`Failed to update setting: ${error.message}`);
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['system-setting', data.setting_key] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Updating Setting',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
