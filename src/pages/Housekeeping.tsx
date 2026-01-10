@@ -497,7 +497,7 @@ const Housekeeping = () => {
                                 <MoreHorizontal className="h-3 w-3" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="bg-popover border-border">
                               <DropdownMenuItem onClick={() => handleEditStaff(member)}>
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Edit
