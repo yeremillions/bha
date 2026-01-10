@@ -646,6 +646,695 @@ export type Database = {
           }
         ]
       }
+      inventory_alerts: {
+        Row: {
+          id: string
+          item_id: string
+          alert_type: string
+          severity: string
+          message: string
+          is_acknowledged: boolean
+          acknowledged_by: string | null
+          acknowledged_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          alert_type: string
+          severity: string
+          message: string
+          is_acknowledged?: boolean
+          acknowledged_by?: string | null
+          acknowledged_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          alert_type?: string
+          severity?: string
+          message?: string
+          is_acknowledged?: boolean
+          acknowledged_by?: string | null
+          acknowledged_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_alerts_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      inventory_categories: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          parent_category_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          parent_category_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          parent_category_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_items: {
+        Row: {
+          id: string
+          item_code: string
+          item_name: string
+          category_id: string | null
+          description: string | null
+          unit_of_measure: string
+          current_stock: number
+          minimum_stock_level: number
+          reorder_level: number
+          maximum_stock_level: number | null
+          unit_cost: number | null
+          selling_price: number | null
+          currency: string
+          primary_supplier_id: string | null
+          storage_location: string | null
+          status: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          item_code: string
+          item_name: string
+          category_id?: string | null
+          description?: string | null
+          unit_of_measure: string
+          current_stock?: number
+          minimum_stock_level?: number
+          reorder_level?: number
+          maximum_stock_level?: number | null
+          unit_cost?: number | null
+          selling_price?: number | null
+          currency?: string
+          primary_supplier_id?: string | null
+          storage_location?: string | null
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          item_code?: string
+          item_name?: string
+          category_id?: string | null
+          description?: string | null
+          unit_of_measure?: string
+          current_stock?: number
+          minimum_stock_level?: number
+          reorder_level?: number
+          maximum_stock_level?: number | null
+          unit_cost?: number | null
+          selling_price?: number | null
+          currency?: string
+          primary_supplier_id?: string | null
+          storage_location?: string | null
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_items_primary_supplier_id_fkey"
+            columns: ["primary_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      inventory_purchase_order_items: {
+        Row: {
+          id: string
+          purchase_order_id: string
+          item_id: string
+          quantity_ordered: number
+          quantity_received: number
+          unit_cost: number
+          total_cost: number
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          purchase_order_id: string
+          item_id: string
+          quantity_ordered: number
+          quantity_received?: number
+          unit_cost: number
+          total_cost: number
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          purchase_order_id?: string
+          item_id?: string
+          quantity_ordered?: number
+          quantity_received?: number
+          unit_cost?: number
+          total_cost?: number
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_purchase_order_items_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_purchase_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      inventory_purchase_orders: {
+        Row: {
+          id: string
+          po_number: string
+          supplier_id: string
+          order_date: string
+          expected_delivery_date: string | null
+          actual_delivery_date: string | null
+          status: string
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          notes: string | null
+          created_by: string | null
+          approved_by: string | null
+          approved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          po_number?: string
+          supplier_id: string
+          order_date: string
+          expected_delivery_date?: string | null
+          actual_delivery_date?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          notes?: string | null
+          created_by?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          po_number?: string
+          supplier_id?: string
+          order_date?: string
+          expected_delivery_date?: string | null
+          actual_delivery_date?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          notes?: string | null
+          created_by?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      inventory_stock_movements: {
+        Row: {
+          id: string
+          item_id: string
+          movement_type: string
+          quantity: number
+          stock_before: number
+          stock_after: number
+          reference_number: string | null
+          reference_type: string | null
+          reference_id: string | null
+          supplier_id: string | null
+          unit_cost: number | null
+          total_cost: number | null
+          notes: string | null
+          performed_by: string | null
+          movement_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          movement_type: string
+          quantity: number
+          stock_before: number
+          stock_after: number
+          reference_number?: string | null
+          reference_type?: string | null
+          reference_id?: string | null
+          supplier_id?: string | null
+          unit_cost?: number | null
+          total_cost?: number | null
+          notes?: string | null
+          performed_by?: string | null
+          movement_date?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          movement_type?: string
+          quantity?: number
+          stock_before?: number
+          stock_after?: number
+          reference_number?: string | null
+          reference_type?: string | null
+          reference_id?: string | null
+          supplier_id?: string | null
+          unit_cost?: number | null
+          total_cost?: number | null
+          notes?: string | null
+          performed_by?: string | null
+          movement_date?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_stock_movements_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      staff: {
+        Row: {
+          id: string
+          employee_id: string
+          full_name: string
+          email: string | null
+          phone: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          department: string
+          position: string
+          employment_type: string
+          employment_status: string
+          date_of_birth: string | null
+          hire_date: string
+          termination_date: string | null
+          base_salary: number | null
+          salary_currency: string
+          payment_frequency: string
+          address: string | null
+          city: string | null
+          state: string | null
+          documents: Json | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id?: string
+          full_name: string
+          email?: string | null
+          phone?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          department: string
+          position: string
+          employment_type?: string
+          employment_status?: string
+          date_of_birth?: string | null
+          hire_date: string
+          termination_date?: string | null
+          base_salary?: number | null
+          salary_currency?: string
+          payment_frequency?: string
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          documents?: Json | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          full_name?: string
+          email?: string | null
+          phone?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          department?: string
+          position?: string
+          employment_type?: string
+          employment_status?: string
+          date_of_birth?: string | null
+          hire_date?: string
+          termination_date?: string | null
+          base_salary?: number | null
+          salary_currency?: string
+          payment_frequency?: string
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          documents?: Json | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      staff_attendance: {
+        Row: {
+          id: string
+          staff_id: string
+          shift_id: string | null
+          attendance_date: string
+          clock_in_time: string | null
+          clock_out_time: string | null
+          status: string
+          hours_worked: number | null
+          overtime_hours: number
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          staff_id: string
+          shift_id?: string | null
+          attendance_date: string
+          clock_in_time?: string | null
+          clock_out_time?: string | null
+          status: string
+          hours_worked?: number | null
+          overtime_hours?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          staff_id?: string
+          shift_id?: string | null
+          attendance_date?: string
+          clock_in_time?: string | null
+          clock_out_time?: string | null
+          status?: string
+          hours_worked?: number | null
+          overtime_hours?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_attendance_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      staff_leave_requests: {
+        Row: {
+          id: string
+          staff_id: string
+          leave_type: string
+          start_date: string
+          end_date: string
+          days_requested: number
+          reason: string | null
+          status: string
+          approved_by: string | null
+          approved_at: string | null
+          rejection_reason: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          staff_id: string
+          leave_type: string
+          start_date: string
+          end_date: string
+          days_requested: number
+          reason?: string | null
+          status?: string
+          approved_by?: string | null
+          approved_at?: string | null
+          rejection_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          staff_id?: string
+          leave_type?: string
+          start_date?: string
+          end_date?: string
+          days_requested?: number
+          reason?: string | null
+          status?: string
+          approved_by?: string | null
+          approved_at?: string | null
+          rejection_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_leave_requests_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      staff_performance_reviews: {
+        Row: {
+          id: string
+          staff_id: string
+          review_date: string
+          review_period_start: string
+          review_period_end: string
+          reviewer_id: string | null
+          punctuality_rating: number | null
+          quality_of_work_rating: number | null
+          teamwork_rating: number | null
+          communication_rating: number | null
+          overall_rating: number | null
+          strengths: string | null
+          areas_for_improvement: string | null
+          goals: string | null
+          comments: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          staff_id: string
+          review_date: string
+          review_period_start: string
+          review_period_end: string
+          reviewer_id?: string | null
+          punctuality_rating?: number | null
+          quality_of_work_rating?: number | null
+          teamwork_rating?: number | null
+          communication_rating?: number | null
+          overall_rating?: number | null
+          strengths?: string | null
+          areas_for_improvement?: string | null
+          goals?: string | null
+          comments?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          staff_id?: string
+          review_date?: string
+          review_period_start?: string
+          review_period_end?: string
+          reviewer_id?: string | null
+          punctuality_rating?: number | null
+          quality_of_work_rating?: number | null
+          teamwork_rating?: number | null
+          communication_rating?: number | null
+          overall_rating?: number | null
+          strengths?: string | null
+          areas_for_improvement?: string | null
+          goals?: string | null
+          comments?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_performance_reviews_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      staff_shifts: {
+        Row: {
+          id: string
+          staff_id: string
+          shift_date: string
+          shift_type: string
+          start_time: string
+          end_time: string
+          break_duration_minutes: number
+          status: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          staff_id: string
+          shift_date: string
+          shift_type: string
+          start_time: string
+          end_time: string
+          break_duration_minutes?: number
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          staff_id?: string
+          shift_date?: string
+          shift_type?: string
+          start_time?: string
+          end_time?: string
+          break_duration_minutes?: number
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_shifts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      suppliers: {
+        Row: {
+          id: string
+          supplier_name: string
+          contact_person: string | null
+          email: string | null
+          phone: string | null
+          address: string | null
+          city: string | null
+          state: string | null
+          payment_terms: string | null
+          notes: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          supplier_name: string
+          contact_person?: string | null
+          email?: string | null
+          phone?: string | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          payment_terms?: string | null
+          notes?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          supplier_name?: string
+          contact_person?: string | null
+          email?: string | null
+          phone?: string | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          payment_terms?: string | null
+          notes?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       system_settings: {
         Row: {
           id: string
