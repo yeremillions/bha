@@ -38,6 +38,7 @@ import {
   MoreHorizontal,
   UserPlus,
   Play,
+  Package,
 } from 'lucide-react';
 import { useHousekeepingTasks, useHousekeepingStaff, useAssignTask, useUpdateTask, useAutoAssignTask } from '@/hooks/useHousekeeping';
 import { format } from 'date-fns';
@@ -305,43 +306,110 @@ const Housekeeping = () => {
               </Card>
             </div>
 
-            {/* Staff Panel */}
+            {/* Right Column - Staff & Inventory */}
             <div className="space-y-6">
+              {/* Staff Overview */}
               <Card className="border-border/50 bg-card">
                 <CardHeader className="border-b border-border/50">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      Staff
-                    </CardTitle>
-                    <Button size="sm" variant="outline">
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add Staff
-                    </Button>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Staff Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4">
+                  {/* Add Staff Button - Own Row */}
+                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Staff Member
+                  </Button>
+
+                  {/* Staff List */}
+                  <div className="space-y-3">
+                    {staffStats.map((member) => (
+                      <div
+                        key={member.id}
+                        className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">{member.full_name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                <span className="text-xs text-muted-foreground">{member.rating.toFixed(1)}</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">•</span>
+                              <span className="text-xs text-muted-foreground">
+                                {member.total_tasks_completed} total
+                              </span>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="ml-2">
+                            {member.tasksToday} today
+                          </Badge>
+                        </div>
+                        {member.phone && (
+                          <p className="text-xs text-muted-foreground">{member.phone}</p>
+                        )}
+                      </div>
+                    ))}
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Inventory Alerts */}
+              <Card className="border-border/50 bg-card">
+                <CardHeader className="border-b border-border/50">
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Inventory Alerts
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3">
-                  {staffStats.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                    >
-                      <div>
-                        <p className="font-medium">{member.full_name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                            <span className="text-xs text-muted-foreground">{member.rating.toFixed(1)}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className="text-xs text-muted-foreground">
-                            {member.total_tasks_completed} completed
-                          </span>
-                        </div>
-                      </div>
-                      <Badge variant="outline">{member.tasksToday} today</Badge>
+                  {/* Sample Inventory Items */}
+                  <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="font-medium text-rose-600 dark:text-rose-400">Towel Sets</p>
+                      <Badge className="bg-rose-500 text-white">Critical</Badge>
                     </div>
-                  ))}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Current: 3</span>
+                      <span className="text-muted-foreground">Threshold: 8</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="font-medium text-amber-600 dark:text-amber-400">Bed Linens (Queen)</p>
+                      <Badge className="bg-amber-500 text-white">Low Stock</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Current: 5</span>
+                      <span className="text-muted-foreground">Threshold: 10</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="font-medium text-amber-600 dark:text-amber-400">Toilet Paper (Rolls)</p>
+                      <Badge className="bg-amber-500 text-white">Low Stock</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Current: 15</span>
+                      <span className="text-muted-foreground">Threshold: 20</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="font-medium text-emerald-600 dark:text-emerald-400">Cleaning Supplies</p>
+                      <Badge className="bg-emerald-500 text-white">In Stock</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Current: 12</span>
+                      <span className="text-muted-foreground">Threshold: 10</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
