@@ -33,7 +33,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettings, type EmailTemplates as EmailTemplatesType } from "@/hooks/useSettings";
+import { useSystemSetting, useUpdateSystemSetting } from "@/hooks/useHousekeeping";
 import { format } from "date-fns";
+import { Sparkles } from "lucide-react";
 
 const Settings = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -75,6 +77,36 @@ const Settings = () => {
     loadMoreAuditLogs,
   } = useSettings();
 
+  // Housekeeping settings
+  const { data: assignmentModeSetting } = useSystemSetting('housekeeping_assignment_mode');
+  const { data: autoCreateSetting } = useSystemSetting('housekeeping_auto_create_on_checkout');
+  const updateSetting = useUpdateSystemSetting();
+
+  const [housekeepingAssignmentMode, setHousekeepingAssignmentMode] = useState<string>('automatic');
+  const [housekeepingAutoCreate, setHousekeepingAutoCreate] = useState<boolean>(true);
+
+  // Update local state when settings load
+  useState(() => {
+    if (assignmentModeSetting) {
+      const mode = JSON.parse(assignmentModeSetting.setting_value as string);
+      setHousekeepingAssignmentMode(mode);
+    }
+    if (autoCreateSetting) {
+      setHousekeepingAutoCreate(autoCreateSetting.setting_value as boolean);
+    }
+  });
+
+  const saveHousekeepingSettings = async () => {
+    await updateSetting.mutateAsync({
+      key: 'housekeeping_assignment_mode',
+      value: JSON.stringify(housekeepingAssignmentMode),
+    });
+    await updateSetting.mutateAsync({
+      key: 'housekeeping_auto_create_on_checkout',
+      value: housekeepingAutoCreate,
+    });
+  };
+
   const tabs = [
     { id: "business", label: "Business Info", icon: Building2 },
     { id: "branding", label: "Branding", icon: Palette },
@@ -83,6 +115,7 @@ const Settings = () => {
     { id: "payment", label: "Payment", icon: CreditCard },
     { id: "cancellation", label: "Cancellation Policy", icon: XCircle },
     { id: "seasonal-pricing", label: "Seasonal Pricing", icon: Calendar },
+    { id: "housekeeping", label: "Housekeeping", icon: Sparkles },
     { id: "users", label: "User Management", icon: Users },
     { id: "security", label: "Security", icon: Shield },
     { id: "audit-log", label: "Audit Log", icon: History },
@@ -924,6 +957,99 @@ const Settings = () => {
                           <Plus className="h-4 w-4" />
                           Invite Team Member
                         </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Housekeeping Settings */}
+                  {activeTab === "housekeeping" && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 font-display">
+                          <Sparkles className="h-5 w-5 text-primary" />
+                          Housekeeping Settings
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="assignmentMode">Task Assignment Mode</Label>
+                            <Select
+                              value={housekeepingAssignmentMode}
+                              onValueChange={setHousekeepingAssignmentMode}
+                            >
+                              <SelectTrigger id="assignmentMode">
+                                <SelectValue placeholder="Select assignment mode" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="automatic">Automatic Assignment</SelectItem>
+                                <SelectItem value="manual">Manual Assignment</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-sm text-muted-foreground">
+                              {housekeepingAssignmentMode === 'automatic'
+                                ? 'Tasks will be automatically assigned to available staff based on workload, ratings, and availability.'
+                                : 'Tasks will remain unassigned until manually assigned by a manager.'}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between space-x-4 p-4 rounded-lg bg-muted/30 border border-border">
+                            <div className="flex-1 space-y-1">
+                              <Label htmlFor="autoCreate" className="text-base font-medium">
+                                Auto-Create Tasks on Checkout
+                              </Label>
+                              <p className="text-sm text-muted-foreground">
+                                Automatically create housekeeping tasks when guests check out
+                              </p>
+                            </div>
+                            <Switch
+                              id="autoCreate"
+                              checked={housekeepingAutoCreate}
+                              onCheckedChange={setHousekeepingAutoCreate}
+                            />
+                          </div>
+
+                          <div className="p-4 rounded-lg bg-accent/10 border border-accent/20">
+                            <h4 className="font-semibold text-foreground mb-2">How It Works</h4>
+                            <ul className="text-sm text-muted-foreground space-y-2">
+                              <li className="flex items-start gap-2">
+                                <span className="text-accent mt-0.5">•</span>
+                                <span>When a booking is marked as completed (checked out), a checkout cleaning task is automatically created</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-accent mt-0.5">•</span>
+                                <span>In automatic mode, the task is immediately assigned to the best available staff member</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-accent mt-0.5">•</span>
+                                <span>In manual mode, the task waits in the unassigned queue for manager assignment</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-accent mt-0.5">•</span>
+                                <span>Auto-assignment considers: staff workload, performance ratings, and task priority</span>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                          <Button
+                            onClick={saveHousekeepingSettings}
+                            disabled={updateSetting.isPending}
+                          >
+                            {updateSetting.isPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Save className="h-4 w-4 mr-2" />
+                                Save Changes
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   )}
