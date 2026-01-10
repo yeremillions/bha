@@ -61,21 +61,16 @@ import {
 } from 'lucide-react';
 import {
   useHousekeepingTasks,
-  useHousekeepingStaff,
   useCreateTask,
   useUpdateTask,
   useDeleteTask,
   useAssignTask,
   useAutoAssignTask,
-  useCreateStaff,
-  useUpdateStaff,
-  useDeleteStaff,
   type NewTask,
-  type NewStaff,
   type HousekeepingTask,
-  type HousekeepingStaff as StaffMember,
 } from '@/hooks/useHousekeeping';
 import { useProperties } from '@/hooks/useProperties';
+import { useStaffByDepartment } from '@/hooks/useStaff';
 import { format } from 'date-fns';
 
 const priorityConfig = {
@@ -126,9 +121,6 @@ const Housekeeping = () => {
   const [dateTo, setDateTo] = useState('');
 
   // Dialog states
-  const [addStaffDialogOpen, setAddStaffDialogOpen] = useState(false);
-  const [editStaffDialogOpen, setEditStaffDialogOpen] = useState(false);
-  const [deleteStaffDialogOpen, setDeleteStaffDialogOpen] = useState(false);
   const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
   const [editTaskDialogOpen, setEditTaskDialogOpen] = useState(false);
   const [viewTaskDialogOpen, setViewTaskDialogOpen] = useState(false);
@@ -138,17 +130,7 @@ const Housekeeping = () => {
 
   // Form states
   const [selectedTask, setSelectedTask] = useState<HousekeepingTask | null>(null);
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
-  const [staffToDelete, setStaffToDelete] = useState<{ id: string; name: string } | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<{ id: string; number: string } | null>(null);
-
-  const [staffForm, setStaffForm] = useState({
-    full_name: '',
-    phone: '',
-    email: '',
-    status: 'active' as 'active' | 'inactive' | 'on_leave',
-    notes: '',
-  });
 
   const [taskForm, setTaskForm] = useState({
     property_id: '',
@@ -171,7 +153,7 @@ const Housekeeping = () => {
 
   // Fetch data
   const { data: allTasks = [], isLoading: tasksLoading } = useHousekeepingTasks();
-  const { data: staff = [], isLoading: staffLoading } = useHousekeepingStaff();
+  const { data: staff = [], isLoading: staffLoading } = useStaffByDepartment('housekeeping');
   const { data: properties = [] } = useProperties();
 
   // Mutations
@@ -180,9 +162,6 @@ const Housekeeping = () => {
   const deleteTask = useDeleteTask();
   const assignTask = useAssignTask();
   const autoAssign = useAutoAssignTask();
-  const createStaff = useCreateStaff();
-  const updateStaff = useUpdateStaff();
-  const deleteStaff = useDeleteStaff();
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -218,7 +197,7 @@ const Housekeeping = () => {
     ];
   }, [allTasks]);
 
-  // Get today's tasks for each staff member
+  // Get today's tasks and total tasks for each staff member
   const staffStats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     return staff.map(member => {
@@ -226,9 +205,27 @@ const Housekeeping = () => {
         t.assigned_to === member.id &&
         t.scheduled_for.startsWith(today)
       ).length;
+
+      const total_tasks_completed = allTasks.filter(t =>
+        t.assigned_to === member.id &&
+        t.status === 'completed'
+      ).length;
+
+      // Calculate rating based on completed tasks with quality ratings
+      const ratedTasks = allTasks.filter(t =>
+        t.assigned_to === member.id &&
+        t.status === 'completed' &&
+        t.quality_rating
+      );
+      const rating = ratedTasks.length > 0
+        ? ratedTasks.reduce((sum, t) => sum + (t.quality_rating || 0), 0) / ratedTasks.length
+        : 5.0;
+
       return {
         ...member,
         tasksToday,
+        total_tasks_completed,
+        rating,
       };
     });
   }, [staff, allTasks]);
@@ -460,12 +457,6 @@ const Housekeeping = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
-                {/* Add Staff Button */}
-                <Button onClick={handleOpenStaffDialog} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Staff Member
-                </Button>
-
                 {/* Staff List */}
                 <div className="space-y-3">
                   {staffStats.map((member) => (
@@ -487,28 +478,9 @@ const Housekeeping = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="ml-2">
-                            {member.tasksToday} today
-                          </Badge>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MoreHorizontal className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-popover border-border">
-                              <DropdownMenuItem onClick={() => handleEditStaff(member)}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteStaff(member)} className="text-destructive">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                        <Badge variant="outline" className="ml-2">
+                          {member.tasksToday} today
+                        </Badge>
                       </div>
                       {member.phone && (
                         <p className="text-xs text-muted-foreground">{member.phone}</p>
@@ -746,87 +718,6 @@ const Housekeeping = () => {
           </Card>
         </main>
       </div>
-
-      {/* Add/Edit Staff Dialog */}
-      <Dialog open={addStaffDialogOpen || editStaffDialogOpen} onOpenChange={(open) => {
-        setAddStaffDialogOpen(open);
-        setEditStaffDialogOpen(open);
-        if (!open) setSelectedStaff(null);
-      }}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle>{selectedStaff ? 'Edit Staff Member' : 'Add Staff Member'}</DialogTitle>
-            <DialogDescription>
-              {selectedStaff ? 'Update staff member information' : 'Add a new housekeeping staff member'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="full_name">Full Name *</Label>
-              <Input
-                id="full_name"
-                value={staffForm.full_name}
-                onChange={(e) => setStaffForm({ ...staffForm, full_name: e.target.value })}
-                placeholder="Enter full name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={staffForm.phone}
-                onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })}
-                placeholder="+234 800 000 0000"
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={staffForm.email}
-                onChange={(e) => setStaffForm({ ...staffForm, email: e.target.value })}
-                placeholder="email@example.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select value={staffForm.status} onValueChange={(value: any) => setStaffForm({ ...staffForm, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="on_leave">On Leave</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={staffForm.notes}
-                onChange={(e) => setStaffForm({ ...staffForm, notes: e.target.value })}
-                placeholder="Additional notes..."
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setAddStaffDialogOpen(false);
-              setEditStaffDialogOpen(false);
-              setSelectedStaff(null);
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveStaff} disabled={!staffForm.full_name}>
-              {selectedStaff ? 'Update' : 'Add'} Staff
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Create/Edit Task Dialog */}
       <Dialog open={createTaskDialogOpen || editTaskDialogOpen} onOpenChange={(open) => {
@@ -1170,17 +1061,6 @@ const Housekeeping = () => {
       </Dialog>
 
       {/* Delete Confirmations */}
-      <ConfirmDialog
-        open={deleteStaffDialogOpen}
-        onOpenChange={setDeleteStaffDialogOpen}
-        onConfirm={confirmDeleteStaff}
-        title="Delete Staff Member?"
-        description={`Are you sure you want to delete ${staffToDelete?.name}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="destructive"
-      />
-
       <ConfirmDialog
         open={deleteTaskDialogOpen}
         onOpenChange={setDeleteTaskDialogOpen}

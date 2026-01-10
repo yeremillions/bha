@@ -148,3 +148,21 @@ export const useStaffStats = () => {
     },
   });
 };
+
+// Get staff by department (e.g., housekeeping)
+export const useStaffByDepartment = (department: string) => {
+  return useQuery({
+    queryKey: ['staff', 'department', department],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('staff')
+        .select('*')
+        .eq('department', department)
+        .eq('employment_status', 'active')
+        .order('full_name');
+
+      if (error) throw new Error(error.message);
+      return data as Staff[];
+    },
+  });
+};
