@@ -590,7 +590,7 @@ const Bookings = () => {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end" className="bg-popover border-border">
                         <DropdownMenuItem
                           className="gap-2"
                           onClick={() => handleAction('View Details', booking.id)}
@@ -750,7 +750,7 @@ const Bookings = () => {
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuContent align="end" className="bg-popover border-border">
                               <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => handleAction('View Details', booking.id)}
