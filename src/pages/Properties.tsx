@@ -55,6 +55,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { AddPropertyForm, PropertyFormData } from '@/components/admin/AddPropertyForm';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 // Amenity icons mapping
 const amenityIcons = {
@@ -107,6 +108,10 @@ const Properties = () => {
   const [sortBy, setSortBy] = useState<string>('name-asc');
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null);
+
   // Fetch properties from database
   const { data: properties = [], isLoading, error } = useProperties({
     status: statusFilter,
@@ -137,10 +142,15 @@ const Properties = () => {
     setShowAddForm(false);
   };
 
-  const handleDeleteProperty = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this property?')) {
-      await deleteProperty.mutateAsync(id);
-    }
+  const handleDeleteProperty = (id: string) => {
+    setPropertyToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteProperty = async () => {
+    if (!propertyToDelete) return;
+    await deleteProperty.mutateAsync(propertyToDelete);
+    setPropertyToDelete(null);
   };
 
   useEffect(() => {
@@ -675,6 +685,18 @@ const Properties = () => {
           )}
         </main>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDeleteProperty}
+        title="Delete Property?"
+        description="Are you sure you want to delete this property? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
     </div>
   );
 };

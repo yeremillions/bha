@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
 import { LoadMoreButton, Pagination } from '@/components/ui/pagination-controls';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-NG', {
@@ -71,6 +72,10 @@ const Customers = () => {
   const [mobileDisplayCount, setMobileDisplayCount] = useState(15);
   const [desktopCurrentPage, setDesktopCurrentPage] = useState(1);
   const [desktopItemsPerPage, setDesktopItemsPerPage] = useState(30);
+
+  // Dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Fetch customers from database
   const { data: allCustomers = [], isLoading: customersLoading, error } = useCustomers();
@@ -187,6 +192,12 @@ const Customers = () => {
     );
   };
 
+  const confirmDeleteCustomer = async () => {
+    if (!customerToDelete) return;
+    await deleteCustomer.mutateAsync(customerToDelete.id);
+    setCustomerToDelete(null);
+  };
+
   const handleAction = async (action: string, customerId: string, customerName: string, isVIP: boolean) => {
     if (action === 'View') {
       navigate(`/dashboard/customers/${customerId}`);
@@ -207,9 +218,8 @@ const Customers = () => {
     }
 
     if (action === 'Delete') {
-      if (window.confirm(`Are you sure you want to delete ${customerName}? This cannot be undone.`)) {
-        await deleteCustomer.mutateAsync(customerId);
-      }
+      setCustomerToDelete({ id: customerId, name: customerName });
+      setDeleteDialogOpen(true);
       return;
     }
 
@@ -590,6 +600,18 @@ const Customers = () => {
           </Card>
         </main>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDeleteCustomer}
+        title="Delete Customer?"
+        description={`Are you sure you want to delete ${customerToDelete?.name || 'this customer'}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
     </div>
   );
 };

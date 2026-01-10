@@ -27,6 +27,7 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Select,
   SelectContent,
@@ -111,6 +112,10 @@ const Bookings = () => {
   const [desktopCurrentPage, setDesktopCurrentPage] = useState(1);
   const [desktopItemsPerPage, setDesktopItemsPerPage] = useState(50);
 
+  // Dialog state
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+
   // Fetch bookings from database
   const { data: allBookings = [], isLoading: bookingsLoading, error } = useBookings();
   const updateBookingStatus = useUpdateBookingStatus();
@@ -177,6 +182,28 @@ const Bookings = () => {
       .filter(b => b.payment_status === 'paid')
       .reduce((sum, b) => sum + (b.total_amount || 0), 0);
   }, [allBookings]);
+
+  // Confirm booking cancellation
+  const confirmCancelBooking = async () => {
+    if (!bookingToCancel) return;
+    try {
+      await cancelBooking.mutateAsync(bookingToCancel);
+      toast({
+        title: 'Booking Cancelled',
+        description: 'The booking has been cancelled. Process any required refunds through the Refunds section.',
+        duration: 6000,
+      });
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+      toast({
+        title: 'Error Cancelling Booking',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+      setBookingToCancel(null);
+    }
+  };
 
   // Handle various booking actions
   const handleAction = async (action: string, bookingId: string) => {
@@ -248,23 +275,8 @@ const Bookings = () => {
     }
 
     if (action === 'Cancel Booking') {
-      if (window.confirm('Are you sure you want to cancel this booking? This action cannot be undone. Note: Any required refunds must be processed manually.')) {
-        try {
-          await cancelBooking.mutateAsync(bookingId);
-          toast({
-            title: 'Booking Cancelled',
-            description: 'The booking has been cancelled. Process any required refunds through the Refunds section.',
-            duration: 6000,
-          });
-        } catch (error) {
-          console.error('Failed to cancel booking:', error);
-          toast({
-            title: 'Error Cancelling Booking',
-            description: error instanceof Error ? error.message : 'An unexpected error occurred.',
-            variant: 'destructive',
-          });
-        }
-      }
+      setBookingToCancel(bookingId);
+      setCancelDialogOpen(true);
       return;
     }
 
@@ -836,6 +848,18 @@ const Bookings = () => {
           </div>
         </main>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        onConfirm={confirmCancelBooking}
+        title="Cancel Booking?"
+        description="Are you sure you want to cancel this booking? This action cannot be undone. Note: Any required refunds must be processed manually."
+        confirmText="Cancel Booking"
+        cancelText="Keep Booking"
+        variant="destructive"
+      />
     </div>
   );
 };
