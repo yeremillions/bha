@@ -230,12 +230,13 @@ const BookingDetails = () => {
 
   const handleCancel = async () => {
     if (!booking) return;
-    if (window.confirm('Are you sure you want to cancel this booking? This will refund the payment and cannot be undone.')) {
+    if (window.confirm('Are you sure you want to cancel this booking? This action cannot be undone. Note: Any required refunds must be processed manually.')) {
       try {
-        await cancelBooking.mutateAsync({ id: booking.id, refund: true });
+        await cancelBooking.mutateAsync(booking.id);
         toast({
           title: 'Booking Cancelled',
-          description: 'The booking has been successfully cancelled.',
+          description: 'The booking has been cancelled. Process any required refunds through the Refunds section.',
+          duration: 6000,
         });
         navigate('/dashboard/bookings');
       } catch (error) {

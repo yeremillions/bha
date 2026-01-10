@@ -248,8 +248,22 @@ const Bookings = () => {
     }
 
     if (action === 'Cancel Booking') {
-      if (window.confirm('Are you sure you want to cancel this booking? This will refund the payment.')) {
-        await cancelBooking.mutateAsync({ id: bookingId, refund: true });
+      if (window.confirm('Are you sure you want to cancel this booking? This action cannot be undone. Note: Any required refunds must be processed manually.')) {
+        try {
+          await cancelBooking.mutateAsync(bookingId);
+          toast({
+            title: 'Booking Cancelled',
+            description: 'The booking has been cancelled. Process any required refunds through the Refunds section.',
+            duration: 6000,
+          });
+        } catch (error) {
+          console.error('Failed to cancel booking:', error);
+          toast({
+            title: 'Error Cancelling Booking',
+            description: error instanceof Error ? error.message : 'An unexpected error occurred.',
+            variant: 'destructive',
+          });
+        }
       }
       return;
     }

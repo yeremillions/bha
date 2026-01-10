@@ -18,6 +18,7 @@ import Bar from "./pages/Bar";
 import BarTabDetails from "./pages/BarTabDetails";
 import Calendar from "./pages/Calendar";
 import Customers from "./pages/Customers";
+import CustomerDetails from "./pages/CustomerDetails";
 import Vendors from "./pages/Vendors";
 import VendorDetails from "./pages/VendorDetails";
 import Reports from "./pages/Reports";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/dashboard/vendors" element={<Vendors />} />
               <Route path="/dashboard/vendors/:id" element={<VendorDetails />} />
               <Route path="/dashboard/customers" element={<Customers />} />
+              <Route path="/dashboard/customers/:id" element={<CustomerDetails />} />
               <Route path="/dashboard/financial" element={<Financial />} />
               <Route path="/dashboard/reports" element={<Reports />} />
               <Route path="/dashboard/settings" element={<Settings />} />
