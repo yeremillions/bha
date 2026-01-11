@@ -69,7 +69,7 @@ export const useHousekeepingTasks = (filters?: TaskFilters) => {
           *,
           property:properties(*),
           booking:bookings(*),
-          staff:housekeeping_staff!housekeeping_tasks_assigned_to_fkey(*)
+          staff:staff!housekeeping_tasks_assigned_to_fkey(*)
         `)
         .order('scheduled_for', { ascending: true });
 
@@ -123,7 +123,7 @@ export const useHousekeepingTask = (id: string | undefined) => {
           *,
           property:properties(*),
           booking:bookings(*),
-          staff:housekeeping_staff!housekeeping_tasks_assigned_to_fkey(*)
+          staff:staff!housekeeping_tasks_assigned_to_fkey(*)
         `)
         .eq('id', id)
         .single();
