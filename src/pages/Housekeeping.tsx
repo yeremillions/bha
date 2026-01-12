@@ -5,6 +5,16 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -41,7 +51,8 @@ import {
   AlertTriangle,
   Play,
 } from 'lucide-react';
-import { useHousekeepingTasks } from '@/hooks/useHousekeeping';
+import { useHousekeepingTasks, useCreateTask, type NewTask } from '@/hooks/useHousekeeping';
+import { useProperties } from '@/hooks/useProperties';
 import { format } from 'date-fns';
 
 const priorityConfig = {
@@ -73,6 +84,20 @@ const Housekeeping = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  // Form state
+  const [taskForm, setTaskForm] = useState<NewTask>({
+    property_id: '',
+    task_type: 'regular_clean',
+    priority: 'normal',
+    scheduled_for: '',
+    description: '',
+    special_instructions: '',
+    estimated_duration_minutes: 120,
+  });
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -80,6 +105,8 @@ const Housekeeping = () => {
 
   // Fetch data
   const { data: allTasks = [], isLoading, error } = useHousekeepingTasks();
+  const { data: properties = [] } = useProperties();
+  const createTask = useCreateTask();
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -112,9 +139,31 @@ const Housekeeping = () => {
     ];
   }, [allTasks]);
 
+  const handleOpenCreateDialog = () => {
+    setTaskForm({
+      property_id: '',
+      task_type: 'regular_clean',
+      priority: 'normal',
+      scheduled_for: '',
+      description: '',
+      special_instructions: '',
+      estimated_duration_minutes: 120,
+    });
+    setCreateDialogOpen(true);
+  };
+
+  const handleCreateTask = async () => {
+    if (!taskForm.property_id || !taskForm.scheduled_for) {
+      return;
+    }
+
+    await createTask.mutateAsync(taskForm);
+    setCreateDialogOpen(false);
+  };
+
   const handleAction = (action: string, taskId: string) => {
     console.log('Action:', action, 'Task ID:', taskId);
-    // TODO: Implement actions
+    // TODO: Implement other actions (view, edit, delete)
   };
 
   if (isLoading) {
@@ -155,7 +204,7 @@ const Housekeeping = () => {
               <h1 className="text-3xl font-display font-bold text-foreground">Housekeeping</h1>
               <p className="text-muted-foreground mt-1">Manage cleaning tasks and staff assignments</p>
             </div>
-            <Button onClick={() => handleAction('create', '')} className="bg-primary hover:bg-primary/90">
+            <Button onClick={handleOpenCreateDialog} className="bg-primary hover:bg-primary/90">
               <Plus className="h-4 w-4 mr-2" />
               Create Task
             </Button>
@@ -302,6 +351,120 @@ const Housekeeping = () => {
           </div>
         </main>
       </div>
+
+      {/* Create Task Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Task</DialogTitle>
+            <DialogDescription>Create a new housekeeping task</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="property_id">Property *</Label>
+                <Select value={taskForm.property_id} onValueChange={(value) => setTaskForm({ ...taskForm, property_id: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {properties.map((property) => (
+                      <SelectItem key={property.id} value={property.id}>
+                        {property.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="task_type">Task Type *</Label>
+                <Select value={taskForm.task_type} onValueChange={(value: any) => setTaskForm({ ...taskForm, task_type: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="checkout_clean">Checkout Clean</SelectItem>
+                    <SelectItem value="turnover">Turnover</SelectItem>
+                    <SelectItem value="regular_clean">Regular Clean</SelectItem>
+                    <SelectItem value="deep_clean">Deep Clean</SelectItem>
+                    <SelectItem value="inspection">Inspection</SelectItem>
+                    <SelectItem value="maintenance_support">Maintenance Support</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={taskForm.priority} onValueChange={(value: any) => setTaskForm({ ...taskForm, priority: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="scheduled_for">Scheduled For *</Label>
+                <Input
+                  id="scheduled_for"
+                  type="datetime-local"
+                  value={taskForm.scheduled_for}
+                  onChange={(e) => setTaskForm({ ...taskForm, scheduled_for: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="estimated_duration_minutes">Duration (minutes)</Label>
+                <Input
+                  id="estimated_duration_minutes"
+                  type="number"
+                  value={taskForm.estimated_duration_minutes}
+                  onChange={(e) => setTaskForm({ ...taskForm, estimated_duration_minutes: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={taskForm.description}
+                onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+                placeholder="Task description..."
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="special_instructions">Special Instructions</Label>
+              <Textarea
+                id="special_instructions"
+                value={taskForm.special_instructions}
+                onChange={(e) => setTaskForm({ ...taskForm, special_instructions: e.target.value })}
+                placeholder="Any special instructions..."
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateTask}
+              disabled={!taskForm.property_id || !taskForm.scheduled_for || createTask.isPending}
+            >
+              {createTask.isPending ? 'Creating...' : 'Create Task'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
