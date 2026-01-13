@@ -12,6 +12,7 @@ import Properties from "./pages/Properties";
 import Bookings from "./pages/Bookings";
 import BookingDetails from "./pages/BookingDetails";
 import Housekeeping from "./pages/Housekeeping";
+import HousekeepingTaskDetail from "./pages/HousekeepingTaskDetail";
 import Staff from "./pages/Staff";
 import Inventory from "./pages/Inventory";
 import Maintenance from "./pages/Maintenance";
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/dashboard/bookings/:id" element={<BookingDetails />} />
               <Route path="/dashboard/calendar" element={<Calendar />} />
               <Route path="/dashboard/housekeeping" element={<Housekeeping />} />
+              <Route path="/dashboard/housekeeping/:id" element={<HousekeepingTaskDetail />} />
               <Route path="/dashboard/staff" element={<Staff />} />
               <Route path="/dashboard/inventory" element={<Inventory />} />
               <Route path="/dashboard/bar" element={<Bar />} />

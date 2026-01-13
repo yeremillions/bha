@@ -202,7 +202,7 @@ const Housekeeping = () => {
 
   const handleViewDetails = (taskId: string) => {
     // Navigate to task details page
-    navigate(`/admin/housekeeping/${taskId}`);
+    navigate(`/dashboard/housekeeping/${taskId}`);
   };
 
   const handleOpenEditDialog = (taskId: string) => {
