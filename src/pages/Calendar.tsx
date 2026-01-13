@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useBookings } from '@/hooks/useBookings';
+import { useProperties } from '@/hooks/useProperties';
 import { cn } from '@/lib/utils';
 import { 
   Calendar as CalendarIcon,
@@ -32,48 +34,31 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-// Mock data for bookings
-const mockBookings = [
-  { id: '1', propertyId: '1', propertyName: 'Luxury 3-Bedroom Penthouse', startDate: '2026-01-05', endDate: '2026-01-08', guestName: 'Adebayo Johnson' },
-  { id: '2', propertyId: '2', propertyName: 'Executive Studio Suite', startDate: '2026-01-10', endDate: '2026-01-14', guestName: 'Chioma Okafor' },
-  { id: '3', propertyId: '1', propertyName: 'Luxury 3-Bedroom Penthouse', startDate: '2026-01-15', endDate: '2026-01-18', guestName: 'Tunde Williams' },
-  { id: '4', propertyId: '3', propertyName: 'Cozy 2-Bedroom Apartment', startDate: '2026-01-12', endDate: '2026-01-16', guestName: 'Grace Eze' },
-  { id: '5', propertyId: '4', propertyName: 'Family Home with Garden', startDate: '2026-01-20', endDate: '2026-01-25', guestName: 'Ibrahim Musa' },
-  { id: '6', propertyId: '2', propertyName: 'Executive Studio Suite', startDate: '2026-01-22', endDate: '2026-01-26', guestName: 'Folake Adeyemi' },
-];
-
-const properties = [
-  { id: 'all', name: 'All Properties' },
-  { id: '1', name: 'Luxury 3-Bedroom Penthouse' },
-  { id: '2', name: 'Executive Studio Suite' },
-  { id: '3', name: 'Cozy 2-Bedroom Apartment' },
-  { id: '4', name: 'Family Home with Garden' },
-  { id: '5', name: 'Modern Loft Space' },
-  { id: '6', name: 'Beachfront Villa' },
-];
-
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-type BookingItem = {
-  id: string;
-  propertyId: string;
-  propertyName: string;
-  startDate: string;
-  endDate: string;
-  guestName: string;
-};
 
 const Calendar = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // January 2026
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedProperty, setSelectedProperty] = useState('all');
-  const [selectedDayBookings, setSelectedDayBookings] = useState<BookingItem[]>([]);
+  const [selectedDayBookings, setSelectedDayBookings] = useState<any[]>([]);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Fetch real data
+  const { data: allBookings = [], isLoading: bookingsLoading } = useBookings();
+  const { data: allProperties = [], isLoading: propertiesLoading } = useProperties();
+
+  // Build properties dropdown list
+  const properties = useMemo(() => {
+    return [
+      { id: 'all', name: 'All Properties' },
+      ...allProperties.map(p => ({ id: p.id, name: p.name }))
+    ];
+  }, [allProperties]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -81,10 +66,10 @@ const Calendar = () => {
     }
   }, [user, loading, navigate]);
 
-  if (loading) {
+  if (loading || bookingsLoading || propertiesLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="animate-pulse text-muted-foreground">Loading calendar...</div>
       </div>
     );
   }
@@ -105,25 +90,30 @@ const Calendar = () => {
   today.setHours(0, 0, 0, 0);
 
   // Filter bookings based on selected property
-  const filteredBookings = selectedProperty === 'all' 
-    ? mockBookings 
-    : mockBookings.filter(b => b.propertyId === selectedProperty);
+  const filteredBookings = useMemo(() => {
+    const bookings = selectedProperty === 'all'
+      ? allBookings
+      : allBookings.filter(b => b.property_id === selectedProperty);
+
+    // Only include confirmed and checked_in bookings
+    return bookings.filter(b => b.status === 'confirmed' || b.status === 'checked_in');
+  }, [allBookings, selectedProperty]);
 
   // Get booking status for a specific day
   const getDateStatus = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const date = new Date(year, month, day);
     date.setHours(0, 0, 0, 0);
-    
+
     if (date < today) return 'past';
-    
+
     const bookingsOnDate = filteredBookings.filter(booking => {
-      const start = new Date(booking.startDate);
-      const end = new Date(booking.endDate);
+      const start = new Date(booking.check_in_date);
+      const end = new Date(booking.check_out_date);
       const checkDate = new Date(dateStr);
       return checkDate >= start && checkDate <= end;
     });
-    
+
     if (bookingsOnDate.length === 0) return 'available';
     if (selectedProperty === 'all') {
       // For all properties, check occupancy percentage
@@ -134,7 +124,7 @@ const Calendar = () => {
     } else {
       return 'fully-booked';
     }
-    
+
     return 'available';
   };
 
@@ -142,8 +132,8 @@ const Calendar = () => {
   const getBookingsForDay = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return filteredBookings.filter(booking => {
-      const start = new Date(booking.startDate);
-      const end = new Date(booking.endDate);
+      const start = new Date(booking.check_in_date);
+      const end = new Date(booking.check_out_date);
       const checkDate = new Date(dateStr);
       return checkDate >= start && checkDate <= end;
     });
@@ -167,29 +157,33 @@ const Calendar = () => {
 
   // Calculate stats
   const monthBookings = filteredBookings.filter(b => {
-    const start = new Date(b.startDate);
+    const start = new Date(b.check_in_date);
     return start.getMonth() === month && start.getFullYear() === year;
   });
-  
-  const totalDays = daysInMonth * (selectedProperty === 'all' ? properties.length - 1 : 1);
+
+  const totalDays = daysInMonth * (selectedProperty === 'all' ? allProperties.length : 1);
   const bookedDays = filteredBookings.reduce((acc, booking) => {
-    const start = new Date(booking.startDate);
-    const end = new Date(booking.endDate);
+    const start = new Date(booking.check_in_date);
+    const end = new Date(booking.check_out_date);
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0);
-    
+
     const effectiveStart = start < monthStart ? monthStart : start;
     const effectiveEnd = end > monthEnd ? monthEnd : end;
-    
+
     if (effectiveStart <= effectiveEnd) {
       const days = Math.ceil((effectiveEnd.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       return acc + days;
     }
     return acc;
   }, 0);
-  
+
   const occupancyRate = totalDays > 0 ? Math.round((bookedDays / totalDays) * 100) : 0;
-  const estimatedRevenue = monthBookings.length * 75000; // Mock average
+
+  // Calculate actual revenue from bookings
+  const monthlyRevenue = monthBookings.reduce((acc, booking) => {
+    return acc + (booking.total_amount || 0);
+  }, 0);
 
   // Generate calendar grid
   const calendarDays = [];
@@ -285,17 +279,19 @@ const Calendar = () => {
                 color: 'text-emerald-600 dark:text-emerald-400',
                 gradient: 'from-emerald-500/20 to-emerald-500/5',
               },
-              { 
-                label: 'Revenue', 
-                value: `₦${(estimatedRevenue / 1000).toFixed(0)}K`, 
+              {
+                label: 'Revenue',
+                value: monthlyRevenue >= 1000000
+                  ? `₦${(monthlyRevenue / 1000000).toFixed(1)}M`
+                  : `₦${(monthlyRevenue / 1000).toFixed(0)}K`,
                 subtext: 'This month',
                 icon: Banknote,
                 color: 'text-accent',
                 gradient: 'from-amber-500/20 to-amber-500/5',
               },
-              { 
-                label: 'Properties', 
-                value: selectedProperty === 'all' ? properties.length - 1 : 1, 
+              {
+                label: 'Properties',
+                value: selectedProperty === 'all' ? allProperties.length : 1,
                 subtext: selectedProperty === 'all' ? 'All properties' : 'Selected',
                 icon: Home,
                 color: 'text-foreground',
@@ -457,7 +453,7 @@ const Calendar = () => {
                         {bookings.length > 0 && status !== 'past' && (
                           <div className="flex-1 flex flex-col justify-end gap-0.5 overflow-hidden">
                             {bookings.slice(0, 2).map((booking) => (
-                              <button 
+                              <button
                                 key={booking.id}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -465,7 +461,7 @@ const Calendar = () => {
                                 }}
                                 className="hidden sm:block text-[8px] truncate px-1 py-0.5 rounded bg-accent/20 text-accent hover:bg-accent/40 transition-colors text-left"
                               >
-                                {booking.guestName.split(' ')[0]}
+                                {booking.customer?.full_name?.split(' ')[0] || 'Guest'}
                               </button>
                             ))}
                             {bookings.length > 2 && (
@@ -500,7 +496,7 @@ const Calendar = () => {
                           <div className="text-center">
                             <p className="text-xs font-medium text-foreground">{bookings.length} booking{bookings.length > 1 ? 's' : ''}</p>
                             <p className="text-[10px] text-muted-foreground truncate max-w-full">
-                              {bookings[0]?.guestName}
+                              {bookings[0]?.customer?.full_name || 'Guest'}
                             </p>
                             <p className="text-[9px] text-accent mt-1">Click to view</p>
                           </div>
@@ -544,8 +540,8 @@ const Calendar = () => {
                       <User className="h-5 w-5 text-accent" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{booking.guestName}</p>
-                      <p className="text-xs text-muted-foreground truncate">{booking.propertyName}</p>
+                      <p className="font-medium text-foreground truncate">{booking.customer?.full_name || 'Guest'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{booking.property?.name || 'Property'}</p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
                   </button>
