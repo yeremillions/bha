@@ -16,6 +16,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -50,9 +60,12 @@ import {
   CheckCircle2,
   AlertTriangle,
   Play,
+  UserCog,
 } from 'lucide-react';
-import { useHousekeepingTasks, useCreateTask, type NewTask } from '@/hooks/useHousekeeping';
+import { useHousekeepingTasks, useCreateTask, useUpdateTask, useDeleteTask, useAssignTask, type NewTask, type UpdateTask } from '@/hooks/useHousekeeping';
 import { useProperties } from '@/hooks/useProperties';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
 const priorityConfig = {
@@ -86,6 +99,10 @@ const Housekeeping = () => {
 
   // Dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Form state
   const [taskForm, setTaskForm] = useState<NewTask>({
@@ -98,6 +115,9 @@ const Housekeeping = () => {
     estimated_duration_minutes: 120,
   });
 
+  const [editForm, setEditForm] = useState<UpdateTask>({});
+  const [selectedStaffId, setSelectedStaffId] = useState<string>('');
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -107,6 +127,25 @@ const Housekeeping = () => {
   const { data: allTasks = [], isLoading, error } = useHousekeepingTasks();
   const { data: properties = [] } = useProperties();
   const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
+  const assignTask = useAssignTask();
+
+  // Fetch housekeeping staff from staff table
+  const { data: housekeepingStaff = [] } = useQuery({
+    queryKey: ['staff-housekeeping'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('staff')
+        .select('*')
+        .eq('department', 'housekeeping')
+        .eq('employment_status', 'active')
+        .order('full_name');
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -161,9 +200,67 @@ const Housekeeping = () => {
     setCreateDialogOpen(false);
   };
 
-  const handleAction = (action: string, taskId: string) => {
-    console.log('Action:', action, 'Task ID:', taskId);
-    // TODO: Implement other actions (view, edit, delete)
+  const handleViewDetails = (taskId: string) => {
+    // Navigate to task details page
+    navigate(`/admin/housekeeping/${taskId}`);
+  };
+
+  const handleOpenEditDialog = (taskId: string) => {
+    const task = allTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    setSelectedTaskId(taskId);
+    setEditForm({
+      status: task.status,
+      priority: task.priority,
+      description: task.description || '',
+      special_instructions: task.special_instructions || '',
+      estimated_duration_minutes: task.estimated_duration_minutes,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditTask = async () => {
+    if (!selectedTaskId) return;
+
+    await updateTask.mutateAsync({
+      id: selectedTaskId,
+      updates: editForm,
+    });
+    setEditDialogOpen(false);
+    setSelectedTaskId(null);
+  };
+
+  const handleOpenReassignDialog = (taskId: string) => {
+    const task = allTasks.find(t => t.id === taskId);
+    setSelectedTaskId(taskId);
+    setSelectedStaffId(task?.assigned_to || '');
+    setReassignDialogOpen(true);
+  };
+
+  const handleReassignTask = async () => {
+    if (!selectedTaskId || !selectedStaffId) return;
+
+    await assignTask.mutateAsync({
+      taskId: selectedTaskId,
+      staffId: selectedStaffId,
+    });
+    setReassignDialogOpen(false);
+    setSelectedTaskId(null);
+    setSelectedStaffId('');
+  };
+
+  const handleOpenDeleteDialog = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteTask = async () => {
+    if (!selectedTaskId) return;
+
+    await deleteTask.mutateAsync(selectedTaskId);
+    setDeleteDialogOpen(false);
+    setSelectedTaskId(null);
   };
 
   if (isLoading) {
@@ -325,16 +422,20 @@ const Housekeeping = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="bg-popover border-border">
-                                <DropdownMenuItem onClick={() => handleAction('view', task.id)}>
+                                <DropdownMenuItem onClick={() => handleViewDetails(task.id)}>
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleAction('edit', task.id)}>
+                                <DropdownMenuItem onClick={() => handleOpenEditDialog(task.id)}>
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleOpenReassignDialog(task.id)}>
+                                  <UserCog className="h-4 w-4 mr-2" />
+                                  Reassign
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleAction('delete', task.id)} className="text-destructive">
+                                <DropdownMenuItem onClick={() => handleOpenDeleteDialog(task.id)} className="text-destructive">
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Delete
                                 </DropdownMenuItem>
@@ -465,6 +566,147 @@ const Housekeeping = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Task Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+            <DialogDescription>Update task details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_status">Status</Label>
+                <Select value={editForm.status} onValueChange={(value: any) => setEditForm({ ...editForm, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    <SelectItem value="assigned">Assigned</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit_priority">Priority</Label>
+                <Select value={editForm.priority} onValueChange={(value: any) => setEditForm({ ...editForm, priority: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit_duration">Duration (minutes)</Label>
+                <Input
+                  id="edit_duration"
+                  type="number"
+                  value={editForm.estimated_duration_minutes || ''}
+                  onChange={(e) => setEditForm({ ...editForm, estimated_duration_minutes: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit_description">Description</Label>
+              <Textarea
+                id="edit_description"
+                value={editForm.description || ''}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                placeholder="Task description..."
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_special_instructions">Special Instructions</Label>
+              <Textarea
+                id="edit_special_instructions"
+                value={editForm.special_instructions || ''}
+                onChange={(e) => setEditForm({ ...editForm, special_instructions: e.target.value })}
+                placeholder="Any special instructions..."
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditTask} disabled={updateTask.isPending}>
+              {updateTask.isPending ? 'Updating...' : 'Update Task'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reassign Task Dialog */}
+      <Dialog open={reassignDialogOpen} onOpenChange={setReassignDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reassign Task</DialogTitle>
+            <DialogDescription>Assign this task to a different staff member</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="staff_id">Staff Member *</Label>
+              <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select staff member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {housekeepingStaff.map((staff) => (
+                    <SelectItem key={staff.id} value={staff.id}>
+                      {staff.full_name} ({staff.employee_id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReassignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleReassignTask} disabled={!selectedStaffId || assignTask.isPending}>
+              {assignTask.isPending ? 'Reassigning...' : 'Reassign Task'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this task? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTask}
+              disabled={deleteTask.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteTask.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
