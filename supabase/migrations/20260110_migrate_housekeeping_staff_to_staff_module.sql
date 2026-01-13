@@ -9,43 +9,81 @@
 -- ============================================================================
 
 -- Step 1: Migrate existing housekeeping_staff to staff table
-INSERT INTO staff (
-  id,
-  employee_id,
-  full_name,
-  email,
-  phone,
-  department,
-  position,
-  employment_type,
-  employment_status,
-  hire_date,
-  notes,
-  created_at,
-  updated_at
-)
-SELECT
-  hs.id,
-  'EMP' || LPAD(ROW_NUMBER() OVER (ORDER BY hs.created_at)::TEXT, 4, '0') as employee_id,
-  hs.full_name,
-  hs.email,
-  hs.phone,
-  'housekeeping' as department,
-  'Housekeeping Staff' as position,
-  'full_time' as employment_type,
-  CASE
-    WHEN hs.status = 'active' THEN 'active'
-    WHEN hs.status = 'on_leave' THEN 'on_leave'
-    ELSE 'active'
-  END as employment_status,
-  COALESCE(hs.created_at::DATE, CURRENT_DATE) as hire_date,
-  hs.notes,
-  hs.created_at,
-  hs.updated_at
-FROM housekeeping_staff hs
-WHERE NOT EXISTS (
-  SELECT 1 FROM staff s WHERE s.id = hs.id
-);
+-- Use a temporary function to generate unique employee IDs that don't conflict
+DO $$
+DECLARE
+  max_emp_num INTEGER;
+  hs_record RECORD;
+  new_emp_id TEXT;
+BEGIN
+  -- Get the maximum existing employee number
+  SELECT COALESCE(
+    MAX(
+      CAST(
+        SUBSTRING(employee_id FROM 4) AS INTEGER
+      )
+    ), 0
+  ) INTO max_emp_num
+  FROM staff
+  WHERE employee_id ~ '^EMP[0-9]+$';
+
+  -- Insert each housekeeping staff member with sequential employee_id
+  FOR hs_record IN
+    SELECT
+      hs.id,
+      hs.full_name,
+      hs.email,
+      hs.phone,
+      hs.status,
+      hs.notes,
+      hs.created_at,
+      hs.updated_at
+    FROM housekeeping_staff hs
+    WHERE NOT EXISTS (
+      SELECT 1 FROM staff s WHERE s.id = hs.id
+    )
+    ORDER BY hs.created_at
+  LOOP
+    -- Generate next employee ID
+    max_emp_num := max_emp_num + 1;
+    new_emp_id := 'EMP' || LPAD(max_emp_num::TEXT, 4, '0');
+
+    -- Insert the record
+    INSERT INTO staff (
+      id,
+      employee_id,
+      full_name,
+      email,
+      phone,
+      department,
+      position,
+      employment_type,
+      employment_status,
+      hire_date,
+      notes,
+      created_at,
+      updated_at
+    ) VALUES (
+      hs_record.id,
+      new_emp_id,
+      hs_record.full_name,
+      hs_record.email,
+      hs_record.phone,
+      'housekeeping',
+      'Housekeeping Staff',
+      'full_time',
+      CASE
+        WHEN hs_record.status = 'active' THEN 'active'
+        WHEN hs_record.status = 'on_leave' THEN 'on_leave'
+        ELSE 'active'
+      END,
+      COALESCE(hs_record.created_at::DATE, CURRENT_DATE),
+      hs_record.notes,
+      hs_record.created_at,
+      hs_record.updated_at
+    );
+  END LOOP;
+END $$;
 
 -- Step 2: Drop old foreign key constraint from housekeeping_tasks
 ALTER TABLE housekeeping_tasks
