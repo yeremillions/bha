@@ -135,6 +135,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop existing triggers before creating new ones
+DROP TRIGGER IF EXISTS staff_updated_at ON staff;
+DROP TRIGGER IF EXISTS staff_shifts_updated_at ON staff_shifts;
+DROP TRIGGER IF EXISTS staff_attendance_updated_at ON staff_attendance;
+DROP TRIGGER IF EXISTS staff_leave_requests_updated_at ON staff_leave_requests;
+
 CREATE TRIGGER staff_updated_at BEFORE UPDATE ON staff
   FOR EACH ROW EXECUTE FUNCTION update_staff_updated_at();
 
@@ -154,25 +160,51 @@ ALTER TABLE staff_attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_leave_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_performance_reviews ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies before creating new ones
+DROP POLICY IF EXISTS "Enable read access for all users" ON staff;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON staff;
+DROP POLICY IF EXISTS "Enable update for authenticated users only" ON staff;
+DROP POLICY IF EXISTS "Enable delete for authenticated users only" ON staff;
+
 CREATE POLICY "Enable read access for all users" ON staff FOR SELECT USING (true);
 CREATE POLICY "Enable insert for authenticated users only" ON staff FOR INSERT WITH CHECK (true);
 CREATE POLICY "Enable update for authenticated users only" ON staff FOR UPDATE USING (true);
 CREATE POLICY "Enable delete for authenticated users only" ON staff FOR DELETE USING (true);
+
+DROP POLICY IF EXISTS "Enable read access for all users" ON staff_shifts;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON staff_shifts;
+DROP POLICY IF EXISTS "Enable update for authenticated users only" ON staff_shifts;
+DROP POLICY IF EXISTS "Enable delete for authenticated users only" ON staff_shifts;
 
 CREATE POLICY "Enable read access for all users" ON staff_shifts FOR SELECT USING (true);
 CREATE POLICY "Enable insert for authenticated users only" ON staff_shifts FOR INSERT WITH CHECK (true);
 CREATE POLICY "Enable update for authenticated users only" ON staff_shifts FOR UPDATE USING (true);
 CREATE POLICY "Enable delete for authenticated users only" ON staff_shifts FOR DELETE USING (true);
 
+DROP POLICY IF EXISTS "Enable read access for all users" ON staff_attendance;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON staff_attendance;
+DROP POLICY IF EXISTS "Enable update for authenticated users only" ON staff_attendance;
+DROP POLICY IF EXISTS "Enable delete for authenticated users only" ON staff_attendance;
+
 CREATE POLICY "Enable read access for all users" ON staff_attendance FOR SELECT USING (true);
 CREATE POLICY "Enable insert for authenticated users only" ON staff_attendance FOR INSERT WITH CHECK (true);
 CREATE POLICY "Enable update for authenticated users only" ON staff_attendance FOR UPDATE USING (true);
 CREATE POLICY "Enable delete for authenticated users only" ON staff_attendance FOR DELETE USING (true);
 
+DROP POLICY IF EXISTS "Enable read access for all users" ON staff_leave_requests;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON staff_leave_requests;
+DROP POLICY IF EXISTS "Enable update for authenticated users only" ON staff_leave_requests;
+DROP POLICY IF EXISTS "Enable delete for authenticated users only" ON staff_leave_requests;
+
 CREATE POLICY "Enable read access for all users" ON staff_leave_requests FOR SELECT USING (true);
 CREATE POLICY "Enable insert for authenticated users only" ON staff_leave_requests FOR INSERT WITH CHECK (true);
 CREATE POLICY "Enable update for authenticated users only" ON staff_leave_requests FOR UPDATE USING (true);
 CREATE POLICY "Enable delete for authenticated users only" ON staff_leave_requests FOR DELETE USING (true);
+
+DROP POLICY IF EXISTS "Enable read access for all users" ON staff_performance_reviews;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON staff_performance_reviews;
+DROP POLICY IF EXISTS "Enable update for authenticated users only" ON staff_performance_reviews;
+DROP POLICY IF EXISTS "Enable delete for authenticated users only" ON staff_performance_reviews;
 
 CREATE POLICY "Enable read access for all users" ON staff_performance_reviews FOR SELECT USING (true);
 CREATE POLICY "Enable insert for authenticated users only" ON staff_performance_reviews FOR INSERT WITH CHECK (true);
@@ -206,6 +238,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_employee_id_trigger ON staff;
 CREATE TRIGGER set_employee_id_trigger BEFORE INSERT ON staff
   FOR EACH ROW EXECUTE FUNCTION set_employee_id();
 
@@ -220,5 +253,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS calculate_hours_trigger ON staff_attendance;
 CREATE TRIGGER calculate_hours_trigger BEFORE INSERT OR UPDATE ON staff_attendance
   FOR EACH ROW EXECUTE FUNCTION calculate_attendance_hours();
