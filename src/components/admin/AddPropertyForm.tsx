@@ -22,12 +22,17 @@ export interface PropertyFormData {
   name: string;
   type: string;
   location: string;
+  address?: string;
   description: string;
   bedrooms: number;
   bathrooms: number;
   maxGuests: number;
   pricePerNight: number;
+  cleaningFee?: number;
+  amenities?: string[];
+  images?: string[];
   status: string;
+  featured?: boolean;
 }
 
 const propertyTypes = ['Apartment', 'Penthouse', 'Studio', 'House', 'Villa', 'Loft'];

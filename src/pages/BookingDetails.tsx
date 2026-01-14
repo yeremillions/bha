@@ -101,8 +101,8 @@ const BookingDetails = () => {
     check_out_date: '',
     num_guests: 0,
     special_requests: '',
-    payment_status: '' as 'pending' | 'paid' | 'refunded' | 'partial',
-    status: '' as 'pending' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled',
+    payment_status: '' as string,
+    status: '' as string,
   });
 
   // Track if form has unsaved changes
@@ -192,7 +192,11 @@ const BookingDetails = () => {
     try {
       await updateBooking.mutateAsync({
         id: booking.id,
-        updates: editForm,
+        updates: {
+          ...editForm,
+          payment_status: editForm.payment_status as 'pending' | 'paid' | 'refunded' | 'partial',
+          status: editForm.status as 'pending' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled',
+        },
       });
       setIsEditing(false);
       setHasUnsavedChanges(false);
