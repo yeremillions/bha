@@ -52,7 +52,7 @@ const Calendar = () => {
   const { data: allBookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: allProperties = [], isLoading: propertiesLoading } = useProperties();
 
-  // Build properties dropdown list
+  // Build properties dropdown list - MUST be before any early returns
   const properties = useMemo(() => {
     return [
       { id: 'all', name: 'All Properties' },
@@ -60,12 +60,23 @@ const Calendar = () => {
     ];
   }, [allProperties]);
 
+  // Filter bookings based on selected property - MUST be before any early returns
+  const filteredBookings = useMemo(() => {
+    const bookings = selectedProperty === 'all'
+      ? allBookings
+      : allBookings.filter(b => b.property_id === selectedProperty);
+
+    // Only include confirmed and checked_in bookings
+    return bookings.filter(b => b.status === 'confirmed' || b.status === 'checked_in');
+  }, [allBookings, selectedProperty]);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
 
+  // Early returns AFTER all hooks
   if (loading || bookingsLoading || propertiesLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -88,16 +99,6 @@ const Calendar = () => {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  // Filter bookings based on selected property
-  const filteredBookings = useMemo(() => {
-    const bookings = selectedProperty === 'all'
-      ? allBookings
-      : allBookings.filter(b => b.property_id === selectedProperty);
-
-    // Only include confirmed and checked_in bookings
-    return bookings.filter(b => b.status === 'confirmed' || b.status === 'checked_in');
-  }, [allBookings, selectedProperty]);
 
   // Get booking status for a specific day
   const getDateStatus = (day: number) => {
