@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { 
-  DollarSign, 
-  TrendingDown, 
-  Clock, 
+import {
+  DollarSign,
+  TrendingDown,
+  Clock,
   TrendingUp,
   Download,
   Building2,
+  Plus,
 } from 'lucide-react';
 import {
   Select,
@@ -19,37 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-// Mock data
-const revenueBreakdown = [
-  { label: 'Accommodation', amount: 1950000, percentage: 84.4, color: 'bg-accent' },
-  { label: 'Bar Sales', amount: 315000, percentage: 13.6, color: 'bg-violet-500' },
-  { label: 'Other Services', amount: 45000, percentage: 2, color: 'bg-sky-500' },
-];
-
-const expenseBreakdown = [
-  { label: 'Staff Salaries', amount: 250000, percentage: 34.2, color: 'bg-red-500' },
-  { label: 'Housekeeping', amount: 180000, percentage: 24.7, color: 'bg-orange-500' },
-  { label: 'Utilities', amount: 120000, percentage: 16.4, color: 'bg-amber-500' },
-  { label: 'Maintenance', amount: 95000, percentage: 13, color: 'bg-emerald-500' },
-  { label: 'Supplies', amount: 85000, percentage: 11.6, color: 'bg-blue-500' },
-];
-
-const propertyPerformance = [
-  { name: 'Luxury 3-Bedroom Penthouse', bookings: 12, occupancy: 85, avgRate: 45000, revenue: 540000 },
-  { name: 'Family 4-Bedroom Home', bookings: 8, occupancy: 72, avgRate: 65000, revenue: 520000 },
-  { name: 'Cozy 2-Bedroom Apartment', bookings: 15, occupancy: 90, avgRate: 28000, revenue: 420000 },
-  { name: 'Executive Studio', bookings: 10, occupancy: 68, avgRate: 22000, revenue: 220000 },
-];
-
-const monthlyTrend = [
-  { month: 'Jul', revenue: 1850000, expenses: 680000, profit: 1170000, margin: 63.2 },
-  { month: 'Aug', revenue: 2100000, expenses: 720000, profit: 1380000, margin: 65.7 },
-  { month: 'Sep', revenue: 1920000, expenses: 695000, profit: 1225000, margin: 63.8 },
-  { month: 'Oct', revenue: 2250000, expenses: 750000, profit: 1500000, margin: 66.7 },
-  { month: 'Nov', revenue: 2180000, expenses: 710000, profit: 1470000, margin: 67.4 },
-  { month: 'Dec', revenue: 2310000, expenses: 730000, profit: 1580000, margin: 68.4 },
-];
+import { useTransactions, useFinancialSummary } from '@/hooks/useFinancial';
+import { useBookings } from '@/hooks/useBookings';
+import { startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format as formatDate } from 'date-fns';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000000) {
@@ -59,7 +32,47 @@ const formatCurrency = (amount: number) => {
 };
 
 const formatFullCurrency = (amount: number) => {
-  return `₦${amount.toLocaleString()}`;
+  return `₦${Math.round(amount).toLocaleString()}`;
+};
+
+const categoryLabels: Record<string, string> = {
+  // Income
+  accommodation: 'Accommodation',
+  bar_sales: 'Bar Sales',
+  other_services: 'Other Services',
+  deposit: 'Deposits',
+  additional_charges: 'Additional Charges',
+  // Expenses
+  staff_salaries: 'Staff Salaries',
+  housekeeping: 'Housekeeping',
+  utilities: 'Utilities',
+  maintenance: 'Maintenance',
+  supplies: 'Supplies',
+  inventory: 'Inventory',
+  marketing: 'Marketing',
+  insurance: 'Insurance',
+  taxes: 'Taxes',
+  other_expenses: 'Other Expenses',
+};
+
+const categoryColors: Record<string, string> = {
+  // Income
+  accommodation: 'bg-accent',
+  bar_sales: 'bg-violet-500',
+  other_services: 'bg-sky-500',
+  deposit: 'bg-emerald-500',
+  additional_charges: 'bg-blue-500',
+  // Expenses
+  staff_salaries: 'bg-red-500',
+  housekeeping: 'bg-orange-500',
+  utilities: 'bg-amber-500',
+  maintenance: 'bg-emerald-500',
+  supplies: 'bg-blue-500',
+  inventory: 'bg-purple-500',
+  marketing: 'bg-pink-500',
+  insurance: 'bg-indigo-500',
+  taxes: 'bg-yellow-500',
+  other_expenses: 'bg-gray-500',
 };
 
 const Financial = () => {
@@ -67,10 +80,124 @@ const Financial = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [period, setPeriod] = useState('this-month');
 
-  const totalRevenue = 2310000;
-  const totalExpenses = 730000;
+  // Calculate date range based on selected period
+  const { startDate, endDate } = useMemo(() => {
+    const now = new Date();
+    let start, end;
+
+    switch (period) {
+      case 'last-month':
+        start = startOfMonth(subMonths(now, 1));
+        end = endOfMonth(subMonths(now, 1));
+        break;
+      case 'this-quarter':
+        const quarterStart = Math.floor(now.getMonth() / 3) * 3;
+        start = new Date(now.getFullYear(), quarterStart, 1);
+        end = now;
+        break;
+      case 'this-year':
+        start = startOfYear(now);
+        end = endOfYear(now);
+        break;
+      case 'this-month':
+      default:
+        start = startOfMonth(now);
+        end = endOfMonth(now);
+        break;
+    }
+
+    return {
+      startDate: formatDate(start, 'yyyy-MM-dd'),
+      endDate: formatDate(end, 'yyyy-MM-dd'),
+    };
+  }, [period]);
+
+  // Fetch financial data
+  const { data: transactions = [], isLoading: transactionsLoading } = useTransactions();
+  const { data: financialSummary, isLoading: summaryLoading } = useFinancialSummary(startDate, endDate);
+  const { data: allBookings = [] } = useBookings();
+
+  const isLoading = transactionsLoading || summaryLoading;
+
+  // Calculate summary metrics
+  const totalRevenue = financialSummary?.totalIncome || 0;
+  const totalExpenses = financialSummary?.totalExpenses || 0;
   const netProfit = totalRevenue - totalExpenses;
-  const profitMargin = ((netProfit / totalRevenue) * 100).toFixed(1);
+  const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : '0.0';
+
+  // Build revenue breakdown from income categories
+  const revenueBreakdown = useMemo(() => {
+    if (!financialSummary) return [];
+
+    return Object.entries(financialSummary.incomeByCategory || {})
+      .map(([category, amount]) => ({
+        label: categoryLabels[category] || category,
+        amount: Number(amount),
+        percentage: totalRevenue > 0 ? (Number(amount) / totalRevenue) * 100 : 0,
+        color: categoryColors[category] || 'bg-gray-500',
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [financialSummary, totalRevenue]);
+
+  // Build expense breakdown from expense categories
+  const expenseBreakdown = useMemo(() => {
+    if (!financialSummary) return [];
+
+    return Object.entries(financialSummary.expensesByCategory || {})
+      .map(([category, amount]) => ({
+        label: categoryLabels[category] || category,
+        amount: Number(amount),
+        percentage: totalExpenses > 0 ? (Number(amount) / totalExpenses) * 100 : 0,
+        color: categoryColors[category] || 'bg-gray-500',
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [financialSummary, totalExpenses]);
+
+  // Calculate property performance from bookings
+  const propertyPerformance = useMemo(() => {
+    const periodBookings = allBookings.filter(b => {
+      const checkIn = new Date(b.check_in_date);
+      return checkIn >= new Date(startDate) && checkIn <= new Date(endDate) && b.status !== 'cancelled';
+    });
+
+    const propertyStats: Record<string, any> = {};
+
+    periodBookings.forEach(booking => {
+      const propId = booking.property_id;
+      if (!propertyStats[propId]) {
+        propertyStats[propId] = {
+          name: booking.property?.name || 'Unknown',
+          bookings: 0,
+          revenue: 0,
+          totalNights: 0,
+        };
+      }
+
+      propertyStats[propId].bookings++;
+      propertyStats[propId].revenue += booking.total_amount || 0;
+
+      const checkIn = new Date(booking.check_in_date);
+      const checkOut = new Date(booking.check_out_date);
+      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+      propertyStats[propId].totalNights += nights;
+    });
+
+    return Object.values(propertyStats)
+      .map((stat: any) => ({
+        ...stat,
+        avgRate: stat.bookings > 0 ? stat.revenue / stat.bookings : 0,
+        occupancy: 0, // Calculated below if we have property data
+      }))
+      .sort((a: any, b: any) => b.revenue - a.revenue);
+  }, [allBookings, startDate, endDate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Loading financial data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background font-body">
@@ -189,27 +316,35 @@ const Financial = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
-                {revenueBreakdown.map((item) => (
-                  <div key={item.label} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{item.label}</span>
-                      <span className="font-medium text-foreground">{formatFullCurrency(item.amount)}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${item.color} rounded-full transition-all duration-500`}
-                          style={{ width: `${item.percentage}%` }}
-                        />
+                {revenueBreakdown.length > 0 ? (
+                  <>
+                    {revenueBreakdown.map((item) => (
+                      <div key={item.label} className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-foreground">{item.label}</span>
+                          <span className="font-medium text-foreground">{formatFullCurrency(item.amount)}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${item.color} rounded-full transition-all duration-500`}
+                              style={{ width: `${item.percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground w-12 text-right">{item.percentage.toFixed(1)}%</span>
+                        </div>
                       </div>
-                      <span className="text-xs text-muted-foreground w-12 text-right">{item.percentage}%</span>
+                    ))}
+                    <div className="pt-4 border-t border-border flex items-center justify-between">
+                      <span className="font-medium text-foreground">Total Revenue</span>
+                      <span className="font-bold text-accent text-lg">{formatFullCurrency(totalRevenue)}</span>
                     </div>
+                  </>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <p className="text-sm">No revenue data for this period</p>
                   </div>
-                ))}
-                <div className="pt-4 border-t border-border flex items-center justify-between">
-                  <span className="font-medium text-foreground">Total Revenue</span>
-                  <span className="font-bold text-accent text-lg">{formatFullCurrency(totalRevenue)}</span>
-                </div>
+                )}
               </CardContent>
             </Card>
 
@@ -222,27 +357,39 @@ const Financial = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
-                {expenseBreakdown.map((item) => (
-                  <div key={item.label} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{item.label}</span>
-                      <span className="font-medium text-foreground">{formatFullCurrency(item.amount)}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${item.color} rounded-full transition-all duration-500`}
-                          style={{ width: `${item.percentage}%` }}
-                        />
+                {expenseBreakdown.length > 0 ? (
+                  <>
+                    {expenseBreakdown.map((item) => (
+                      <div key={item.label} className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-foreground">{item.label}</span>
+                          <span className="font-medium text-foreground">{formatFullCurrency(item.amount)}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${item.color} rounded-full transition-all duration-500`}
+                              style={{ width: `${item.percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground w-12 text-right">{item.percentage.toFixed(1)}%</span>
+                        </div>
                       </div>
-                      <span className="text-xs text-muted-foreground w-12 text-right">{item.percentage}%</span>
+                    ))}
+                    <div className="pt-4 border-t border-border flex items-center justify-between">
+                      <span className="font-medium text-foreground">Total Expenses</span>
+                      <span className="font-bold text-destructive text-lg">{formatFullCurrency(totalExpenses)}</span>
                     </div>
+                  </>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <p className="text-sm">No expense data for this period</p>
+                    <Button variant="outline" size="sm" className="mt-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Expense
+                    </Button>
                   </div>
-                ))}
-                <div className="pt-4 border-t border-border flex items-center justify-between">
-                  <span className="font-medium text-foreground">Total Expenses</span>
-                  <span className="font-bold text-destructive text-lg">{formatFullCurrency(totalExpenses)}</span>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -256,66 +403,31 @@ const Financial = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {propertyPerformance.map((property) => (
-                <div 
-                  key={property.name}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors gap-4"
-                >
-                  <div className="space-y-1">
-                    <h4 className="font-medium text-foreground">{property.name}</h4>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                      <span>Bookings: <span className="text-foreground font-medium">{property.bookings}</span></span>
-                      <span className="flex items-center gap-2">
-                        Occupancy: 
-                        <Progress value={property.occupancy} className="w-16 h-1.5" />
-                        <span className="text-foreground font-medium">{property.occupancy}%</span>
-                      </span>
-                      <span>Avg Rate: <span className="text-foreground font-medium">{formatFullCurrency(property.avgRate)}</span></span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-display font-bold text-accent">{formatFullCurrency(property.revenue)}</p>
-                    <p className="text-xs text-muted-foreground">Revenue</p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* 6-Month Trend */}
-          <Card className="border-border/50">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg font-display">
-                <TrendingUp className="h-5 w-5 text-emerald-500" />
-                6-Month Trend
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                {monthlyTrend.map((month) => (
-                  <div 
-                    key={month.month}
-                    className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left space-y-3"
+              {propertyPerformance.length > 0 ? (
+                propertyPerformance.map((property) => (
+                  <div
+                    key={property.name}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors gap-4"
                   >
-                    <h4 className="font-display font-bold text-foreground">{month.month}</h4>
-                    <div className="space-y-1 text-sm">
-                      <span className="text-muted-foreground">Revenue</span>
-                      <p className="font-medium text-foreground">{formatCurrency(month.revenue)}</p>
+                    <div className="space-y-1">
+                      <h4 className="font-medium text-foreground">{property.name}</h4>
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <span>Bookings: <span className="text-foreground font-medium">{property.bookings}</span></span>
+                        <span>Avg Rate: <span className="text-foreground font-medium">{formatFullCurrency(property.avgRate)}</span></span>
+                        <span>Nights: <span className="text-foreground font-medium">{property.totalNights}</span></span>
+                      </div>
                     </div>
-                    <div className="space-y-1 text-sm">
-                      <span className="text-muted-foreground">Expenses</span>
-                      <p className="font-medium text-destructive">{formatCurrency(month.expenses)}</p>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <span className="text-muted-foreground">Profit</span>
-                      <p className="font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(month.profit)}</p>
-                    </div>
-                    <div className="pt-2 border-t border-border">
-                      <span className="text-sm font-bold text-accent">{month.margin}%</span>
+                    <div className="text-right">
+                      <p className="text-xl font-display font-bold text-accent">{formatFullCurrency(property.revenue)}</p>
+                      <p className="text-xs text-muted-foreground">Revenue</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground py-8">
+                  <p className="text-sm">No property bookings for this period</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </main>
