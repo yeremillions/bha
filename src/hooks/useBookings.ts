@@ -41,6 +41,7 @@ export interface NewBooking {
   source?: string;
   payment_status?: PaymentStatus;
   status?: BookingStatus;
+  booking_number?: string;
 }
 
 export interface UpdateBooking {
@@ -330,6 +331,7 @@ export const useCreateBooking = () => {
         .insert([
           {
             ...newBooking,
+            booking_number: newBooking.booking_number || `BK-${Date.now()}`, // Temp, overwritten by trigger
             status: newBooking.status || 'pending',
             payment_status: newBooking.payment_status || 'pending',
           },

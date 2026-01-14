@@ -128,16 +128,16 @@ const Properties = () => {
       type: propertyData.type,
       description: propertyData.description,
       location: propertyData.location,
-      address: propertyData.address,
+      address: propertyData.address || null,
       bedrooms: propertyData.bedrooms,
       bathrooms: propertyData.bathrooms,
       max_guests: propertyData.maxGuests,
       base_price_per_night: propertyData.pricePerNight,
-      cleaning_fee: propertyData.cleaningFee,
-      amenities: propertyData.amenities,
-      images: propertyData.images,
+      cleaning_fee: propertyData.cleaningFee || null,
+      amenities: propertyData.amenities || null,
+      images: propertyData.images || null,
       status: 'available',
-      featured: propertyData.featured,
+      featured: propertyData.featured || false,
     });
     setShowAddForm(false);
   };

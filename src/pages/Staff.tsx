@@ -57,12 +57,12 @@ import {
   useCreateStaff,
   useUpdateStaff,
   useDeleteStaff,
+  type NewStaff,
 } from '@/hooks/useStaff';
 import type { Database } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 
 type Staff = Database['public']['Tables']['staff']['Row'];
-type NewStaff = Database['public']['Tables']['staff']['Insert'];
 
 const departments = [
   'reception',

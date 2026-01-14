@@ -29,13 +29,14 @@ export interface Transaction {
   category: TransactionCategory;
   amount: number;
   payment_method: PaymentMethod | null;
+  payment_reference: string | null;
   booking_id: string | null;
-  property_id: string | null;
+  customer_id: string | null;
   description: string | null;
-  notes: string | null;
-  transaction_date: string;
+  status: string | null;
+  metadata: any;
+  processed_at: string | null;
   created_at: string;
-  updated_at: string;
   booking?: any;
   property?: any;
 }
@@ -45,11 +46,11 @@ export interface NewTransaction {
   category: TransactionCategory;
   amount: number;
   payment_method?: PaymentMethod;
+  payment_reference?: string;
   booking_id?: string;
-  property_id?: string;
+  customer_id?: string;
   description?: string;
-  notes?: string;
-  transaction_date?: string;
+  status?: string;
 }
 
 /**
@@ -63,17 +64,16 @@ export const useTransactions = () => {
         .from('transactions')
         .select(`
           *,
-          booking:bookings(id, booking_number, customer:customers(full_name)),
-          property:properties(id, name)
+          booking:bookings(id, booking_number, customer:customers(full_name))
         `)
-        .order('transaction_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching transactions:', error);
         throw new Error(`Failed to fetch transactions: ${error.message}`);
       }
 
-      return data as Transaction[];
+      return data as unknown as Transaction[];
     },
   });
 };
@@ -89,19 +89,18 @@ export const useTransactionsByDateRange = (startDate: string, endDate: string) =
         .from('transactions')
         .select(`
           *,
-          booking:bookings(id, booking_number, customer:customers(full_name)),
-          property:properties(id, name)
+          booking:bookings(id, booking_number, customer:customers(full_name))
         `)
-        .gte('transaction_date', startDate)
-        .lte('transaction_date', endDate)
-        .order('transaction_date', { ascending: false });
+        .gte('created_at', startDate)
+        .lte('created_at', endDate)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching transactions:', error);
         throw new Error(`Failed to fetch transactions: ${error.message}`);
       }
 
-      return data as Transaction[];
+      return data as unknown as Transaction[];
     },
   });
 };
@@ -225,8 +224,8 @@ export const useFinancialSummary = (startDate: string, endDate: string) => {
       const { data, error } = await supabase
         .from('transactions')
         .select('transaction_type, category, amount')
-        .gte('transaction_date', startDate)
-        .lte('transaction_date', endDate);
+        .gte('created_at', startDate)
+        .lte('created_at', endDate);
 
       if (error) {
         console.error('Error fetching financial summary:', error);

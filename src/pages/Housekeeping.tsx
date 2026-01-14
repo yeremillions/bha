@@ -211,11 +211,11 @@ const Housekeeping = () => {
 
     setSelectedTaskId(taskId);
     setEditForm({
-      status: task.status,
-      priority: task.priority,
+      status: task.status as UpdateTask['status'],
+      priority: task.priority as UpdateTask['priority'],
       description: task.description || '',
       special_instructions: task.special_instructions || '',
-      estimated_duration_minutes: task.estimated_duration_minutes,
+      estimated_duration_minutes: task.estimated_duration_minutes || undefined,
     });
     setEditDialogOpen(true);
   };

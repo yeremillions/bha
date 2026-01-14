@@ -4,8 +4,29 @@ import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 
 type Staff = Database['public']['Tables']['staff']['Row'];
-type NewStaff = Database['public']['Tables']['staff']['Insert'];
 type StaffUpdate = Database['public']['Tables']['staff']['Update'];
+
+// Custom type for creating staff without required employee_id (auto-generated)
+export interface NewStaff {
+  full_name: string;
+  email?: string | null;
+  phone?: string | null;
+  department: string;
+  position: string;
+  employment_type?: string;
+  employment_status?: string;
+  hire_date: string;
+  base_salary?: number | null;
+  salary_currency?: string | null;
+  payment_frequency?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  date_of_birth?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  notes?: string | null;
+}
 
 // Staff CRUD hooks
 export const useStaff = (status?: string) => {
@@ -50,7 +71,10 @@ export const useCreateStaff = () => {
     mutationFn: async (newStaff: NewStaff) => {
       const { data, error } = await supabase
         .from('staff')
-        .insert([newStaff])
+        .insert([{
+          ...newStaff,
+          employee_id: `EMP-${Date.now()}`, // Temporary, should be overwritten by trigger
+        }])
         .select()
         .single();
 
