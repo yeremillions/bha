@@ -2,6 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
+import {
+  sendBookingConfirmation,
+  sendPaymentReceipt,
+  sendCancellationConfirmation
+} from '@/lib/emailService';
+import { format } from 'date-fns';
 
 // Types
 export type Booking = Tables<'bookings'>;
@@ -350,13 +356,32 @@ export const useCreateBooking = () => {
 
       return data as BookingWithDetails;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       toast({
         title: 'Booking created',
         description: `Booking ${data.booking_number} has been created successfully.`,
       });
+
+      // Send booking confirmation email
+      if (data.customer?.email) {
+        try {
+          await sendBookingConfirmation(data.customer.email, {
+            bookingNumber: data.booking_number,
+            customerName: data.customer.name,
+            propertyName: data.property?.name || 'Property',
+            checkInDate: format(new Date(data.check_in_date), 'MMMM d, yyyy'),
+            checkOutDate: format(new Date(data.check_out_date), 'MMMM d, yyyy'),
+            totalPrice: data.total_amount,
+            guestCount: data.num_guests,
+          });
+          console.log('Booking confirmation email sent successfully');
+        } catch (emailError) {
+          console.error('Failed to send booking confirmation email:', emailError);
+          // Don't throw - email failure shouldn't break the booking flow
+        }
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -466,11 +491,31 @@ export const useCancelBooking = () => {
 
       return data as BookingWithDetails;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       // Note: Success toast is handled by the component to avoid duplicate toasts
+
+      // Send cancellation confirmation email
+      if (data.customer?.email) {
+        try {
+          await sendCancellationConfirmation(data.customer.email, {
+            bookingNumber: data.booking_number,
+            customerName: data.customer.name,
+            propertyName: data.property?.name || 'Property',
+            checkInDate: format(new Date(data.check_in_date), 'MMMM d, yyyy'),
+            checkOutDate: format(new Date(data.check_out_date), 'MMMM d, yyyy'),
+            cancellationDate: format(new Date(), 'MMMM d, yyyy'),
+            refundAmount: data.payment_status === 'paid' ? data.total_amount : 0,
+            refundEligible: data.payment_status === 'paid',
+          });
+          console.log('Cancellation confirmation email sent successfully');
+        } catch (emailError) {
+          console.error('Failed to send cancellation confirmation email:', emailError);
+          // Don't throw - email failure shouldn't break the cancellation flow
+        }
+      }
     },
     onError: (error: Error) => {
       // Note: Error toast is handled by the component for better control
@@ -549,13 +594,37 @@ export const useUpdatePaymentStatus = () => {
 
       return data as BookingWithDetails;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
       toast({
         title: 'Payment status updated',
         description: `Payment for booking ${data.booking_number} is now ${data.payment_status}.`,
       });
+
+      // Send payment receipt email when payment is marked as paid
+      if (data.payment_status === 'paid' && data.customer?.email) {
+        try {
+          await sendPaymentReceipt(data.customer.email, {
+            bookingNumber: data.booking_number,
+            customerName: data.customer.name,
+            propertyName: data.property?.name || 'Property',
+            checkInDate: format(new Date(data.check_in_date), 'MMMM d, yyyy'),
+            checkOutDate: format(new Date(data.check_out_date), 'MMMM d, yyyy'),
+            amount: data.total_amount,
+            paymentMethod: 'Online Payment', // This could be enhanced to track actual payment method
+            transactionDate: format(new Date(), 'MMMM d, yyyy'),
+            baseAmount: data.base_amount,
+            cleaningFee: data.cleaning_fee || 0,
+            taxAmount: data.tax_amount || 0,
+            discountAmount: data.discount_amount || 0,
+          });
+          console.log('Payment receipt email sent successfully');
+        } catch (emailError) {
+          console.error('Failed to send payment receipt email:', emailError);
+          // Don't throw - email failure shouldn't break the payment update flow
+        }
+      }
     },
     onError: (error: Error) => {
       toast({
