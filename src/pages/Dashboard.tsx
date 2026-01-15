@@ -13,13 +13,14 @@ import { TodaySchedule } from '@/components/admin/TodaySchedule';
 import { RecentBookings } from '@/components/admin/RecentBookings';
 import { HousekeepingTasks } from '@/components/admin/HousekeepingTasks';
 import { MonthlyOverview } from '@/components/admin/MonthlyOverview';
+import { useDashboardStats, formatNaira } from '@/hooks/useDashboardStats';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -83,33 +84,33 @@ const Dashboard = () => {
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
             <StatCard
               title="Today's Bookings"
-              value="3"
-              subtitle="12 this week"
-              trend={{ value: '12%', positive: true }}
+              value={statsLoading ? '...' : String(stats?.todayBookings ?? 0)}
+              subtitle={statsLoading ? '...' : `${stats?.weekBookings ?? 0} this week`}
+              trend={stats?.bookingsTrend ?? { value: '0%', positive: true }}
               icon={BookOpen}
               variant="navy"
             />
             <StatCard
               title="Today's Revenue"
-              value="₦135K"
-              subtitle="₦540K this week"
-              trend={{ value: '8%', positive: true }}
+              value={statsLoading ? '...' : formatNaira(stats?.todayRevenue ?? 0)}
+              subtitle={statsLoading ? '...' : `${formatNaira(stats?.weekRevenue ?? 0)} this week`}
+              trend={stats?.revenueTrend ?? { value: '0%', positive: true }}
               icon={DollarSign}
               variant="success"
             />
             <StatCard
               title="Occupancy Rate"
-              value="78%"
+              value={statsLoading ? '...' : `${stats?.occupancyRate ?? 0}%`}
               subtitle="This month"
-              trend={{ value: '5%', positive: true }}
+              trend={stats?.occupancyTrend ?? { value: '0%', positive: true }}
               icon={Percent}
               variant="gold"
             />
             <StatCard
               title="Bar Sales Today"
-              value="₦25K"
-              subtitle="₦105K this week"
-              trend={{ value: '15%', positive: true }}
+              value={statsLoading ? '...' : formatNaira(stats?.barSalesToday ?? 0)}
+              subtitle={statsLoading ? '...' : `${formatNaira(stats?.barSalesWeek ?? 0)} this week`}
+              trend={stats?.barSalesTrend ?? { value: '0%', positive: true }}
               icon={Wine}
               variant="purple"
             />
