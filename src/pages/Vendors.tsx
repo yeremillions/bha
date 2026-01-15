@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ import {
   Edit,
   Trash2,
   Eye,
+  Loader2,
 } from 'lucide-react';
 
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -50,96 +51,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-
-// Mock vendors data with extended information
-const vendorsData = [
-  {
-    id: 'V001',
-    name: 'John AC Services',
-    specialty: 'HVAC',
-    rating: 4.8,
-    completedJobs: 15,
-    pendingJobs: 2,
-    phone: '+234 801 234 5678',
-    email: 'john@johnac.com',
-    location: 'Victoria Island, Lagos',
-    status: 'active',
-    joinedDate: '2024-03-15',
-    totalEarnings: 375000,
-  },
-  {
-    id: 'V002',
-    name: 'PowerFix Solutions',
-    specialty: 'Electrical',
-    rating: 4.9,
-    completedJobs: 22,
-    pendingJobs: 3,
-    phone: '+234 802 345 6789',
-    email: 'info@powerfix.ng',
-    location: 'Lekki Phase 1, Lagos',
-    status: 'active',
-    joinedDate: '2024-01-10',
-    totalEarnings: 550000,
-  },
-  {
-    id: 'V003',
-    name: 'AquaMaint Ltd',
-    specialty: 'Pool/Facilities',
-    rating: 4.7,
-    completedJobs: 8,
-    pendingJobs: 1,
-    phone: '+234 803 456 7890',
-    email: 'service@aquamaint.com',
-    location: 'Ikoyi, Lagos',
-    status: 'active',
-    joinedDate: '2024-05-20',
-    totalEarnings: 192000,
-  },
-  {
-    id: 'V004',
-    name: 'TilePro Services',
-    specialty: 'General Repairs',
-    rating: 4.6,
-    completedJobs: 12,
-    pendingJobs: 0,
-    phone: '+234 804 567 8901',
-    email: 'tilepro@gmail.com',
-    location: 'Surulere, Lagos',
-    status: 'inactive',
-    joinedDate: '2024-02-28',
-    totalEarnings: 288000,
-  },
-  {
-    id: 'V005',
-    name: 'NetFix Tech',
-    specialty: 'IT/Electrical',
-    rating: 4.9,
-    completedJobs: 18,
-    pendingJobs: 4,
-    phone: '+234 805 678 9012',
-    email: 'support@netfixtech.ng',
-    location: 'Victoria Island, Lagos',
-    status: 'active',
-    joinedDate: '2024-04-12',
-    totalEarnings: 462000,
-  },
-  {
-    id: 'V006',
-    name: 'QuickPlumb NG',
-    specialty: 'Plumbing',
-    rating: 4.5,
-    completedJobs: 9,
-    pendingJobs: 2,
-    phone: '+234 806 789 0123',
-    email: 'quickplumb@outlook.com',
-    location: 'Yaba, Lagos',
-    status: 'active',
-    joinedDate: '2024-06-01',
-    totalEarnings: 180000,
-  },
-];
-
-const specialties = [...new Set(vendorsData.map(v => v.specialty))];
+import { useVendors } from '@/hooks/useVendors';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-NG', {
@@ -150,7 +62,7 @@ const formatCurrency = (amount: number) => {
 };
 
 const Vendors = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -161,26 +73,36 @@ const Vendors = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
-  // Sort vendors by most recently used (completed jobs + pending jobs as proxy for activity)
-  const recentlyUsedVendors = [...vendorsData]
-    .sort((a, b) => (b.completedJobs + b.pendingJobs) - (a.completedJobs + a.pendingJobs))
-    .slice(0, 4);
+  // Fetch vendors from database
+  const { data: allVendors = [], isLoading: vendorsLoading } = useVendors();
+
+  // Get unique specialties from real data
+  const specialties = useMemo(() => {
+    return [...new Set(allVendors.map(v => v.specialty))];
+  }, [allVendors]);
+
+  // Sort vendors by most active (completed jobs)
+  const recentlyUsedVendors = useMemo(() => {
+    return [...allVendors]
+      .sort((a, b) => b.completed_jobs - a.completed_jobs)
+      .slice(0, 4);
+  }, [allVendors]);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate]);
 
-  // Reset to first page when filters change - must be before early returns
+  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, specialtyFilter, viewMode]);
 
-  if (loading) {
+  if (authLoading || vendorsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -190,14 +112,17 @@ const Vendors = () => {
   }
 
   // Base vendors list based on view mode
-  const baseVendors = viewMode === 'recent' ? recentlyUsedVendors : vendorsData;
+  const baseVendors = viewMode === 'recent' ? recentlyUsedVendors : allVendors;
 
   const filteredVendors = baseVendors.filter(vendor => {
     const matchesSearch =
       vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vendor.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vendor.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || vendor.status === statusFilter;
+      (vendor.address && vendor.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (vendor.company_name && vendor.company_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && vendor.active) ||
+      (statusFilter === 'inactive' && !vendor.active);
     const matchesSpecialty = specialtyFilter === 'all' || vendor.specialty === specialtyFilter;
     return matchesSearch && matchesStatus && matchesSpecialty;
   });
@@ -207,10 +132,13 @@ const Vendors = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedVendors = filteredVendors.slice(startIndex, startIndex + itemsPerPage);
 
-  const totalVendors = vendorsData.length;
-  const activeVendors = vendorsData.filter(v => v.status === 'active').length;
-  const totalJobs = vendorsData.reduce((sum, v) => sum + v.completedJobs, 0);
-  const avgRating = (vendorsData.reduce((sum, v) => sum + v.rating, 0) / vendorsData.length).toFixed(1);
+  // Calculate stats from real data
+  const totalVendors = allVendors.length;
+  const activeVendors = allVendors.filter(v => v.active).length;
+  const totalJobs = allVendors.reduce((sum, v) => sum + v.completed_jobs, 0);
+  const avgRating = allVendors.length > 0
+    ? (allVendors.reduce((sum, v) => sum + v.rating, 0) / allVendors.length).toFixed(1)
+    : '0.0';
 
   const handleAction = (action: string, vendorId: string) => {
     if (action === 'view') {
@@ -466,43 +394,51 @@ const Vendors = () => {
                       <span className="text-sm font-semibold">{vendor.rating}</span>
                     </div>
                     <Badge
-                      variant={vendor.status === 'active' ? 'default' : 'secondary'}
+                      variant={vendor.active ? 'default' : 'secondary'}
                       className={cn(
                         'text-xs',
-                        vendor.status === 'active' && 'bg-emerald-500 hover:bg-emerald-600'
+                        vendor.active && 'bg-emerald-500 hover:bg-emerald-600'
                       )}
                     >
-                      {vendor.status === 'active' ? 'Active' : 'Inactive'}
+                      {vendor.active ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
 
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-3.5 w-3.5" />
-                      <span>{vendor.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-3.5 w-3.5" />
-                      <span className="truncate">{vendor.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5" />
-                      <span>{vendor.location}</span>
-                    </div>
+                    {vendor.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5" />
+                        <span>{vendor.phone}</span>
+                      </div>
+                    )}
+                    {vendor.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5" />
+                        <span className="truncate">{vendor.email}</span>
+                      </div>
+                    )}
+                    {vendor.address && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-3.5 w-3.5" />
+                        <span>{vendor.address}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-border/50">
                     <div className="text-center">
-                      <p className="text-lg font-bold text-foreground">{vendor.completedJobs}</p>
+                      <p className="text-lg font-bold text-foreground">{vendor.completed_jobs}</p>
                       <p className="text-xs text-muted-foreground">Completed</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-bold text-foreground">{vendor.pendingJobs}</p>
-                      <p className="text-xs text-muted-foreground">Pending</p>
+                      <p className="text-lg font-bold text-foreground">{vendor.total_jobs}</p>
+                      <p className="text-xs text-muted-foreground">Total Jobs</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-bold text-accent">{formatCurrency(vendor.totalEarnings)}</p>
-                      <p className="text-xs text-muted-foreground">Earnings</p>
+                      <p className="text-lg font-bold text-accent">
+                        {vendor.hourly_rate ? formatCurrency(vendor.hourly_rate) : 'N/A'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Hourly Rate</p>
                     </div>
                   </div>
                 </CardContent>
