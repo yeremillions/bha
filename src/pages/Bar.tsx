@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ import {
   XCircle,
   Sparkles,
   Filter,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -52,41 +54,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NewTabDialog } from "@/components/bar/NewTabDialog";
 import { toast } from "@/hooks/use-toast";
-
-// Mock data
-const mockTabs = [
-  { id: 1, guestName: "John Smith", apartment: "101A", amount: 87500, items: 8, status: "open", openedAt: "2024-01-15 18:30" },
-  { id: 2, guestName: "Sarah Johnson", apartment: "102B", amount: 42500, items: 4, status: "open", openedAt: "2024-01-15 19:15" },
-  { id: 3, guestName: "Michael Brown", apartment: "103A", amount: 145000, items: 12, status: "open", openedAt: "2024-01-15 17:45" },
-  { id: 4, guestName: "Emily Davis", apartment: "104B", amount: 55000, items: 5, status: "pending", openedAt: "2024-01-14 20:00" },
-  { id: 5, guestName: "Robert Wilson", apartment: "101B", amount: 195000, items: 15, status: "closed", openedAt: "2024-01-14 18:00" },
-];
-
-const mockSales = [
-  { id: 1, item: "Château Margaux 2018", category: "Wine", quantity: 2, amount: 115000, time: "19:45", guest: "John Smith" },
-  { id: 2, item: "Hendrick's Gin & Tonic", category: "Cocktails", quantity: 3, amount: 27000, time: "19:30", guest: "Sarah Johnson" },
-  { id: 3, item: "Craft Beer Flight", category: "Beer", quantity: 1, amount: 18000, time: "19:15", guest: "Michael Brown" },
-  { id: 4, item: "Espresso Martini", category: "Cocktails", quantity: 2, amount: 19000, time: "19:00", guest: "Emily Davis" },
-  { id: 5, item: "Premium Whisky Selection", category: "Spirits", quantity: 1, amount: 65000, time: "18:45", guest: "John Smith" },
-];
-
-const mockInventory = [
-  { id: 1, name: "Grey Goose Vodka", category: "Spirits", stock: 8, minStock: 5, unit: "bottles", lastOrdered: "2024-01-10" },
-  { id: 2, name: "Hendrick's Gin", category: "Spirits", stock: 3, minStock: 4, unit: "bottles", lastOrdered: "2024-01-08" },
-  { id: 3, name: "Château Margaux 2018", category: "Wine", stock: 12, minStock: 6, unit: "bottles", lastOrdered: "2024-01-12" },
-  { id: 4, name: "Craft IPA", category: "Beer", stock: 24, minStock: 20, unit: "cans", lastOrdered: "2024-01-14" },
-  { id: 5, name: "Prosecco DOC", category: "Wine", stock: 2, minStock: 8, unit: "bottles", lastOrdered: "2024-01-05" },
-  { id: 6, name: "Angostura Bitters", category: "Mixers", stock: 6, minStock: 3, unit: "bottles", lastOrdered: "2024-01-11" },
-  { id: 7, name: "Fresh Lime Juice", category: "Mixers", stock: 4, minStock: 10, unit: "bottles", lastOrdered: "2024-01-13" },
-  { id: 8, name: "Premium Tonic Water", category: "Mixers", stock: 36, minStock: 24, unit: "bottles", lastOrdered: "2024-01-14" },
-];
-
-const statCards = [
-  { title: "Today's Revenue", value: "₦1,147,500", change: "+12.5%", icon: DollarSign, trend: "up" },
-  { title: "Open Tabs", value: "4", change: "3 pending", icon: CreditCard, trend: "neutral" },
-  { title: "Items Sold", value: "47", change: "+8 vs yesterday", icon: Wine, trend: "up" },
-  { title: "Low Stock Items", value: "3", change: "Action needed", icon: AlertTriangle, trend: "warning" },
-];
+import {
+  useBarItems,
+  useLowStockItems,
+} from "@/hooks/useBarItems";
+import {
+  useBarTabs,
+  useBarRevenueToday,
+  useItemsSoldToday,
+} from "@/hooks/useBarTabs";
 
 export default function Bar() {
   const navigate = useNavigate();
@@ -94,23 +70,52 @@ export default function Bar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("tabs");
   const [searchTerm, setSearchTerm] = useState("");
-  const [tabFilter, setTabFilter] = useState("all");
+  const [tabFilter, setTabFilter] = useState<"all" | "open" | "closed">("all");
   const [inventoryFilter, setInventoryFilter] = useState("all");
 
-  const filteredTabs = mockTabs.filter(tab => {
-    const matchesSearch = tab.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          tab.apartment.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = tabFilter === "all" || tab.status === tabFilter;
-    return matchesSearch && matchesFilter;
-  });
+  // Fetch data from hooks
+  const statusFilter = tabFilter === "all" ? undefined : tabFilter;
+  const { data: allTabs = [], isLoading: tabsLoading } = useBarTabs(statusFilter);
+  const { data: barItems = [], isLoading: itemsLoading } = useBarItems();
+  const { data: lowStockItems = [], isLoading: lowStockLoading } = useLowStockItems();
+  const { data: todayRevenue = 0, isLoading: revenueLoading } = useBarRevenueToday();
+  const { data: itemsSoldToday = 0, isLoading: itemsSoldLoading } = useItemsSoldToday();
 
-  const filteredInventory = mockInventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = inventoryFilter === "all" || 
-                          (inventoryFilter === "low" && item.stock <= item.minStock) ||
-                          item.category.toLowerCase() === inventoryFilter.toLowerCase();
-    return matchesSearch && matchesFilter;
-  });
+  // Filter tabs based on search
+  const filteredTabs = useMemo(() => {
+    return allTabs.filter(tab => {
+      const matchesSearch = tab.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (tab.room_number && tab.room_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                            tab.tab_number.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    });
+  }, [allTabs, searchTerm]);
+
+  // Filter inventory based on search and filter
+  const filteredInventory = useMemo(() => {
+    return barItems.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = inventoryFilter === "all" ||
+                            (inventoryFilter === "low" && item.stock_quantity <= item.min_stock_level) ||
+                            item.category.toLowerCase() === inventoryFilter.toLowerCase();
+      return matchesSearch && matchesFilter && item.active;
+    });
+  }, [barItems, searchTerm, inventoryFilter]);
+
+  // Calculate stats
+  const openTabsCount = allTabs.filter(tab => tab.status === 'open').length;
+
+  // Get today's sales (recent tab items from closed tabs today)
+  const todaysSales = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return allTabs
+      .filter(tab => tab.status === 'closed' && new Date(tab.closed_at!) >= today)
+      .slice(0, 10); // Show last 10 sales
+  }, [allTabs]);
+
+  const isLoading = tabsLoading || itemsLoading;
 
   const getStockStatus = (stock: number, minStock: number) => {
     const ratio = stock / minStock;
@@ -196,51 +201,77 @@ export default function Bar() {
 
           {/* Stats Cards */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            {statCards.map((stat, index) => (
-              <div
-                key={stat.title}
-                className={cn(
-                  "group relative rounded-xl border bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5",
-                  stat.trend === "warning" 
-                    ? "from-amber-500/20 to-amber-500/5" 
-                    : "from-accent/20 to-accent/5",
-                  "border-border/50"
-                )}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Glassmorphism overlay */}
-                <div className="absolute inset-0 bg-card/60 backdrop-blur-sm" />
-                
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-muted-foreground font-medium">{stat.title}</p>
-                    <stat.icon className={cn(
-                      "h-4 w-4",
-                      stat.trend === "warning" ? "text-amber-400" : "text-muted-foreground/50"
-                    )} />
-                  </div>
-                  <p className={cn(
-                    "text-2xl font-display font-bold",
-                    stat.trend === "up" ? "text-emerald-600 dark:text-emerald-400" :
-                    stat.trend === "warning" ? "text-amber-600 dark:text-amber-400" :
-                    "text-foreground"
-                  )}>
-                    {stat.value}
-                  </p>
-                  <p className={cn(
-                    "text-xs mt-1",
-                    stat.trend === "up" ? "text-emerald-600 dark:text-emerald-400" :
-                    stat.trend === "warning" ? "text-amber-600 dark:text-amber-400" :
-                    "text-muted-foreground"
-                  )}>
-                    {stat.change}
-                  </p>
+            {/* Today's Revenue */}
+            <div className="group relative rounded-xl border bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5 from-accent/20 to-accent/5 border-border/50">
+              <div className="absolute inset-0 bg-card/60 backdrop-blur-sm" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-muted-foreground font-medium">Today's Revenue</p>
+                  <DollarSign className="h-4 w-4 text-muted-foreground/50" />
                 </div>
-                
-                {/* Decorative sparkle */}
-                <Sparkles className="absolute top-3 right-3 h-4 w-4 text-accent/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <p className="text-2xl font-display font-bold text-emerald-600 dark:text-emerald-400">
+                  {revenueLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : `₦${todayRevenue.toLocaleString()}`}
+                </p>
+                <p className="text-xs mt-1 text-muted-foreground">
+                  From bar sales
+                </p>
               </div>
-            ))}
+              <Sparkles className="absolute top-3 right-3 h-4 w-4 text-accent/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+
+            {/* Open Tabs */}
+            <div className="group relative rounded-xl border bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5 from-accent/20 to-accent/5 border-border/50">
+              <div className="absolute inset-0 bg-card/60 backdrop-blur-sm" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-muted-foreground font-medium">Open Tabs</p>
+                  <CreditCard className="h-4 w-4 text-muted-foreground/50" />
+                </div>
+                <p className="text-2xl font-display font-bold text-foreground">
+                  {tabsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : openTabsCount}
+                </p>
+                <p className="text-xs mt-1 text-muted-foreground">
+                  Currently active
+                </p>
+              </div>
+              <Sparkles className="absolute top-3 right-3 h-4 w-4 text-accent/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+
+            {/* Items Sold */}
+            <div className="group relative rounded-xl border bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5 from-accent/20 to-accent/5 border-border/50">
+              <div className="absolute inset-0 bg-card/60 backdrop-blur-sm" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-muted-foreground font-medium">Items Sold</p>
+                  <Wine className="h-4 w-4 text-muted-foreground/50" />
+                </div>
+                <p className="text-2xl font-display font-bold text-emerald-600 dark:text-emerald-400">
+                  {itemsSoldLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : itemsSoldToday}
+                </p>
+                <p className="text-xs mt-1 text-emerald-600 dark:text-emerald-400">
+                  Today's total
+                </p>
+              </div>
+              <Sparkles className="absolute top-3 right-3 h-4 w-4 text-accent/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+
+            {/* Low Stock Items */}
+            <div className="group relative rounded-xl border bg-gradient-to-br p-4 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5 from-amber-500/20 to-amber-500/5 border-border/50">
+              <div className="absolute inset-0 bg-card/60 backdrop-blur-sm" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-muted-foreground font-medium">Low Stock Items</p>
+                  <AlertTriangle className="h-4 w-4 text-amber-400" />
+                </div>
+                <p className="text-2xl font-display font-bold text-amber-600 dark:text-amber-400">
+                  {lowStockLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : lowStockItems.length}
+                </p>
+                <p className="text-xs mt-1 text-amber-600 dark:text-amber-400">
+                  {lowStockItems.length > 0 ? "Action needed" : "All good"}
+                </p>
+              </div>
+              <Sparkles className="absolute top-3 right-3 h-4 w-4 text-accent/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
           </div>
 
           {/* Main Content Tabs */}
@@ -311,51 +342,70 @@ export default function Bar() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredTabs.map((tab, index) => (
-                        <TableRow 
-                          key={tab.id} 
-                          className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                          onClick={() => navigate(`/dashboard/bar/${tab.id}`)}
-                        >
-                          <TableCell className="font-medium text-foreground">{tab.guestName}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="font-mono">{tab.apartment}</Badge>
-                          </TableCell>
-                          <TableCell className="text-foreground">{tab.items} items</TableCell>
-                          <TableCell className="font-semibold text-foreground">₦{tab.amount.toLocaleString()}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            <div className="flex items-center gap-1 whitespace-nowrap">
-                              <Clock className="h-3 w-3" />
-                              {tab.openedAt}
-                            </div>
-                          </TableCell>
-                          <TableCell>{getTabStatusBadge(tab.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-popover border-border z-50">
-                                <DropdownMenuItem className="gap-2" onClick={(e) => { e.stopPropagation(); }}>
-                                  <Plus className="h-4 w-4" /> Add Items
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2" onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/bar/${tab.id}`); }}>
-                                  <CreditCard className="h-4 w-4" /> View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 text-emerald-400" onClick={(e) => e.stopPropagation()}>
-                                  <CheckCircle2 className="h-4 w-4" /> Close Tab
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 text-destructive" onClick={(e) => e.stopPropagation()}>
-                                  <XCircle className="h-4 w-4" /> Void Tab
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground mt-2">Loading tabs...</p>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : filteredTabs.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8">
+                            <p className="text-muted-foreground">No tabs found</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredTabs.map((tab, index) => (
+                          <TableRow
+                            key={tab.id}
+                            className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                            onClick={() => navigate(`/dashboard/bar/${tab.id}`)}
+                          >
+                            <TableCell className="font-medium text-foreground">{tab.customer_name}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="font-mono">
+                                {tab.room_number || tab.tab_number}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-foreground">
+                              {/* We'll need to fetch tab items count separately or store it */}
+                              -
+                            </TableCell>
+                            <TableCell className="font-semibold text-foreground">₦{tab.total.toLocaleString()}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              <div className="flex items-center gap-1 whitespace-nowrap">
+                                <Clock className="h-3 w-3" />
+                                {format(new Date(tab.opened_at), 'MMM d, HH:mm')}
+                              </div>
+                            </TableCell>
+                            <TableCell>{getTabStatusBadge(tab.status)}</TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-popover border-border z-50">
+                                  <DropdownMenuItem className="gap-2" onClick={(e) => { e.stopPropagation(); }}>
+                                    <Plus className="h-4 w-4" /> Add Items
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="gap-2" onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/bar/${tab.id}`); }}>
+                                    <CreditCard className="h-4 w-4" /> View Details
+                                  </DropdownMenuItem>
+                                  {tab.status === 'open' && (
+                                    <DropdownMenuItem className="gap-2 text-emerald-400" onClick={(e) => e.stopPropagation()}>
+                                      <CheckCircle2 className="h-4 w-4" /> Close Tab
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -385,25 +435,44 @@ export default function Bar() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mockSales.map((sale, index) => (
-                        <TableRow 
-                          key={sale.id} 
-                          className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <TableCell className="font-medium text-foreground">{sale.item}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {getCategoryIcon(sale.category)}
-                              <span className="text-muted-foreground">{sale.category}</span>
-                            </div>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground mt-2">Loading sales...</p>
                           </TableCell>
-                          <TableCell className="text-foreground">{sale.guest}</TableCell>
-                          <TableCell className="text-foreground">{sale.quantity}</TableCell>
-                          <TableCell className="font-semibold text-emerald-600 dark:text-emerald-400">₦{sale.amount.toLocaleString()}</TableCell>
-                          <TableCell className="text-muted-foreground whitespace-nowrap">{sale.time}</TableCell>
                         </TableRow>
-                      ))}
+                      ) : todaysSales.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8">
+                            <p className="text-muted-foreground">No sales today</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        todaysSales.map((tab, index) => (
+                          <TableRow
+                            key={tab.id}
+                            className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <TableCell className="font-medium text-foreground">Tab {tab.tab_number}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">Tab Sale</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-foreground">{tab.customer_name}</TableCell>
+                            <TableCell className="text-foreground">-</TableCell>
+                            <TableCell className="font-semibold text-emerald-600 dark:text-emerald-400">
+                              ₦{tab.total.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
+                              {tab.closed_at && format(new Date(tab.closed_at), 'HH:mm')}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -413,7 +482,7 @@ export default function Bar() {
             {/* Inventory Tab */}
             <TabsContent value="inventory" className="space-y-6">
               {/* Low Stock Alerts */}
-              {mockInventory.filter(i => i.stock <= i.minStock).length > 0 && (
+              {!lowStockLoading && lowStockItems.length > 0 && (
                 <div className="relative rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-amber-500/5 p-4 animate-fade-in">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex items-center gap-3 flex-1">
@@ -423,11 +492,16 @@ export default function Bar() {
                       <div>
                         <p className="font-medium text-amber-600 dark:text-amber-400">Low Stock Alert</p>
                         <p className="text-sm text-muted-foreground">
-                          {mockInventory.filter(i => i.stock <= i.minStock).length} items need to be reordered
+                          {lowStockItems.length} items need to be reordered
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                      onClick={() => setInventoryFilter('low')}
+                    >
                       View All
                     </Button>
                   </div>
@@ -490,65 +564,82 @@ export default function Bar() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredInventory.map((item, index) => {
-                        const stockStatus = getStockStatus(item.stock, item.minStock);
-                        const stockPercentage = Math.min((item.stock / (item.minStock * 2)) * 100, 100);
-                        
-                        return (
-                          <TableRow 
-                            key={item.id} 
-                            className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
-                            style={{ animationDelay: `${index * 50}ms` }}
-                          >
-                            <TableCell className="font-medium text-foreground">{item.name}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {getCategoryIcon(item.category)}
-                                <span className="text-muted-foreground">{item.category}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="space-y-1.5 min-w-[120px]">
-                                <div className="flex justify-between text-xs">
-                                  <span className="text-foreground">{item.stock} {item.unit}</span>
-                                  <span className="text-muted-foreground">min: {item.minStock}</span>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground mt-2">Loading inventory...</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredInventory.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8">
+                            <p className="text-muted-foreground">No items found</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredInventory.map((item, index) => {
+                          const stockStatus = getStockStatus(item.stock_quantity, item.min_stock_level);
+                          const stockPercentage = Math.min((item.stock_quantity / (item.min_stock_level * 2)) * 100, 100);
+
+                          return (
+                            <TableRow
+                              key={item.id}
+                              className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in"
+                              style={{ animationDelay: `${index * 50}ms` }}
+                            >
+                              <TableCell className="font-medium text-foreground">{item.name}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {getCategoryIcon(item.category)}
+                                  <span className="text-muted-foreground capitalize">{item.category.replace('_', ' ')}</span>
                                 </div>
-                                <Progress 
-                                  value={stockPercentage} 
-                                  className="h-1.5"
-                                />
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={cn(
-                                stockStatus.status === "Critical" && "bg-rose-500 text-white border-rose-500",
-                                stockStatus.status === "Low" && "bg-amber-500 text-white border-amber-500",
-                                stockStatus.status === "Good" && "bg-emerald-500 text-white border-emerald-500"
-                              )}>
-                                {stockStatus.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground whitespace-nowrap">{item.lastOrdered}</TableCell>
-                            <TableCell className="text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-popover border-border z-50">
-                                  <DropdownMenuItem className="gap-2">
-                                    <Plus className="h-4 w-4" /> Update Stock
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="gap-2">
-                                    <Package className="h-4 w-4" /> Reorder
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                              </TableCell>
+                              <TableCell>
+                                <div className="space-y-1.5 min-w-[120px]">
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-foreground">{item.stock_quantity} {item.unit}</span>
+                                    <span className="text-muted-foreground">min: {item.min_stock_level}</span>
+                                  </div>
+                                  <Progress
+                                    value={stockPercentage}
+                                    className="h-1.5"
+                                  />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={cn(
+                                  stockStatus.status === "Critical" && "bg-rose-500 text-white border-rose-500",
+                                  stockStatus.status === "Low" && "bg-amber-500 text-white border-amber-500",
+                                  stockStatus.status === "Good" && "bg-emerald-500 text-white border-emerald-500"
+                                )}>
+                                  {stockStatus.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground whitespace-nowrap">
+                                {item.updated_at ? format(new Date(item.updated_at), 'MMM d, yyyy') : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="bg-popover border-border z-50">
+                                    <DropdownMenuItem className="gap-2">
+                                      <Plus className="h-4 w-4" /> Update Stock
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="gap-2">
+                                      <Package className="h-4 w-4" /> Reorder
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
                     </TableBody>
                   </Table>
                 </div>
