@@ -20,6 +20,7 @@ import {
   FileText,
   XCircle,
   Sparkles,
+  Plus,
 } from 'lucide-react';
 
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -52,6 +53,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { LoadMoreButton, Pagination } from '@/components/ui/pagination-controls';
+import { AddBookingDialog } from '@/components/booking/AddBookingDialog';
 
 const statusStyles = {
   confirmed: 'bg-emerald-500 text-white border-emerald-500',
@@ -115,6 +117,7 @@ const Bookings = () => {
   // Dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [addBookingDialogOpen, setAddBookingDialogOpen] = useState(false);
 
   // Fetch bookings from database
   const { data: allBookings = [], isLoading: bookingsLoading, error } = useBookings();
@@ -360,14 +363,23 @@ const Bookings = () => {
                 Manage all property reservations and guest stays
               </p>
             </div>
-            <Button 
-              variant="outline"
-              className="gap-2"
-              onClick={() => handleAction('Export', 'all')}
-            >
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                className="gap-2"
+                onClick={() => setAddBookingDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Add Booking
+              </Button>
+              <Button 
+                variant="outline"
+                className="gap-2"
+                onClick={() => handleAction('Export', 'all')}
+              >
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -859,6 +871,12 @@ const Bookings = () => {
         confirmText="Cancel Booking"
         cancelText="Keep Booking"
         variant="destructive"
+      />
+
+      {/* Add Booking Dialog */}
+      <AddBookingDialog
+        open={addBookingDialogOpen}
+        onOpenChange={setAddBookingDialogOpen}
       />
     </div>
   );
