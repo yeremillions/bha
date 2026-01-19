@@ -147,12 +147,135 @@ export const useUpdateProperty = () => {
   });
 };
 
-// Delete a property
+// Mark property as inactive (soft delete)
+export const useArchiveProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('properties')
+        .update({ status: 'inactive' })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error archiving property:', error);
+        throw error;
+      }
+
+      return data as Property;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property', data.id] });
+      toast({
+        title: 'Property archived',
+        description: `${data.name} has been marked as inactive. It will no longer appear in active listings.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error archiving property',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// Reactivate an archived property
+export const useReactivateProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('properties')
+        .update({ status: 'available' })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error reactivating property:', error);
+        throw error;
+      }
+
+      return data as Property;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property', data.id] });
+      toast({
+        title: 'Property reactivated',
+        description: `${data.name} has been reactivated and is now available for bookings.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error reactivating property',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// Delete a property (with dependency check)
 export const useDeleteProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // First, check if there are any bookings associated with this property
+      const { data: bookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('id, booking_number, status')
+        .eq('property_id', id)
+        .limit(1);
+
+      if (bookingsError) {
+        console.error('Error checking property bookings:', bookingsError);
+        throw new Error('Failed to check property dependencies');
+      }
+
+      // If there are bookings, prevent deletion
+      if (bookings && bookings.length > 0) {
+        throw new Error(
+          'Cannot delete property with existing bookings. Please mark the property as inactive instead.'
+        );
+      }
+
+      // Check for other dependencies (maintenance, transactions, etc.)
+      const { data: maintenance, error: maintenanceError } = await supabase
+        .from('maintenance_issues')
+        .select('id')
+        .eq('property_id', id)
+        .limit(1);
+
+      if (maintenanceError) {
+        console.error('Error checking maintenance records:', maintenanceError);
+      }
+
+      const { data: transactions, error: transactionsError } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('property_id', id)
+        .limit(1);
+
+      if (transactionsError) {
+        console.error('Error checking transactions:', transactionsError);
+      }
+
+      if ((maintenance && maintenance.length > 0) || (transactions && transactions.length > 0)) {
+        throw new Error(
+          'Cannot delete property with existing maintenance records or transactions. Please mark the property as inactive instead.'
+        );
+      }
+
+      // If no dependencies, proceed with deletion
       const { error } = await supabase
         .from('properties')
         .delete()

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useProperties, useCreateProperty, useDeleteProperty } from '@/hooks/useProperties';
+import { useProperties, useCreateProperty, useDeleteProperty, useArchiveProperty, useReactivateProperty } from '@/hooks/useProperties';
 import { cn } from '@/lib/utils';
 import { 
   Plus, 
@@ -18,6 +18,8 @@ import {
   Edit,
   Trash2,
   Eye,
+  Archive,
+  ArchiveRestore,
   TrendingUp,
   ArrowUpDown,
   Building2,
@@ -118,9 +120,11 @@ const Properties = () => {
     search: searchQuery,
   });
 
-  // Create and delete mutations
+  // Create, delete, and archive mutations
   const createProperty = useCreateProperty();
   const deleteProperty = useDeleteProperty();
+  const archiveProperty = useArchiveProperty();
+  const reactivateProperty = useReactivateProperty();
 
   const handleAddProperty = async (propertyData: PropertyFormData) => {
     await createProperty.mutateAsync({
@@ -151,6 +155,15 @@ const Properties = () => {
     if (!propertyToDelete) return;
     await deleteProperty.mutateAsync(propertyToDelete);
     setPropertyToDelete(null);
+    setDeleteDialogOpen(false);
+  };
+
+  const handleArchiveProperty = async (id: string) => {
+    await archiveProperty.mutateAsync(id);
+  };
+
+  const handleReactivateProperty = async (id: string) => {
+    await reactivateProperty.mutateAsync(id);
   };
 
   useEffect(() => {
@@ -349,6 +362,7 @@ const Properties = () => {
                     <SelectItem value="available">Available</SelectItem>
                     <SelectItem value="occupied">Occupied</SelectItem>
                     <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="inactive">Inactive (Archived)</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -451,12 +465,29 @@ const Properties = () => {
                           Edit Property
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        {property.status === 'inactive' ? (
+                          <DropdownMenuItem
+                            className="text-green-600"
+                            onClick={() => handleReactivateProperty(property.id)}
+                          >
+                            <ArchiveRestore className="h-4 w-4 mr-2" />
+                            Reactivate
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            className="text-orange-600"
+                            onClick={() => handleArchiveProperty(property.id)}
+                          >
+                            <Archive className="h-4 w-4 mr-2" />
+                            Archive
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => handleDeleteProperty(property.id)}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
+                          Delete Permanently
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -632,12 +663,29 @@ const Properties = () => {
                           Edit Property
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        {property.status === 'inactive' ? (
+                          <DropdownMenuItem
+                            className="text-green-600"
+                            onClick={() => handleReactivateProperty(property.id)}
+                          >
+                            <ArchiveRestore className="h-4 w-4 mr-2" />
+                            Reactivate
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            className="text-orange-600"
+                            onClick={() => handleArchiveProperty(property.id)}
+                          >
+                            <Archive className="h-4 w-4 mr-2" />
+                            Archive
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => handleDeleteProperty(property.id)}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
+                          Delete Permanently
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -691,9 +739,9 @@ const Properties = () => {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDeleteProperty}
-        title="Delete Property?"
-        description="Are you sure you want to delete this property? This action cannot be undone."
-        confirmText="Delete"
+        title="Delete Property Permanently?"
+        description="This will permanently delete the property from the database. If the property has any bookings, transactions, or maintenance records, deletion will fail. Consider archiving instead to preserve historical data."
+        confirmText="Delete Permanently"
         cancelText="Cancel"
         variant="destructive"
       />
