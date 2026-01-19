@@ -207,7 +207,7 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
         booked_via: 'dashboard',
         source: 'walk_in',
         status: 'confirmed',
-        payment_status: 'pending',
+        payment_status: 'paid', // Walk-in customers pay immediately
       });
 
       setBookingNumber(booking.booking_number);
