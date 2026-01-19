@@ -143,6 +143,22 @@ const Bookings = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Sync status filter with showCancelled checkbox
+  useEffect(() => {
+    // If status is set to cancelled, automatically show cancelled bookings
+    if (statusFilter === 'cancelled') {
+      setShowCancelled(true);
+    }
+  }, [statusFilter]);
+
+  // Sync showCancelled checkbox with status filter
+  useEffect(() => {
+    // If showCancelled is unchecked and status is 'cancelled', reset to 'all'
+    if (!showCancelled && statusFilter === 'cancelled') {
+      setStatusFilter('all');
+    }
+  }, [showCancelled, statusFilter]);
+
   // Client-side filtering
   const filteredBookings = useMemo(() => {
     return allBookings.filter(booking => {
