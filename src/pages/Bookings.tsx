@@ -143,21 +143,6 @@ const Bookings = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Sync status filter with showCancelled checkbox
-  useEffect(() => {
-    // If status is set to cancelled, automatically show cancelled bookings
-    if (statusFilter === 'cancelled') {
-      setShowCancelled(true);
-    }
-  }, [statusFilter]);
-
-  // Sync showCancelled checkbox with status filter
-  useEffect(() => {
-    // If showCancelled is unchecked and status is 'cancelled', reset to 'all'
-    if (!showCancelled && statusFilter === 'cancelled') {
-      setStatusFilter('all');
-    }
-  }, [showCancelled, statusFilter]);
 
   // Client-side filtering
   const filteredBookings = useMemo(() => {
@@ -530,7 +515,9 @@ const Bookings = () => {
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="checked_in">Checked In</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  {showCancelled && (
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <Select value={paymentFilter} onValueChange={setPaymentFilter}>
@@ -548,7 +535,14 @@ const Bookings = () => {
                 <Checkbox
                   id="show-cancelled"
                   checked={showCancelled}
-                  onCheckedChange={(checked) => setShowCancelled(checked === true)}
+                  onCheckedChange={(checked) => {
+                    const isChecked = checked === true;
+                    setShowCancelled(isChecked);
+                    // If unchecking and status is 'cancelled', reset to 'all'
+                    if (!isChecked && statusFilter === 'cancelled') {
+                      setStatusFilter('all');
+                    }
+                  }}
                 />
                 <Label
                   htmlFor="show-cancelled"
