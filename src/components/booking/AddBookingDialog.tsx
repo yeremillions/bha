@@ -191,7 +191,7 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
         customerId = newCustomer.id;
       }
 
-      // Create booking with walk-in source
+      // Create booking via dashboard for walk-in guest
       const booking = await createBooking.mutateAsync({
         property_id: selectedProperty.id,
         customer_id: customerId,
@@ -204,7 +204,7 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
         discount_amount: priceBreakdown.discountAmount,
         total_amount: priceBreakdown.totalAmount,
         special_requests: guestInfo.specialRequests || undefined,
-        booked_via: 'walk_in',
+        booked_via: 'dashboard',
         source: 'walk_in',
         status: 'confirmed',
         payment_status: 'pending',
