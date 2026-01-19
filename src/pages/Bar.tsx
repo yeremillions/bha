@@ -309,7 +309,7 @@ export default function Bar() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <Select value={tabFilter} onValueChange={setTabFilter}>
+                  <Select value={tabFilter} onValueChange={(value) => setTabFilter(value as 'all' | 'open' | 'closed')}>
                     <SelectTrigger className="w-full md:w-44 bg-background/50 border-border/50 hover:bg-background transition-colors">
                       <SelectValue placeholder="All Tabs" />
                     </SelectTrigger>

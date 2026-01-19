@@ -367,9 +367,9 @@ export const useCreateBooking = () => {
       // Send booking confirmation email
       if (data.customer?.email) {
         try {
-          await sendBookingConfirmation(data.customer.email, {
+        await sendBookingConfirmation(data.customer.email, {
             bookingNumber: data.booking_number,
-            customerName: data.customer.name,
+            customerName: data.customer.full_name,
             propertyName: data.property?.name || 'Property',
             checkInDate: format(new Date(data.check_in_date), 'MMMM d, yyyy'),
             checkOutDate: format(new Date(data.check_out_date), 'MMMM d, yyyy'),
@@ -500,15 +500,12 @@ export const useCancelBooking = () => {
       // Send cancellation confirmation email
       if (data.customer?.email) {
         try {
-          await sendCancellationConfirmation(data.customer.email, {
+        await sendCancellationConfirmation(data.customer.email, {
             bookingNumber: data.booking_number,
-            customerName: data.customer.name,
+            customerName: data.customer.full_name,
             propertyName: data.property?.name || 'Property',
-            checkInDate: format(new Date(data.check_in_date), 'MMMM d, yyyy'),
-            checkOutDate: format(new Date(data.check_out_date), 'MMMM d, yyyy'),
-            cancellationDate: format(new Date(), 'MMMM d, yyyy'),
             refundAmount: data.payment_status === 'paid' ? data.total_amount : 0,
-            refundEligible: data.payment_status === 'paid',
+            cancellationDate: format(new Date(), 'MMMM d, yyyy'),
           });
           console.log('Cancellation confirmation email sent successfully');
         } catch (emailError) {
@@ -607,17 +604,11 @@ export const useUpdatePaymentStatus = () => {
         try {
           await sendPaymentReceipt(data.customer.email, {
             bookingNumber: data.booking_number,
-            customerName: data.customer.name,
-            propertyName: data.property?.name || 'Property',
-            checkInDate: format(new Date(data.check_in_date), 'MMMM d, yyyy'),
-            checkOutDate: format(new Date(data.check_out_date), 'MMMM d, yyyy'),
+            customerName: data.customer.full_name,
             amount: data.total_amount,
-            paymentMethod: 'Online Payment', // This could be enhanced to track actual payment method
-            transactionDate: format(new Date(), 'MMMM d, yyyy'),
-            baseAmount: data.base_amount,
-            cleaningFee: data.cleaning_fee || 0,
-            taxAmount: data.tax_amount || 0,
-            discountAmount: data.discount_amount || 0,
+            paymentMethod: 'Online Payment',
+            transactionRef: data.booking_number,
+            date: format(new Date(), 'MMMM d, yyyy'),
           });
           console.log('Payment receipt email sent successfully');
         } catch (emailError) {

@@ -41,6 +41,195 @@ export type Database = {
         }
         Relationships: []
       }
+      bar_items: {
+        Row: {
+          active: boolean | null
+          category: string
+          cost: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          min_stock_level: number | null
+          name: string
+          price: number
+          stock_quantity: number | null
+          unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          category: string
+          cost?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          min_stock_level?: number | null
+          name: string
+          price: number
+          stock_quantity?: number | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          category?: string
+          cost?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          min_stock_level?: number | null
+          name?: string
+          price?: number
+          stock_quantity?: number | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      bar_tab_items: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          id: string
+          item_id: string
+          item_name: string
+          notes: string | null
+          quantity: number
+          tab_id: string
+          total: number | null
+          unit_price: number
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          id?: string
+          item_id: string
+          item_name: string
+          notes?: string | null
+          quantity: number
+          tab_id: string
+          total?: number | null
+          unit_price: number
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          id?: string
+          item_id?: string
+          item_name?: string
+          notes?: string | null
+          quantity?: number
+          tab_id?: string
+          total?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bar_tab_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "bar_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_tab_items_tab_id_fkey"
+            columns: ["tab_id"]
+            isOneToOne: false
+            referencedRelation: "bar_tabs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bar_tabs: {
+        Row: {
+          booking_id: string | null
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string | null
+          customer_id: string | null
+          customer_name: string
+          discount_amount: number | null
+          id: string
+          notes: string | null
+          opened_at: string | null
+          opened_by: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          room_number: string | null
+          status: string | null
+          subtotal: number | null
+          tab_number: string
+          tax_amount: number | null
+          tax_rate: number | null
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          customer_name: string
+          discount_amount?: number | null
+          id?: string
+          notes?: string | null
+          opened_at?: string | null
+          opened_by?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          room_number?: string | null
+          status?: string | null
+          subtotal?: number | null
+          tab_number: string
+          tax_amount?: number | null
+          tax_rate?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          discount_amount?: number | null
+          id?: string
+          notes?: string | null
+          opened_at?: string | null
+          opened_by?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          room_number?: string | null
+          status?: string | null
+          subtotal?: number | null
+          tab_number?: string
+          tax_amount?: number | null
+          tax_rate?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bar_tabs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_tabs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           arrival_time: string | null
@@ -1417,6 +1606,190 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_jobs: {
+        Row: {
+          actual_cost: number | null
+          actual_hours: number | null
+          assigned_by: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          description: string
+          estimated_cost: number | null
+          estimated_hours: number | null
+          feedback: string | null
+          id: string
+          images: string[] | null
+          invoice_number: string | null
+          job_number: string
+          labor_cost: number | null
+          maintenance_issue_id: string | null
+          notes: string | null
+          parts_cost: number | null
+          payment_date: string | null
+          payment_status: string | null
+          priority: string | null
+          property_id: string | null
+          rating: number | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          started_at: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          actual_hours?: number | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          description: string
+          estimated_cost?: number | null
+          estimated_hours?: number | null
+          feedback?: string | null
+          id?: string
+          images?: string[] | null
+          invoice_number?: string | null
+          job_number: string
+          labor_cost?: number | null
+          maintenance_issue_id?: string | null
+          notes?: string | null
+          parts_cost?: number | null
+          payment_date?: string | null
+          payment_status?: string | null
+          priority?: string | null
+          property_id?: string | null
+          rating?: number | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          started_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          actual_cost?: number | null
+          actual_hours?: number | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          description?: string
+          estimated_cost?: number | null
+          estimated_hours?: number | null
+          feedback?: string | null
+          id?: string
+          images?: string[] | null
+          invoice_number?: string | null
+          job_number?: string
+          labor_cost?: number | null
+          maintenance_issue_id?: string | null
+          notes?: string | null
+          parts_cost?: number | null
+          payment_date?: string | null
+          payment_status?: string | null
+          priority?: string | null
+          property_id?: string | null
+          rating?: number | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          started_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_jobs_maintenance_issue_id_fkey"
+            columns: ["maintenance_issue_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_jobs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_jobs_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          company_name: string | null
+          completed_jobs: number | null
+          created_at: string | null
+          email: string | null
+          emergency_contact: boolean | null
+          hourly_rate: number | null
+          id: string
+          insurance_verified: boolean | null
+          license_number: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          rating: number | null
+          specialty: string
+          total_jobs: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          company_name?: string | null
+          completed_jobs?: number | null
+          created_at?: string | null
+          email?: string | null
+          emergency_contact?: boolean | null
+          hourly_rate?: number | null
+          id?: string
+          insurance_verified?: boolean | null
+          license_number?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          rating?: number | null
+          specialty: string
+          total_jobs?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          company_name?: string | null
+          completed_jobs?: number | null
+          created_at?: string | null
+          email?: string | null
+          emergency_contact?: boolean | null
+          hourly_rate?: number | null
+          id?: string
+          insurance_verified?: boolean | null
+          license_number?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          rating?: number | null
+          specialty?: string
+          total_jobs?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1434,7 +1807,20 @@ export type Database = {
       generate_employee_id: { Args: never; Returns: string }
       generate_item_code: { Args: { category_name: string }; Returns: string }
       generate_po_number: { Args: never; Returns: string }
+      generate_tab_number: { Args: never; Returns: string }
       generate_task_number: { Args: never; Returns: string }
+      generate_vendor_job_number: { Args: never; Returns: string }
+      get_low_stock_items: {
+        Args: never
+        Returns: {
+          category: string
+          difference: number
+          id: string
+          min_stock_level: number
+          name: string
+          stock_quantity: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -142,10 +142,14 @@ export const useCreateTab = () => {
     mutationFn: async (input: CreateTabInput) => {
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Generate tab number
+      const { data: tabNum } = await supabase.rpc('generate_tab_number');
+
       const { data, error } = await supabase
         .from('bar_tabs')
         .insert([{
           ...input,
+          tab_number: tabNum || `TAB-${Date.now()}`,
           opened_by: user?.id,
         }])
         .select()

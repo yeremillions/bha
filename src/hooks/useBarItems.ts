@@ -1,22 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
-export interface BarItem {
-  id: string;
-  name: string;
-  category: 'beer' | 'wine' | 'spirits' | 'soft_drinks' | 'cocktails' | 'snacks' | 'other';
-  price: number;
-  cost?: number;
-  stock_quantity: number;
-  min_stock_level: number;
-  unit: string;
-  active: boolean;
-  image_url?: string;
-  description?: string;
-  created_at: string;
-  updated_at: string;
-}
+export type BarItem = Tables<'bar_items'>;
 
 export interface CreateBarItemInput {
   name: string;
@@ -57,7 +44,7 @@ export const useBarItems = (activeOnly = false) => {
         throw error;
       }
 
-      return data as BarItem[];
+      return data;
     },
   });
 };
@@ -79,7 +66,7 @@ export const useBarItemsByCategory = (category: string) => {
         throw error;
       }
 
-      return data as BarItem[];
+      return data;
     },
   });
 };
@@ -100,7 +87,7 @@ export const useBarItem = (id: string) => {
         throw error;
       }
 
-      return data as BarItem;
+      return data;
     },
     enabled: !!id,
   });
@@ -111,14 +98,21 @@ export const useLowStockItems = () => {
   return useQuery({
     queryKey: ['bar-items', 'low-stock'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_low_stock_items');
+      // Get items where stock is below minimum level
+      const { data, error } = await supabase
+        .from('bar_items')
+        .select('*')
+        .eq('active', true);
 
       if (error) {
         console.error('Error fetching low stock items:', error);
         throw error;
       }
 
-      return data;
+      // Filter items where stock is below minimum
+      return data?.filter(item => 
+        (item.stock_quantity || 0) < (item.min_stock_level || 0)
+      ) || [];
     },
   });
 };
@@ -136,7 +130,7 @@ export const useCreateBarItem = () => {
         .single();
 
       if (error) throw error;
-      return data as BarItem;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bar-items'] });
@@ -163,11 +157,11 @@ export const useUpdateBarItem = () => {
         .single();
 
       if (error) throw error;
-      return data as BarItem;
+      return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['bar-items'] });
-      queryClient.invalidateQueries({ queryKey: ['bar-items', data.id] });
+      if (data) queryClient.invalidateQueries({ queryKey: ['bar-items', data.id] });
       toast.success('Bar item updated successfully');
     },
     onError: (error: any) => {
@@ -216,7 +210,7 @@ export const useUpdateBarItemStock = () => {
         .single();
 
       if (error) throw error;
-      return data as BarItem;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bar-items'] });
@@ -244,8 +238,8 @@ export const useBarInventoryValue = () => {
         throw error;
       }
 
-      const totalValue = data.reduce((sum, item) => {
-        return sum + (item.cost || 0) * item.stock_quantity;
+      const totalValue = (data || []).reduce((sum, item) => {
+        return sum + (item.cost || 0) * (item.stock_quantity || 0);
       }, 0);
 
       return totalValue;

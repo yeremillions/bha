@@ -146,7 +146,10 @@ export const PaystackButton = ({
     }
 
     // Initialize payment popup
-    initializePayment(handlePaymentSuccess, handlePaymentClose);
+    initializePayment({
+      onSuccess: handlePaymentSuccess,
+      onClose: handlePaymentClose,
+    });
   };
 
   return (
