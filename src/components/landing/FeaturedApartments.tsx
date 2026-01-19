@@ -118,12 +118,17 @@ export const FeaturedApartments = () => {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
 
-  const { data: properties, isLoading, error } = useProperties({ 
-    status: 'active' 
+  const { data: properties, isLoading, error } = useProperties({
+    status: 'available'
   });
 
-  // Get featured properties (up to 3)
-  const featuredProperties = properties?.slice(0, 3) || [];
+  // Get featured properties first, then fill with available properties (up to 3)
+  const featuredProperties = properties
+    ? [
+        ...properties.filter(p => p.featured), // Featured first
+        ...properties.filter(p => !p.featured) // Then non-featured
+      ].slice(0, 3)
+    : [];
 
   const handleBookNow = (property: Property) => {
     setSelectedProperty(property);
