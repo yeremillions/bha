@@ -73,15 +73,13 @@ export const sendCheckInReminders = async (): Promise<{
       }
 
       try {
-        const result = await sendCheckInReminder(customer.email, {
+      const result = await sendCheckInReminder(customer.email, {
           bookingNumber: booking.booking_number,
-          customerName: customer.name,
+          customerName: customer.full_name,
           propertyName: property?.name || 'Property',
           checkInDate: format(new Date(booking.check_in_date), 'MMMM d, yyyy'),
           checkInTime: booking.arrival_time || '3:00 PM',
           propertyAddress: property?.address || 'Address on file',
-          specialInstructions: booking.special_requests || 'None',
-          contactPhone: '+234 803 123 4567', // This should come from settings
         });
 
         if (result.success) {

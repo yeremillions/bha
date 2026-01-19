@@ -96,7 +96,7 @@ export const useRevenueReport = (dateRange: ReportDateRange | null) => {
       // Calculate daily revenue
       const dailyRevenueMap = new Map<string, number>();
       transactions.forEach(t => {
-        const date = new Date(t.transaction_date).toISOString().split('T')[0];
+        const date = new Date(t.created_at).toISOString().split('T')[0];
         dailyRevenueMap.set(date, (dailyRevenueMap.get(date) || 0) + t.amount);
       });
 
@@ -195,7 +195,7 @@ export const useBookingSummaryReport = (dateRange: ReportDateRange | null) => {
       const checkedInBookings = bookings.filter(b => b.status === 'checked_in').length;
       const checkedOutBookings = bookings.filter(b => b.status === 'checked_out').length;
 
-      const totalRevenue = bookings.reduce((sum, b) => sum + b.total_price, 0);
+      const totalRevenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
       const averageBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
 
       // Top properties by booking count
@@ -205,7 +205,7 @@ export const useBookingSummaryReport = (dateRange: ReportDateRange | null) => {
         const current = propertyBookings.get(propertyName) || { count: 0, revenue: 0 };
         propertyBookings.set(propertyName, {
           count: current.count + 1,
-          revenue: current.revenue + b.total_price,
+          revenue: current.revenue + (b.total_amount || 0),
         });
       });
 

@@ -361,10 +361,14 @@ export const useCreateVendorJob = () => {
     mutationFn: async (input: CreateVendorJobInput) => {
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Generate job number
+      const { data: jobNum } = await supabase.rpc('generate_vendor_job_number');
+
       const { data, error } = await supabase
         .from('vendor_jobs')
         .insert([{
           ...input,
+          job_number: jobNum || `VJ-${Date.now()}`,
           assigned_by: user?.id,
         }])
         .select()
