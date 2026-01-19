@@ -19,7 +19,7 @@ export const sendEmail = async (options: EmailOptions) => {
     const { to, subject, html, from } = options;
 
     const response = await resend.emails.send({
-      from: from || 'Brooklyn Hills Apartments <noreply@brooklynhills.ng>',
+      from: from || 'Brooklyn Hills Apartments <noreply@brooklynhillsapartment.com>',
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
