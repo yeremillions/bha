@@ -27,6 +27,7 @@ export interface BookingFilters {
   customerId?: string;
   startDate?: string;
   endDate?: string;
+  hideCancelled?: boolean; // Hide cancelled bookings by default
 }
 
 export interface NewBooking {
@@ -108,6 +109,10 @@ export const useBookings = (filters?: BookingFilters) => {
       }
       if (filters?.paymentStatus && filters.paymentStatus !== 'all') {
         query = query.eq('payment_status', filters.paymentStatus);
+      }
+      // Hide cancelled bookings by default (unless explicitly set to false)
+      if (filters?.hideCancelled !== false) {
+        query = query.neq('status', 'cancelled');
       }
       if (filters?.propertyId) {
         query = query.eq('property_id', filters.propertyId);

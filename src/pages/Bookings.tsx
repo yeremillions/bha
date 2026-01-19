@@ -28,6 +28,8 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Select,
@@ -108,6 +110,7 @@ const Bookings = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [showCancelled, setShowCancelled] = useState(false); // Hide cancelled by default
 
   // Pagination state
   const [mobileDisplayCount, setMobileDisplayCount] = useState(20);
@@ -119,8 +122,10 @@ const Bookings = () => {
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
   const [addBookingDialogOpen, setAddBookingDialogOpen] = useState(false);
 
-  // Fetch bookings from database
-  const { data: allBookings = [], isLoading: bookingsLoading, error } = useBookings();
+  // Fetch bookings from database (hide cancelled by default)
+  const { data: allBookings = [], isLoading: bookingsLoading, error } = useBookings({
+    hideCancelled: !showCancelled,
+  });
   const updateBookingStatus = useUpdateBookingStatus();
   const cancelBooking = useCancelBooking();
 
@@ -178,6 +183,12 @@ const Bookings = () => {
   }, [filteredBookings, desktopCurrentPage, desktopItemsPerPage]);
 
   const totalDesktopPages = Math.ceil(filteredBookings.length / desktopItemsPerPage);
+
+  // Count cancelled bookings (only when hidden)
+  const cancelledCount = useMemo(() => {
+    if (showCancelled) return 0;
+    return allBookings.filter(b => b.status === 'cancelled').length;
+  }, [allBookings, showCancelled]);
 
   // Calculate total revenue
   const totalRevenue = useMemo(() => {
@@ -517,7 +528,26 @@ const Bookings = () => {
                   <SelectItem value="refunded">Refunded</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex items-center space-x-2 bg-background/50 border border-border/50 rounded-md px-4 py-2 hover:bg-background transition-colors">
+                <Checkbox
+                  id="show-cancelled"
+                  checked={showCancelled}
+                  onCheckedChange={(checked) => setShowCancelled(checked === true)}
+                />
+                <Label
+                  htmlFor="show-cancelled"
+                  className="text-sm font-medium cursor-pointer select-none"
+                >
+                  Show Cancelled
+                </Label>
+              </div>
             </div>
+            {/* Show hidden cancelled count */}
+            {cancelledCount > 0 && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                {cancelledCount} cancelled {cancelledCount === 1 ? 'booking' : 'bookings'} hidden
+              </div>
+            )}
           </div>
 
           {/* Bookings List - Mobile Card View */}
@@ -527,7 +557,10 @@ const Bookings = () => {
                 <div
                   key={booking.id}
                   onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
-                  className="relative rounded-2xl border border-border/50 bg-card p-4 cursor-pointer hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 animate-fade-in"
+                  className={cn(
+                    "relative rounded-2xl border border-border/50 bg-card p-4 cursor-pointer hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 animate-fade-in",
+                    booking.status === 'cancelled' && "opacity-50 bg-muted/20"
+                  )}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {/* Header with Booking ID and Status */}
@@ -718,7 +751,10 @@ const Bookings = () => {
                       <TableRow
                         key={booking.id}
                         onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
-                        className="border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer"
+                        className={cn(
+                          "border-border/50 hover:bg-muted/30 transition-colors animate-fade-in cursor-pointer",
+                          booking.status === 'cancelled' && "opacity-50 bg-muted/20"
+                        )}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <TableCell className="font-medium text-foreground">{booking.booking_number}</TableCell>
