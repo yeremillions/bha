@@ -28,6 +28,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop trigger if it exists, then create it
+DROP TRIGGER IF EXISTS team_invitations_updated_at ON team_invitations;
+
 CREATE TRIGGER team_invitations_updated_at
   BEFORE UPDATE ON team_invitations
   FOR EACH ROW
@@ -35,6 +38,13 @@ CREATE TRIGGER team_invitations_updated_at
 
 -- Add RLS policies
 ALTER TABLE team_invitations ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Admins and managers can view invitations" ON team_invitations;
+DROP POLICY IF EXISTS "Admins and managers can create invitations" ON team_invitations;
+DROP POLICY IF EXISTS "Admins and managers can update invitations" ON team_invitations;
+DROP POLICY IF EXISTS "Admins and managers can delete invitations" ON team_invitations;
+DROP POLICY IF EXISTS "Users can view their own invitation by token" ON team_invitations;
 
 -- Admins and managers can view all invitations
 CREATE POLICY "Admins and managers can view invitations"
