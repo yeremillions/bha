@@ -1,14 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import type { UserRole, Department } from '@/hooks/useCurrentUser';
 
-export type InvitationRole = 'admin' | 'manager' | 'receptionist' | 'staff';
+export type InvitationRole = UserRole;
+export type InvitationDepartment = Department;
 export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
 
 export interface TeamInvitation {
   id: string;
   email: string;
   role: InvitationRole;
+  department: InvitationDepartment;
   invited_by: string | null;
   status: InvitationStatus;
   invite_token: string;
@@ -22,6 +25,7 @@ export interface TeamInvitation {
 export interface NewInvitation {
   email: string;
   role: InvitationRole;
+  department: InvitationDepartment;
 }
 
 /**
@@ -114,6 +118,7 @@ export const useSendInvitation = () => {
         .insert({
           email: invitation.email,
           role: invitation.role,
+          department: invitation.department,
           invited_by: user.id,
         })
         .select()
