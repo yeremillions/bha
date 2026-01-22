@@ -159,7 +159,10 @@ const Landing = () => {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
               <Building2 className="h-5 w-5 text-accent-foreground" />
             </div>
-            <span className="font-display text-xl font-semibold tracking-tight">Brooklyn Hills</span>
+            <div className="flex flex-col">
+              <span className="font-display text-xl font-semibold tracking-tight leading-tight">Brooklyn Hills</span>
+              <span className="text-[10px] text-muted-foreground font-medium tracking-wide">Luxury Meets Comfort</span>
+            </div>
           </div>
           <div className="hidden md:flex items-center gap-8">
             <a href="#properties" className="font-body text-muted-foreground hover:text-foreground transition-colors">Properties</a>
@@ -200,12 +203,12 @@ const Landing = () => {
             </Link>
             
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              Premium Shortlet Apartments
-              <span className="block text-accent">in the heart of Uyo</span>
+              Brooklyn Hills Apartment
+              <span className="block text-accent">Luxury Meets Comfort</span>
             </h1>
-            
+
             <p className="font-body text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-10">
-              Experience comfort and luxury with our fully furnished apartments. Perfect for business trips, vacations, and extended stays.
+              Experience the perfect blend of luxury and comfort with our premium shortlet apartments in the heart of Uyo. Perfect for business trips, vacations, and extended stays.
             </p>
             
             {/* Booking Form */}

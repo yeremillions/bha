@@ -56,7 +56,7 @@ const Reports = () => {
       toast.error('No data to export');
       return;
     }
-    let csvContent = 'Brooklyn Hills Apartments - Report\n\n';
+    let csvContent = 'Brooklyn Hills Apartment - Luxury Meets Comfort - Report\n\n';
     csvContent += `Report Period: ${format(startDate!, 'MMM d, yyyy')} - ${format(endDate!, 'MMM d, yyyy')}\n\n`;
     if (revenueReport) {
       csvContent += 'REVENUE SUMMARY\n';
