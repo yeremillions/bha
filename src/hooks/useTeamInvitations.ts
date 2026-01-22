@@ -129,9 +129,38 @@ export const useSendInvitation = () => {
         throw new Error(`Failed to create invitation: ${error.message}`);
       }
 
-      // TODO: Send invitation email
-      // This would call an edge function to send the email
-      // await sendInvitationEmail(data);
+      // Send invitation email via edge function
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+          throw new Error('No active session');
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-team-invitation`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              invitationId: data.id,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Failed to send invitation email:', errorData);
+          // Don't throw error - invitation was created successfully
+          // Just log the email sending failure
+        }
+      } catch (emailError) {
+        console.error('Error sending invitation email:', emailError);
+        // Don't throw error - invitation was created successfully
+      }
 
       return data as TeamInvitation;
     },
@@ -176,8 +205,38 @@ export const useResendInvitation = () => {
         throw new Error(`Failed to resend invitation: ${error.message}`);
       }
 
-      // TODO: Resend invitation email
-      // await sendInvitationEmail(data);
+      // Send invitation email via edge function
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+          throw new Error('No active session');
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-team-invitation`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              invitationId: data.id,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Failed to resend invitation email:', errorData);
+          // Don't throw error - invitation was updated successfully
+          // Just log the email sending failure
+        }
+      } catch (emailError) {
+        console.error('Error resending invitation email:', emailError);
+        // Don't throw error - invitation was updated successfully
+      }
 
       return data as TeamInvitation;
     },
