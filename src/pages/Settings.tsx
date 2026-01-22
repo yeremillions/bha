@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { useSettings, type EmailTemplates as EmailTemplatesType } from "@/hooks/useSettings";
 import { useSystemSetting, useUpdateSystemSetting } from "@/hooks/useHousekeeping";
 import { useTeamInvitations, useResendInvitation, useRevokeInvitation, useDeleteInvitation } from "@/hooks/useTeamInvitations";
+import { useCanManageInvitations } from "@/hooks/useCurrentUser";
 import { InviteTeamMemberDialog } from "@/components/settings/InviteTeamMemberDialog";
 import { format } from "date-fns";
 import { Sparkles } from "lucide-react";
@@ -55,6 +56,7 @@ const Settings = () => {
   const resendInvitation = useResendInvitation();
   const revokeInvitation = useRevokeInvitation();
   const deleteInvitation = useDeleteInvitation();
+  const canManageInvitations = useCanManageInvitations();
 
   const {
     loading,
@@ -1035,14 +1037,24 @@ const Settings = () => {
                           </div>
                         )}
 
-                        <Button
-                          variant="outline"
-                          className="gap-2"
-                          onClick={() => setInviteDialogOpen(true)}
-                        >
-                          <Plus className="h-4 w-4" />
-                          Invite Team Member
-                        </Button>
+                        {canManageInvitations && (
+                          <Button
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => setInviteDialogOpen(true)}
+                          >
+                            <Plus className="h-4 w-4" />
+                            Invite Team Member
+                          </Button>
+                        )}
+
+                        {!canManageInvitations && (
+                          <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                            <p className="text-sm text-muted-foreground">
+                              Only admins and managers can invite team members.
+                            </p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   )}
