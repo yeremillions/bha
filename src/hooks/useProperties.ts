@@ -248,30 +248,31 @@ export const useDeleteProperty = () => {
         );
       }
 
-      // Check for other dependencies (maintenance, transactions, etc.)
+      // Check for other dependencies (maintenance, etc.)
       const { data: maintenance, error: maintenanceError } = await supabase
         .from('maintenance_issues')
         .select('id')
-        .eq('property_id', id)
+        .eq('property', id)
         .limit(1);
 
       if (maintenanceError) {
         console.error('Error checking maintenance records:', maintenanceError);
       }
 
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('transactions')
+      // Check housekeeping tasks
+      const { data: housekeepingTasks, error: housekeepingError } = await supabase
+        .from('housekeeping_tasks')
         .select('id')
         .eq('property_id', id)
         .limit(1);
 
-      if (transactionsError) {
-        console.error('Error checking transactions:', transactionsError);
+      if (housekeepingError) {
+        console.error('Error checking housekeeping tasks:', housekeepingError);
       }
 
-      if ((maintenance && maintenance.length > 0) || (transactions && transactions.length > 0)) {
+      if ((maintenance && maintenance.length > 0) || (housekeepingTasks && housekeepingTasks.length > 0)) {
         throw new Error(
-          'Cannot delete property with existing maintenance records or transactions. Please mark the property as inactive instead.'
+          'Cannot delete property with existing maintenance records or housekeeping tasks. Please mark the property as inactive instead.'
         );
       }
 

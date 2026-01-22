@@ -688,7 +688,7 @@ export const usePendingApprovals = () => {
           property:properties(*),
           customer:customers(*)
         `)
-        .eq('approval_status', 'pending')
+        .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -716,10 +716,7 @@ export const useApproveBooking = () => {
       const { data, error } = await supabase
         .from('bookings')
         .update({
-          approval_status: 'approved',
           status: 'confirmed',
-          approved_by: user?.id,
-          approved_at: new Date().toISOString(),
         })
         .eq('id', id)
         .select(`
@@ -751,12 +748,12 @@ export const useApproveBooking = () => {
         try {
           await sendBookingConfirmation(data.customer.email, {
             bookingNumber: data.booking_number,
-            customerName: data.customer.name,
+            customerName: data.customer.full_name || 'Guest',
             propertyName: data.property?.name || 'Property',
             checkInDate: format(new Date(data.check_in_date), 'MMMM d, yyyy'),
             checkOutDate: format(new Date(data.check_out_date), 'MMMM d, yyyy'),
-            numGuests: data.num_guests,
-            totalAmount: data.total_amount,
+            guestCount: data.num_guests,
+            totalPrice: data.total_amount,
           });
           console.log('Booking confirmation email sent successfully');
         } catch (emailError) {
