@@ -97,8 +97,16 @@ export const useSendInvitation = () => {
         throw new Error('This email already has a pending invitation');
       }
 
-      // Note: We don't check auth.users here as it's not accessible from client
-      // If the user already exists, they'll get an error when trying to accept the invitation
+      // Check if user already exists in auth.users
+      const { data: existingUser } = await supabase
+        .from('auth.users')
+        .select('id, email')
+        .eq('email', invitation.email)
+        .maybeSingle();
+
+      if (existingUser) {
+        throw new Error('A user with this email already exists');
+      }
 
       // Create invitation
       const { data, error } = await supabase
