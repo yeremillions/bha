@@ -292,12 +292,13 @@ This is an automated message, please do not reply to this email.
       }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error sending invitation email:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        message: error.message
+        message: errorMessage
       }),
       {
         status: 500,

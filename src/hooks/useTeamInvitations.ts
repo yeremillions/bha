@@ -138,7 +138,7 @@ export const useSendInvitation = () => {
         }
 
         const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-team-invitation`,
+          `https://nnrzsvtaeulxunxnbxtw.supabase.co/functions/v1/send-team-invitation`,
           {
             method: 'POST',
             headers: {
@@ -214,7 +214,7 @@ export const useResendInvitation = () => {
         }
 
         const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-team-invitation`,
+          `https://nnrzsvtaeulxunxnbxtw.supabase.co/functions/v1/send-team-invitation`,
           {
             method: 'POST',
             headers: {
