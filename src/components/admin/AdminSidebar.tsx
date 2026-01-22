@@ -26,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useAccessibleModules } from '@/hooks/useCurrentUser';
 
 interface AdminSidebarProps {
   collapsed?: boolean;
@@ -39,6 +40,7 @@ interface NavItem {
   url: string;
   icon: any;
   badge?: number;
+  module: string; // Module identifier for permission check
 }
 
 interface NavSection {
@@ -50,38 +52,38 @@ const navSections: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
+      { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, module: 'dashboard' },
     ],
   },
   {
     title: 'Property Management',
     items: [
-      { title: 'Properties', url: '/dashboard/properties', icon: Home },
-      { title: 'Bookings', url: '/dashboard/bookings', icon: BookOpen, badge: 3 },
-      { title: 'Calendar', url: '/dashboard/calendar', icon: Calendar },
+      { title: 'Properties', url: '/dashboard/properties', icon: Home, module: 'properties' },
+      { title: 'Bookings', url: '/dashboard/bookings', icon: BookOpen, badge: 3, module: 'bookings' },
+      { title: 'Calendar', url: '/dashboard/calendar', icon: Calendar, module: 'calendar' },
     ],
   },
   {
     title: 'Operations',
     items: [
-      { title: 'Housekeeping', url: '/dashboard/housekeeping', icon: Sparkles, badge: 5 },
-      { title: 'Staff', url: '/dashboard/staff', icon: BriefcaseBusiness },
-      { title: 'Inventory', url: '/dashboard/inventory', icon: Package },
-      { title: 'Maintenance', url: '/dashboard/maintenance', icon: Wrench, badge: 2 },
-      { title: 'Bar Management', url: '/dashboard/bar', icon: Wine },
+      { title: 'Housekeeping', url: '/dashboard/housekeeping', icon: Sparkles, badge: 5, module: 'housekeeping' },
+      { title: 'Staff', url: '/dashboard/staff', icon: BriefcaseBusiness, module: 'staff' },
+      { title: 'Inventory', url: '/dashboard/inventory', icon: Package, module: 'inventory' },
+      { title: 'Maintenance', url: '/dashboard/maintenance', icon: Wrench, badge: 2, module: 'maintenance' },
+      { title: 'Bar Management', url: '/dashboard/bar', icon: Wine, module: 'bar' },
     ],
   },
   {
     title: 'Business',
     items: [
-      { title: 'Customers', url: '/dashboard/customers', icon: Users },
-      { title: 'Financial', url: '/dashboard/financial', icon: DollarSign },
+      { title: 'Customers', url: '/dashboard/customers', icon: Users, module: 'customers' },
+      { title: 'Financial', url: '/dashboard/financial', icon: DollarSign, module: 'reports' },
     ],
   },
   {
     title: 'System',
     items: [
-      { title: 'Settings', url: '/dashboard/settings', icon: Settings },
+      { title: 'Settings', url: '/dashboard/settings', icon: Settings, module: 'settings' },
     ],
   },
 ];
@@ -89,11 +91,18 @@ const navSections: NavSection[] = [
 export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }: AdminSidebarProps) => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const accessibleModules = useAccessibleModules();
 
   const isActive = (path: string) => {
     if (path === '/dashboard') return currentPath === '/dashboard';
     return currentPath.startsWith(path);
   };
+
+  // Filter navigation sections based on user's department permissions
+  const filteredNavSections = navSections.map(section => ({
+    ...section,
+    items: section.items.filter(item => accessibleModules.includes(item.module))
+  })).filter(section => section.items.length > 0); // Remove empty sections
 
   return (
     <>
@@ -164,7 +173,7 @@ export const AdminSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }:
         <nav className="flex-1 overflow-y-auto py-6 px-3">
           <TooltipProvider delayDuration={0}>
             <div className="space-y-6">
-              {navSections.map((section, sectionIndex) => (
+              {filteredNavSections.map((section, sectionIndex) => (
                 <div key={section.title} className="space-y-1">
                   {/* Section header */}
                   {!collapsed && (
