@@ -57,6 +57,8 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
+  const [paymentOption, setPaymentOption] = useState<'full' | 'partial' | 'reserve'>('full');
+  const [depositAmount, setDepositAmount] = useState<number>(0);
 
   const { data: properties = [], isLoading: propertiesLoading } = useProperties({ status: 'available' });
   const createBooking = useCreateBooking();
@@ -74,9 +76,19 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
         setAvailabilityError(null);
         setPriceBreakdown(null);
         setBookingNumber(null);
+        setPaymentOption('full');
+        setDepositAmount(0);
       }, 300);
     }
   }, [open]);
+
+  // Calculate default 30% deposit when price changes
+  useEffect(() => {
+    if (priceBreakdown) {
+      const defaultDeposit = Math.round(priceBreakdown.totalAmount * 0.3);
+      setDepositAmount(defaultDeposit);
+    }
+  }, [priceBreakdown]);
 
   // Check availability and calculate price when dates change
   useEffect(() => {
@@ -191,6 +203,29 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
         customerId = newCustomer.id;
       }
 
+      // Determine payment and approval status based on payment option
+      let paymentStatus: 'paid' | 'partial' | 'pending' = 'pending';
+      let approvalStatus: 'approved' | 'pending' = 'approved';
+      let bookingStatus: 'confirmed' | 'pending' = 'confirmed';
+      let amountPaid = 0;
+
+      if (paymentOption === 'full') {
+        paymentStatus = 'paid';
+        amountPaid = priceBreakdown.totalAmount;
+        approvalStatus = 'approved';
+        bookingStatus = 'confirmed';
+      } else if (paymentOption === 'partial') {
+        paymentStatus = 'partial';
+        amountPaid = depositAmount;
+        approvalStatus = 'approved';
+        bookingStatus = 'confirmed';
+      } else if (paymentOption === 'reserve') {
+        paymentStatus = 'pending';
+        amountPaid = 0;
+        approvalStatus = 'pending'; // Needs manager approval
+        bookingStatus = 'pending';
+      }
+
       // Create booking via dashboard for walk-in guest
       const booking = await createBooking.mutateAsync({
         property_id: selectedProperty.id,
@@ -203,11 +238,13 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
         tax_amount: priceBreakdown.taxAmount,
         discount_amount: priceBreakdown.discountAmount,
         total_amount: priceBreakdown.totalAmount,
+        amount_paid: amountPaid,
         special_requests: guestInfo.specialRequests || undefined,
         booked_via: 'dashboard',
         source: 'walk_in',
-        status: 'confirmed',
-        payment_status: 'paid', // Walk-in customers pay immediately
+        status: bookingStatus,
+        payment_status: paymentStatus,
+        approval_status: approvalStatus,
       });
 
       setBookingNumber(booking.booking_number);
@@ -542,6 +579,65 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
                 <p className="text-sm text-muted-foreground mt-2 pt-2 border-t">
                   <span className="font-medium">Notes:</span> {guestInfo.specialRequests}
                 </p>
+              )}
+            </div>
+
+            {/* Payment Options */}
+            <div className="rounded-lg border p-4 space-y-4 bg-accent/5">
+              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                Payment Option
+              </h4>
+              <Select value={paymentOption} onValueChange={(value: 'full' | 'partial' | 'reserve') => setPaymentOption(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment option" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Full Payment</span>
+                      <span className="text-xs text-muted-foreground">Customer pays {formatCurrency(priceBreakdown.totalAmount)}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="partial">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Partial Payment (Deposit)</span>
+                      <span className="text-xs text-muted-foreground">Default 30% deposit - customizable</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="reserve">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Reserve Without Payment</span>
+                      <span className="text-xs text-muted-foreground text-amber-600 dark:text-amber-400">Requires manager approval</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {paymentOption === 'partial' && (
+                <div className="space-y-2">
+                  <Label htmlFor="depositAmount">Deposit Amount</Label>
+                  <Input
+                    id="depositAmount"
+                    type="number"
+                    min="0"
+                    max={priceBreakdown.totalAmount}
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(Number(e.target.value))}
+                    placeholder="Enter deposit amount"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Balance due: {formatCurrency(priceBreakdown.totalAmount - depositAmount)}
+                  </p>
+                </div>
+              )}
+
+              {paymentOption === 'reserve' && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 text-sm">
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-amber-600 dark:text-amber-400">
+                    This booking will be marked as <strong>Pending Approval</strong> and will require facility manager review before confirmation.
+                  </p>
+                </div>
               )}
             </div>
 
