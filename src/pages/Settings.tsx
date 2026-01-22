@@ -11,11 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Building2, 
-  Bell, 
-  CreditCard, 
-  Users, 
+import {
+  Building2,
+  Bell,
+  CreditCard,
+  Users,
   Shield,
   Save,
   Plus,
@@ -29,11 +29,15 @@ import {
   Eye,
   Trash2,
   Edit,
-  Loader2
+  Loader2,
+  RefreshCw,
+  Ban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettings, type EmailTemplates as EmailTemplatesType } from "@/hooks/useSettings";
 import { useSystemSetting, useUpdateSystemSetting } from "@/hooks/useHousekeeping";
+import { useTeamInvitations, useResendInvitation, useRevokeInvitation, useDeleteInvitation } from "@/hooks/useTeamInvitations";
+import { InviteTeamMemberDialog } from "@/components/settings/InviteTeamMemberDialog";
 import { format } from "date-fns";
 import { Sparkles } from "lucide-react";
 
@@ -43,7 +47,14 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState("business");
   const [selectedTemplate, setSelectedTemplate] = useState<keyof EmailTemplatesType>("booking-confirmation");
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Team invitations
+  const { data: invitations = [], isLoading: invitationsLoading } = useTeamInvitations();
+  const resendInvitation = useResendInvitation();
+  const revokeInvitation = useRevokeInvitation();
+  const deleteInvitation = useDeleteInvitation();
 
   const {
     loading,
@@ -953,7 +964,82 @@ const Settings = () => {
                           </div>
                         </div>
 
-                        <Button variant="outline" className="gap-2">
+                        {/* Pending Invitations */}
+                        {invitationsLoading ? (
+                          <div className="space-y-3">
+                            <Skeleton className="h-20 w-full" />
+                            <Skeleton className="h-20 w-full" />
+                          </div>
+                        ) : invitations.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label>Pending Invitations</Label>
+                              <Badge variant="outline">{invitations.length}</Badge>
+                            </div>
+                            {invitations.map((invitation) => (
+                              <div
+                                key={invitation.id}
+                                className="flex items-center justify-between p-4 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors"
+                              >
+                                <div className="flex items-center gap-3 flex-1">
+                                  <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center">
+                                    <Mail className="h-5 w-5 text-accent" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-foreground">{invitation.email}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Badge variant="outline" className="text-xs">
+                                        {invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1)}
+                                      </Badge>
+                                      <span className="text-xs text-muted-foreground">
+                                        Sent {format(new Date(invitation.created_at), 'MMM d, yyyy')}
+                                      </span>
+                                      {invitation.status === 'pending' && new Date(invitation.expires_at) < new Date() && (
+                                        <Badge variant="destructive" className="text-xs">Expired</Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {invitation.status === 'pending' && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => resendInvitation.mutate(invitation.id)}
+                                        disabled={resendInvitation.isPending}
+                                      >
+                                        <RefreshCw className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => revokeInvitation.mutate(invitation.id)}
+                                        disabled={revokeInvitation.isPending}
+                                      >
+                                        <Ban className="h-4 w-4" />
+                                      </Button>
+                                    </>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => deleteInvitation.mutate(invitation.id)}
+                                    disabled={deleteInvitation.isPending}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <Button
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => setInviteDialogOpen(true)}
+                        >
                           <Plus className="h-4 w-4" />
                           Invite Team Member
                         </Button>
@@ -1164,6 +1250,12 @@ const Settings = () => {
           </div>
         </main>
       </div>
+
+      {/* Invite Team Member Dialog */}
+      <InviteTeamMemberDialog
+        open={inviteDialogOpen}
+        onOpenChange={setInviteDialogOpen}
+      />
     </div>
   );
 };
