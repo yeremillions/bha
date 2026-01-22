@@ -249,7 +249,7 @@ This is an automated message, please do not reply to this email.
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Brooklyn Hills <noreply@brooklynhills.ng>',
+        from: 'Brooklyn Hills <noreply@brooklynhillsapartment.com>',
         to: [invitation.email],
         subject: `You're invited to join Brooklyn Hills as ${roleDisplay}`,
         html: emailHtml,

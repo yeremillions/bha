@@ -21,7 +21,7 @@ This Supabase Edge Function handles sending team invitation emails via Resend.
 For production use, you need to verify your domain in Resend:
 
 1. Go to Resend Dashboard → **Domains**
-2. Add your domain (e.g., `brooklynhills.ng`)
+2. Add your domain (e.g., `brooklynhillsapartment.com`)
 3. Add the provided DNS records to your domain
 4. Wait for verification
 
@@ -164,7 +164,7 @@ supabase functions logs send-team-invitation --tail
 
 ### Recommended Settings
 
-1. **From Email**: `noreply@brooklynhills.ng`
+1. **From Email**: `noreply@brooklynhillsapartment.com`
 2. **Reply-To**: Your support email
 3. **Email Categories**: Create "team-invitations" category for tracking
 4. **Webhooks**: Optional - Set up webhooks for delivery tracking

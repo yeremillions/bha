@@ -959,7 +959,7 @@ const Settings = () => {
                               </div>
                               <div>
                                 <p className="font-medium text-foreground">Admin User</p>
-                                <p className="text-sm text-muted-foreground">admin@brooklynhills.ng</p>
+                                <p className="text-sm text-muted-foreground">admin@brooklynhillsapartment.com</p>
                               </div>
                             </div>
                             <Badge>Owner</Badge>

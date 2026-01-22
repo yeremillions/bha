@@ -291,7 +291,7 @@ function generateBookingConfirmationEmail(data: any): string {
           <p>Brooklyn Hills Apartments<br>
           Lagos, Nigeria<br>
           Phone: +234 XXX XXX XXXX<br>
-          Email: <a href="mailto:info@brooklynhills.ng">info@brooklynhills.ng</a></p>
+          Email: <a href="mailto:info@brooklynhillsapartment.com">info@brooklynhillsapartment.com</a></p>
         </div>
       </div>
     </body>
@@ -356,7 +356,7 @@ function generatePaymentReceiptEmail(data: any): string {
 
         <div class="footer">
           <p>Brooklyn Hills Apartments<br>
-          Email: <a href="mailto:info@brooklynhills.ng">info@brooklynhills.ng</a></p>
+          Email: <a href="mailto:info@brooklynhillsapartment.com">info@brooklynhillsapartment.com</a></p>
         </div>
       </div>
     </body>
@@ -437,7 +437,7 @@ function generateCheckInReminderEmail(data: any): string {
         <div class="footer">
           <p>Brooklyn Hills Apartments<br>
           Phone: +234 XXX XXX XXXX<br>
-          Email: <a href="mailto:info@brooklynhills.ng">info@brooklynhills.ng</a></p>
+          Email: <a href="mailto:info@brooklynhillsapartment.com">info@brooklynhillsapartment.com</a></p>
         </div>
       </div>
     </body>
@@ -501,7 +501,7 @@ function generateCancellationEmail(data: any): string {
 
         <div class="footer">
           <p>Brooklyn Hills Apartments<br>
-          Email: <a href="mailto:info@brooklynhills.ng">info@brooklynhills.ng</a></p>
+          Email: <a href="mailto:info@brooklynhillsapartment.com">info@brooklynhillsapartment.com</a></p>
         </div>
       </div>
     </body>

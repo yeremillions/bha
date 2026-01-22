@@ -544,7 +544,7 @@ const Landing = () => {
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-accent shrink-0" />
-                  <a href="mailto:info@brooklynhills.ng" className="font-body text-primary-foreground/70 hover:text-primary-foreground transition-colors">info@brooklynhills.ng</a>
+                  <a href="mailto:info@brooklynhillsapartment.com" className="font-body text-primary-foreground/70 hover:text-primary-foreground transition-colors">info@brooklynhillsapartment.com</a>
                 </li>
                 <li className="flex items-center gap-3">
                   <Headphones className="h-5 w-5 text-accent shrink-0" />
