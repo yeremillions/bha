@@ -41,7 +41,7 @@ CREATE POLICY "Admins and managers can view invitations"
   ON team_invitations
   FOR SELECT
   USING (auth.uid() IN (
-    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhills.ng'
+    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhillsapartment.com'
   ));
 
 -- Admins and managers can create invitations
@@ -49,7 +49,7 @@ CREATE POLICY "Admins and managers can create invitations"
   ON team_invitations
   FOR INSERT
   WITH CHECK (auth.uid() IN (
-    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhills.ng'
+    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhillsapartment.com'
   ));
 
 -- Admins and managers can update invitations
@@ -57,7 +57,7 @@ CREATE POLICY "Admins and managers can update invitations"
   ON team_invitations
   FOR UPDATE
   USING (auth.uid() IN (
-    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhills.ng'
+    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhillsapartment.com'
   ));
 
 -- Admins and managers can delete invitations
@@ -65,7 +65,7 @@ CREATE POLICY "Admins and managers can delete invitations"
   ON team_invitations
   FOR DELETE
   USING (auth.uid() IN (
-    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhills.ng'
+    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhillsapartment.com'
   ));
 
 -- Anyone with a valid token can view their own invitation (for acceptance flow)

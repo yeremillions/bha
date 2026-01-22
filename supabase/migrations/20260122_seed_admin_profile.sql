@@ -10,7 +10,7 @@ SELECT
   COALESCE(raw_user_meta_data->>'full_name', 'Admin User'),
   'admin'
 FROM auth.users
-WHERE email = 'admin@brooklynhills.ng' -- Update this to your actual admin email
+WHERE email = 'admin@brooklynhillsapartment.com' -- Update this to your actual admin email
 ON CONFLICT (id) DO UPDATE
 SET role = 'admin', updated_at = now();
 

@@ -55,7 +55,7 @@ For production, you should use your own domain:
 
 1. Go to **Domains** in Resend dashboard
 2. Click **Add Domain**
-3. Enter your domain (e.g., `brooklynhills.ng`)
+3. Enter your domain (e.g., `brooklynhillsapartment.com`)
 4. Follow DNS configuration instructions
 5. Wait for verification (usually 5-10 minutes)
 
@@ -76,7 +76,7 @@ VITE_RESEND_API_KEY=re_your_api_key_here
 Once your domain is verified, update the sender email in `/src/lib/emailService.ts`:
 
 ```typescript
-from: 'Brooklyn Hills Apartments <noreply@brooklynhills.ng>'
+from: 'Brooklyn Hills Apartments <noreply@brooklynhillsapartment.com>'
 ```
 
 ## Email Templates

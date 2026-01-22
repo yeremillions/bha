@@ -85,7 +85,7 @@ export interface AuditLog {
 
 const defaultBusinessInfo: BusinessInfo = {
   businessName: 'Brooklyn Hills Apartments',
-  email: 'info@brooklynhills.ng',
+  email: 'info@brooklynhillsapartment.com',
   phone: '+234 XXX XXX XXXX',
   whatsapp: '+234 XXX XXX XXXX',
   address: 'Uyo, Akwa Ibom State, Nigeria',
