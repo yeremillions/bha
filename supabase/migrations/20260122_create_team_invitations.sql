@@ -50,33 +50,49 @@ DROP POLICY IF EXISTS "Users can view their own invitation by token" ON team_inv
 CREATE POLICY "Admins and managers can view invitations"
   ON team_invitations
   FOR SELECT
-  USING (auth.uid() IN (
-    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhillsapartment.com'
-  ));
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.id = auth.uid()
+      AND user_profiles.role IN ('admin', 'manager')
+    )
+  );
 
 -- Admins and managers can create invitations
 CREATE POLICY "Admins and managers can create invitations"
   ON team_invitations
   FOR INSERT
-  WITH CHECK (auth.uid() IN (
-    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhillsapartment.com'
-  ));
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.id = auth.uid()
+      AND user_profiles.role IN ('admin', 'manager')
+    )
+  );
 
 -- Admins and managers can update invitations
 CREATE POLICY "Admins and managers can update invitations"
   ON team_invitations
   FOR UPDATE
-  USING (auth.uid() IN (
-    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhillsapartment.com'
-  ));
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.id = auth.uid()
+      AND user_profiles.role IN ('admin', 'manager')
+    )
+  );
 
 -- Admins and managers can delete invitations
 CREATE POLICY "Admins and managers can delete invitations"
   ON team_invitations
   FOR DELETE
-  USING (auth.uid() IN (
-    SELECT id FROM auth.users WHERE email LIKE '%@brooklynhillsapartment.com'
-  ));
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.id = auth.uid()
+      AND user_profiles.role IN ('admin', 'manager')
+    )
+  );
 
 -- Anyone with a valid token can view their own invitation (for acceptance flow)
 CREATE POLICY "Users can view their own invitation by token"
