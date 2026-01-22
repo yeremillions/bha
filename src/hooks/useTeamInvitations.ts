@@ -130,6 +130,7 @@ export const useSendInvitation = () => {
       }
 
       // Send invitation email via edge function
+      let emailSent = false;
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -152,24 +153,40 @@ export const useSendInvitation = () => {
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
           console.error('Failed to send invitation email:', errorData);
-          // Don't throw error - invitation was created successfully
-          // Just log the email sending failure
+          toast({
+            title: 'Email service not configured',
+            description: 'Invitation created but email was not sent. Please deploy the edge function.',
+            variant: 'destructive',
+          });
+        } else {
+          emailSent = true;
         }
       } catch (emailError) {
         console.error('Error sending invitation email:', emailError);
-        // Don't throw error - invitation was created successfully
+        toast({
+          title: 'Email service not available',
+          description: 'Invitation created successfully, but email service is not deployed. Check the README for setup instructions.',
+          variant: 'destructive',
+        });
       }
 
-      return data as TeamInvitation;
+      return { ...data, emailSent } as TeamInvitation & { emailSent: boolean };
     },
-    onSuccess: (data) => {
+    onSuccess: (data: TeamInvitation & { emailSent?: boolean }) => {
       queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
-      toast({
-        title: 'Invitation sent',
-        description: `An invitation has been sent to ${data.email}`,
-      });
+      if (data.emailSent) {
+        toast({
+          title: 'Invitation sent',
+          description: `An invitation email has been sent to ${data.email}`,
+        });
+      } else {
+        toast({
+          title: 'Invitation created',
+          description: `Invitation created for ${data.email}. Configure email service to send invitations.`,
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -206,6 +223,7 @@ export const useResendInvitation = () => {
       }
 
       // Send invitation email via edge function
+      let emailSent = false;
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -228,24 +246,40 @@ export const useResendInvitation = () => {
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
           console.error('Failed to resend invitation email:', errorData);
-          // Don't throw error - invitation was updated successfully
-          // Just log the email sending failure
+          toast({
+            title: 'Email service not configured',
+            description: 'Invitation updated but email was not sent. Please deploy the edge function.',
+            variant: 'destructive',
+          });
+        } else {
+          emailSent = true;
         }
       } catch (emailError) {
         console.error('Error resending invitation email:', emailError);
-        // Don't throw error - invitation was updated successfully
+        toast({
+          title: 'Email service not available',
+          description: 'Invitation updated successfully, but email service is not deployed.',
+          variant: 'destructive',
+        });
       }
 
-      return data as TeamInvitation;
+      return { ...data, emailSent } as TeamInvitation & { emailSent: boolean };
     },
-    onSuccess: (data) => {
+    onSuccess: (data: TeamInvitation & { emailSent?: boolean }) => {
       queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
-      toast({
-        title: 'Invitation resent',
-        description: `Invitation resent to ${data.email}`,
-      });
+      if (data.emailSent) {
+        toast({
+          title: 'Invitation resent',
+          description: `Invitation email has been resent to ${data.email}`,
+        });
+      } else {
+        toast({
+          title: 'Invitation updated',
+          description: `Invitation updated for ${data.email}. Configure email service to send emails.`,
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
