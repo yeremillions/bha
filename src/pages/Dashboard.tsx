@@ -8,6 +8,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { StatCard } from '@/components/admin/StatCard';
 import { AlertsSection } from '@/components/admin/AlertsSection';
+import { PendingApprovals } from '@/components/admin/PendingApprovals';
 import { QuickActions } from '@/components/admin/QuickActions';
 import { TodaySchedule } from '@/components/admin/TodaySchedule';
 import { RecentBookings } from '@/components/admin/RecentBookings';
@@ -119,6 +120,11 @@ const Dashboard = () => {
           {/* Alerts */}
           <div className="mb-8">
             <AlertsSection />
+          </div>
+
+          {/* Pending Approvals */}
+          <div className="mb-8">
+            <PendingApprovals />
           </div>
 
           {/* Quick Actions */}

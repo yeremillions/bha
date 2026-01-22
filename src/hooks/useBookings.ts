@@ -42,6 +42,7 @@ export interface NewBooking {
   tax_amount?: number;
   discount_amount?: number;
   total_amount: number;
+  amount_paid?: number; // Amount actually paid (for partial payments)
   special_requests?: string;
   arrival_time?: string;
   booked_via?: string;
@@ -49,6 +50,7 @@ export interface NewBooking {
   payment_status?: PaymentStatus;
   status?: BookingStatus;
   booking_number?: string;
+  approval_status?: 'approved' | 'pending' | 'rejected'; // For bookings without payment
 }
 
 export interface UpdateBooking {
@@ -660,6 +662,172 @@ export const useDeleteBooking = () => {
     onError: (error: Error) => {
       toast({
         title: 'Error deleting booking',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// ============================================================================
+// APPROVAL WORKFLOW HOOKS
+// ============================================================================
+
+/**
+ * Fetch bookings pending manager approval
+ * Used for bookings created without payment
+ */
+export const usePendingApprovals = () => {
+  return useQuery({
+    queryKey: ['bookings', 'pending-approvals'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          property:properties(*),
+          customer:customers(*)
+        `)
+        .eq('approval_status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching pending approvals:', error);
+        throw new Error(`Failed to fetch pending approvals: ${error.message}`);
+      }
+
+      return data as BookingWithDetails[];
+    },
+  });
+};
+
+/**
+ * Approve a booking
+ * Sets approval_status to 'approved' and updates booking status to 'confirmed'
+ */
+export const useApproveBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Get current user for approved_by field
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .update({
+          approval_status: 'approved',
+          status: 'confirmed',
+          approved_by: user?.id,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select(`
+          *,
+          property:properties(*),
+          customer:customers(*)
+        `)
+        .single();
+
+      if (error) {
+        console.error('Error approving booking:', error);
+        throw new Error(`Failed to approve booking: ${error.message}`);
+      }
+
+      return data as BookingWithDetails;
+    },
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'pending-approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
+
+      toast({
+        title: 'Booking approved',
+        description: `Booking ${data.booking_number} has been approved and confirmed.`,
+      });
+
+      // Send booking confirmation email
+      if (data.customer?.email) {
+        try {
+          await sendBookingConfirmation(data.customer.email, {
+            bookingNumber: data.booking_number,
+            customerName: data.customer.name,
+            propertyName: data.property?.name || 'Property',
+            checkInDate: format(new Date(data.check_in_date), 'MMMM d, yyyy'),
+            checkOutDate: format(new Date(data.check_out_date), 'MMMM d, yyyy'),
+            numGuests: data.num_guests,
+            totalAmount: data.total_amount,
+          });
+          console.log('Booking confirmation email sent successfully');
+        } catch (emailError) {
+          console.error('Failed to send booking confirmation email:', emailError);
+        }
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error approving booking',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+/**
+ * Reject a booking
+ * Sets approval_status to 'rejected' and cancels the booking
+ */
+export const useRejectBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      // Get current user for approved_by field
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const updateData: any = {
+        approval_status: 'rejected',
+        status: 'cancelled',
+        approved_by: user?.id,
+        approved_at: new Date().toISOString(),
+      };
+
+      if (reason) {
+        updateData.special_requests = `[REJECTED] ${reason}\n\n${updateData.special_requests || ''}`;
+      }
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .update(updateData)
+        .eq('id', id)
+        .select(`
+          *,
+          property:properties(*),
+          customer:customers(*)
+        `)
+        .single();
+
+      if (error) {
+        console.error('Error rejecting booking:', error);
+        throw new Error(`Failed to reject booking: ${error.message}`);
+      }
+
+      return data as BookingWithDetails;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'pending-approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
+
+      toast({
+        title: 'Booking rejected',
+        description: `Booking ${data.booking_number} has been rejected.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error rejecting booking',
         description: error.message,
         variant: 'destructive',
       });
