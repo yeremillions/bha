@@ -1,14 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import type { UserRole, Department } from '@/hooks/useCurrentUser';
 
-export type InvitationRole = 'admin' | 'manager' | 'receptionist' | 'staff';
+export type InvitationRole = UserRole;
+export type InvitationDepartment = Department;
 export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
 
 export interface TeamInvitation {
   id: string;
   email: string;
   role: InvitationRole;
+  department: InvitationDepartment;
   invited_by: string | null;
   status: InvitationStatus;
   invite_token: string;
@@ -22,6 +25,7 @@ export interface TeamInvitation {
 export interface NewInvitation {
   email: string;
   role: InvitationRole;
+  department: InvitationDepartment;
 }
 
 /**
@@ -97,8 +101,16 @@ export const useSendInvitation = () => {
         throw new Error('This email already has a pending invitation');
       }
 
-      // Note: We don't check auth.users here as it's not accessible from client
-      // If the user already exists, they'll get an error when trying to accept the invitation
+      // Check if user already exists in user_profiles
+      const { data: existingUser } = await supabase
+        .from('user_profiles')
+        .select('id, email')
+        .eq('email', invitation.email)
+        .maybeSingle();
+
+      if (existingUser) {
+        throw new Error('A user with this email already exists');
+      }
 
       // Create invitation
       const { data, error } = await supabase
@@ -106,6 +118,7 @@ export const useSendInvitation = () => {
         .insert({
           email: invitation.email,
           role: invitation.role,
+          department: invitation.department,
           invited_by: user.id,
         })
         .select()

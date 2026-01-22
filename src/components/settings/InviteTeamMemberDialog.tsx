@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Mail, ShieldCheck } from 'lucide-react';
-import { useSendInvitation, type InvitationRole } from '@/hooks/useTeamInvitations';
+import { Loader2, Mail, ShieldCheck, Building2 } from 'lucide-react';
+import { useSendInvitation, type InvitationRole, type InvitationDepartment } from '@/hooks/useTeamInvitations';
 
 interface InviteTeamMemberDialogProps {
   open: boolean;
@@ -14,21 +14,23 @@ interface InviteTeamMemberDialogProps {
 
 export const InviteTeamMemberDialog = ({ open, onOpenChange }: InviteTeamMemberDialogProps) => {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<InvitationRole>('receptionist');
+  const [role, setRole] = useState<InvitationRole>('staff');
+  const [department, setDepartment] = useState<InvitationDepartment>('reception');
   const sendInvitation = useSendInvitation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !role) {
+    if (!email || !role || !department) {
       return;
     }
 
     try {
-      await sendInvitation.mutateAsync({ email, role });
+      await sendInvitation.mutateAsync({ email, role, department });
       // Reset form and close dialog
       setEmail('');
-      setRole('receptionist');
+      setRole('staff');
+      setDepartment('reception');
       onOpenChange(false);
     } catch (error) {
       // Error handling is done in the hook
@@ -37,10 +39,19 @@ export const InviteTeamMemberDialog = ({ open, onOpenChange }: InviteTeamMemberD
   };
 
   const roleDescriptions = {
-    admin: 'Full access to all features and settings',
-    manager: 'Manage bookings, properties, and approve reservations',
-    receptionist: 'Create bookings and manage guest check-ins',
-    staff: 'View assigned tasks and update completion status',
+    admin: 'Full system access + Settings',
+    manager: 'Approve bookings, manage operations',
+    receptionist: 'Create bookings, check-ins',
+    staff: 'View and complete assigned tasks only',
+  };
+
+  const departmentDescriptions = {
+    management: 'Access to all modules and features',
+    reception: 'Bookings, Properties, Customers',
+    housekeeping: 'Housekeeping tasks and schedules',
+    bar: 'Bar management, tabs, inventory',
+    maintenance: 'Maintenance issues and work orders',
+    security: 'Security monitoring and reports',
   };
 
   return (
@@ -130,6 +141,83 @@ export const InviteTeamMemberDialog = ({ open, onOpenChange }: InviteTeamMemberD
             </div>
           </div>
 
+          {/* Department Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="department">Department *</Label>
+            <Select
+              value={department}
+              onValueChange={(value) => setDepartment(value as InvitationDepartment)}
+              disabled={sendInvitation.isPending}
+            >
+              <SelectTrigger id="department">
+                <SelectValue placeholder="Select a department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="management">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-purple-500" />
+                    <div>
+                      <div className="font-medium">Management</div>
+                      <div className="text-xs text-muted-foreground">All modules</div>
+                    </div>
+                  </div>
+                </SelectItem>
+                <SelectItem value="reception">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-blue-500" />
+                    <div>
+                      <div className="font-medium">Reception</div>
+                      <div className="text-xs text-muted-foreground">Bookings & guests</div>
+                    </div>
+                  </div>
+                </SelectItem>
+                <SelectItem value="housekeeping">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-green-500" />
+                    <div>
+                      <div className="font-medium">Housekeeping</div>
+                      <div className="text-xs text-muted-foreground">Cleaning tasks</div>
+                    </div>
+                  </div>
+                </SelectItem>
+                <SelectItem value="bar">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-amber-500" />
+                    <div>
+                      <div className="font-medium">Bar</div>
+                      <div className="text-xs text-muted-foreground">Bar operations</div>
+                    </div>
+                  </div>
+                </SelectItem>
+                <SelectItem value="maintenance">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-orange-500" />
+                    <div>
+                      <div className="font-medium">Maintenance</div>
+                      <div className="text-xs text-muted-foreground">Repairs & issues</div>
+                    </div>
+                  </div>
+                </SelectItem>
+                <SelectItem value="security">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-red-500" />
+                    <div>
+                      <div className="font-medium">Security</div>
+                      <div className="text-xs text-muted-foreground">Security monitoring</div>
+                    </div>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Department Description */}
+            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">{department.charAt(0).toUpperCase() + department.slice(1)}:</strong> {departmentDescriptions[department]}
+              </p>
+            </div>
+          </div>
+
           {/* Important Note */}
           <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
             <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">📧 Email Invitation</h4>
@@ -152,7 +240,7 @@ export const InviteTeamMemberDialog = ({ open, onOpenChange }: InviteTeamMemberD
             <Button
               type="submit"
               className="flex-1"
-              disabled={!email || !role || sendInvitation.isPending}
+              disabled={!email || !role || !department || sendInvitation.isPending}
             >
               {sendInvitation.isPending ? (
                 <>
