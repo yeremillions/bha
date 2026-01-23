@@ -10,6 +10,7 @@ export interface UserProfile {
   full_name: string | null;
   role: UserRole;
   department: Department;
+  is_owner: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -175,4 +176,36 @@ export const useAccessibleModules = () => {
   });
 
   return accessibleModules;
+};
+
+/**
+ * Check if current user is the owner
+ */
+export const useIsOwner = () => {
+  const { data: profile } = useCurrentUser();
+  return profile?.is_owner === true;
+};
+
+/**
+ * Fetch all admin users for display in settings
+ */
+export const useAdminUsers = () => {
+  return useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('role', 'admin')
+        .order('is_owner', { ascending: false })
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching admin users:', error);
+        throw new Error(`Failed to fetch admin users: ${error.message}`);
+      }
+
+      return data as UserProfile[];
+    },
+  });
 };
