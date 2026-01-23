@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,31 +12,29 @@ import { Mail, Lock, User, Building2, ArrowLeft } from 'lucide-react';
 type AuthView = 'signin' | 'signup' | 'forgot-password' | 'reset-password';
 
 const Auth = () => {
-  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState<AuthView>('signin');
-  const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword, user, loading, session } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword, user, loading, isPasswordRecovery } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if this is a password reset flow
+  // Detect password recovery mode from auth context
   useEffect(() => {
-    const isReset = searchParams.get('reset') === 'true';
-    if (isReset && session) {
+    if (isPasswordRecovery) {
       setView('reset-password');
     }
-  }, [searchParams, session]);
+  }, [isPasswordRecovery]);
 
   useEffect(() => {
-    // Only redirect if not in reset password flow
-    if (!loading && user && view !== 'reset-password') {
+    // Only redirect if not in password recovery mode
+    if (!loading && user && !isPasswordRecovery && view !== 'reset-password') {
       navigate('/dashboard');
     }
-  }, [user, loading, navigate, view]);
+  }, [user, loading, navigate, view, isPasswordRecovery]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
