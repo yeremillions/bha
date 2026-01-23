@@ -1637,6 +1637,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          is_owner: boolean | null
           role: string
           updated_at: string
         }
@@ -1646,6 +1647,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          is_owner?: boolean | null
           role?: string
           updated_at?: string
         }
@@ -1655,6 +1657,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          is_owner?: boolean | null
           role?: string
           updated_at?: string
         }
@@ -1903,6 +1906,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      transfer_ownership: { Args: { new_owner_id: string }; Returns: boolean }
     }
     Enums: {
       app_role:

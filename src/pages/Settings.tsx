@@ -37,8 +37,9 @@ import { cn } from "@/lib/utils";
 import { useSettings, type EmailTemplates as EmailTemplatesType } from "@/hooks/useSettings";
 import { useSystemSetting, useUpdateSystemSetting } from "@/hooks/useHousekeeping";
 import { useTeamInvitations, useResendInvitation, useRevokeInvitation, useDeleteInvitation } from "@/hooks/useTeamInvitations";
-import { useCanManageInvitations } from "@/hooks/useCurrentUser";
+import { useCanManageInvitations, useAdminUsers, useIsOwner } from "@/hooks/useCurrentUser";
 import { InviteTeamMemberDialog } from "@/components/settings/InviteTeamMemberDialog";
+import { AdminUsersList } from "@/components/settings/AdminUsersList";
 import { format } from "date-fns";
 import { Sparkles } from "lucide-react";
 
@@ -951,20 +952,7 @@ const Settings = () => {
                           <p className="text-sm text-muted-foreground">Manage staff access and permissions</p>
                         </div>
 
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <User className="h-5 w-5 text-primary" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-foreground">Admin User</p>
-                                <p className="text-sm text-muted-foreground">admin@brooklynhillsapartment.com</p>
-                              </div>
-                            </div>
-                            <Badge>Owner</Badge>
-                          </div>
-                        </div>
+                        <AdminUsersList />
 
                         {/* Pending Invitations */}
                         {invitationsLoading ? (
