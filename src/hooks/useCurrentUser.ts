@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export type UserRole = 'admin' | 'manager' | 'receptionist' | 'staff';
 export type Department = 'management' | 'reception' | 'housekeeping' | 'bar' | 'maintenance' | 'security';
@@ -206,6 +207,91 @@ export const useAdminUsers = () => {
       }
 
       return data as UserProfile[];
+    },
+  });
+};
+
+/**
+ * Transfer ownership to another admin user
+ */
+export const useTransferOwnership = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (newOwnerId: string) => {
+      const { data, error } = await supabase.rpc('transfer_ownership', {
+        new_owner_id: newOwnerId
+      });
+
+      if (error) {
+        console.error('Error transferring ownership:', error);
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['current-user-profile'] });
+      toast.success('Ownership transferred successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to transfer ownership: ${error.message}`);
+    },
+  });
+};
+
+/**
+ * Check if any owner exists in the system
+ */
+export const useHasOwner = () => {
+  return useQuery({
+    queryKey: ['has-owner'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('is_owner', true)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking owner:', error);
+        return false;
+      }
+
+      return !!data;
+    },
+  });
+};
+
+/**
+ * Assign initial owner (when no owner exists)
+ */
+export const useAssignOwner = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ is_owner: true })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error assigning owner:', error);
+        throw new Error(error.message);
+      }
+
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['current-user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['has-owner'] });
+      toast.success('Owner assigned successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to assign owner: ${error.message}`);
     },
   });
 };
