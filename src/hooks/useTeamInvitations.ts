@@ -132,11 +132,15 @@ export const useSendInvitation = () => {
       // Send invitation email via edge function
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Session for email send:', session ? 'exists' : 'missing');
 
         if (!session) {
+          console.error('No active session for sending invitation email');
           throw new Error('No active session');
         }
 
+        console.log('Calling send-team-invitation edge function for invitation:', data.id);
+        
         const response = await fetch(
           `https://nnrzsvtaeulxunxnbxtw.supabase.co/functions/v1/send-team-invitation`,
           {
@@ -151,11 +155,15 @@ export const useSendInvitation = () => {
           }
         );
 
+        const responseData = await response.json();
+        console.log('Edge function response:', response.status, responseData);
+
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Failed to send invitation email:', errorData);
+          console.error('Failed to send invitation email:', responseData);
           // Don't throw error - invitation was created successfully
           // Just log the email sending failure
+        } else {
+          console.log('Invitation email sent successfully:', responseData);
         }
       } catch (emailError) {
         console.error('Error sending invitation email:', emailError);
