@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import AcceptInvitation from "./pages/AcceptInvitation";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
 import Bookings from "./pages/Bookings";
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/dashboard/reports" element={<Reports />} />
               <Route path="/dashboard/settings" element={<Settings />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
