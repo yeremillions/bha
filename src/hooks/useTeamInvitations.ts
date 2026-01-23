@@ -61,7 +61,7 @@ export const usePendingInvitations = () => {
         .from('team_invitations')
         .select('*')
         .eq('status', 'pending')
-        .lt('expires_at', new Date().toISOString())
+        .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
