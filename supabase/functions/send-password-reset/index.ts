@@ -116,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Brooklyn Hills Apartments <onboarding@resend.dev>",
+        from: "Brooklyn Hills Apartments <noreply@notifications.brooklynhillsapartment.com>",
         to: [email],
         subject: "Reset Your Password - Brooklyn Hills Apartments",
         html,
