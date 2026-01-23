@@ -115,31 +115,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPassword = async (email: string) => {
-    try {
-      // First, generate the reset token via Supabase
-      const { error: supabaseError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
-      });
-      
-      if (supabaseError) {
-        return { error: supabaseError };
-      }
-
-      // Additionally send our branded email via edge function
-      const resetLink = `${window.location.origin}/auth`;
-      
-      const { error: emailError } = await supabase.functions.invoke('send-password-reset', {
-        body: { email, resetLink },
-      });
-      
-      if (emailError) {
-        console.warn('Branded email failed, but Supabase default was sent:', emailError);
-      }
-      
-      return { error: null };
-    } catch (error) {
-      return { error: error as Error };
-    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    return { error };
   };
 
   const updatePassword = async (newPassword: string) => {
