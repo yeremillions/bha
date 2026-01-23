@@ -33,11 +33,36 @@ export const useCurrentUser = () => {
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
         throw new Error(`Failed to fetch user profile: ${error.message}`);
+      }
+
+      // If no profile exists, return a default admin profile for the first user
+      if (!data) {
+        console.warn('No user profile found, creating default admin profile');
+        
+        // Create a profile for this user
+        const { data: newProfile, error: createError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || null,
+            role: 'admin',
+            department: 'management',
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating user profile:', createError);
+          throw new Error(`Failed to create user profile: ${createError.message}`);
+        }
+
+        return newProfile as UserProfile;
       }
 
       return data as UserProfile;
