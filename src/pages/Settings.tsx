@@ -47,7 +47,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSettings, type EmailTemplates as EmailTemplatesType } from "@/hooks/useSettings";
 import { useSystemSetting, useUpdateSystemSetting } from "@/hooks/useHousekeeping";
-import { useTeamInvitations, useResendInvitation, useRevokeInvitation, useDeleteInvitation } from "@/hooks/useTeamInvitations";
+import { usePendingInvitations, useResendInvitation, useRevokeInvitation, useDeleteInvitation } from "@/hooks/useTeamInvitations";
 import { useCanManageInvitations, useAdminUsers, useIsOwner } from "@/hooks/useCurrentUser";
 import { InviteTeamMemberDialog } from "@/components/settings/InviteTeamMemberDialog";
 import { AdminUsersList } from "@/components/settings/AdminUsersList";
@@ -64,7 +64,7 @@ const Settings = () => {
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Team invitations
-  const { data: invitations = [], isLoading: invitationsLoading } = useTeamInvitations();
+  const { data: invitations = [], isLoading: invitationsLoading } = usePendingInvitations();
   const resendInvitation = useResendInvitation();
   const revokeInvitation = useRevokeInvitation();
   const deleteInvitation = useDeleteInvitation();
