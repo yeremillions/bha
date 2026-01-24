@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,13 +49,14 @@ import { cn } from "@/lib/utils";
 import { useSettings, type EmailTemplates as EmailTemplatesType } from "@/hooks/useSettings";
 import { useSystemSetting, useUpdateSystemSetting } from "@/hooks/useHousekeeping";
 import { usePendingInvitations, useResendInvitation, useRevokeInvitation, useDeleteInvitation } from "@/hooks/useTeamInvitations";
-import { useCanManageInvitations, useAdminUsers, useIsOwner, useIsAdmin } from "@/hooks/useCurrentUser";
+import { useCanManageInvitations, useAdminUsers, useIsOwner, useIsAdmin, useIsManager, useCurrentUser } from "@/hooks/useCurrentUser";
 import { InviteTeamMemberDialog } from "@/components/settings/InviteTeamMemberDialog";
 import { AdminUsersList } from "@/components/settings/AdminUsersList";
 import { format } from "date-fns";
 import { Sparkles } from "lucide-react";
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("business");
@@ -63,13 +65,24 @@ const Settings = () => {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Access control - only admins and managers can access settings
+  const { data: userProfile, isLoading: userLoading } = useCurrentUser();
+  const isManager = useIsManager();
+  const isAdmin = useIsAdmin();
+
+  // Redirect non-admin/manager users to dashboard
+  useEffect(() => {
+    if (!userLoading && userProfile && !isManager) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [userLoading, userProfile, isManager, navigate]);
+
   // Team invitations
   const { data: invitations = [], isLoading: invitationsLoading } = usePendingInvitations();
   const resendInvitation = useResendInvitation();
   const revokeInvitation = useRevokeInvitation();
   const deleteInvitation = useDeleteInvitation();
   const canManageInvitations = useCanManageInvitations();
-  const isAdmin = useIsAdmin();
 
   const {
     loading,
@@ -180,6 +193,20 @@ const Settings = () => {
   };
 
   const saveHandler = getSaveHandler();
+
+  // Show loading while checking permissions
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Don't render if user doesn't have access (redirect will happen via useEffect)
+  if (!isManager) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex bg-background">
