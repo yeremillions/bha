@@ -52,15 +52,19 @@ const AcceptInvitation = () => {
 
     if (!invitation || !token) return;
 
-    await acceptMutation.mutateAsync({
-      token,
-      password,
-      fullName,
-      invitation,
-    });
+    try {
+      await acceptMutation.mutateAsync({
+        token,
+        password,
+        fullName,
+        invitation,
+      });
 
-    // Navigate to auth page after successful signup
-    navigate('/auth');
+      // Navigate directly to auth page where they can sign in immediately
+      navigate('/auth');
+    } catch (error) {
+      // Error is handled by the mutation
+    }
   };
 
   // Loading state

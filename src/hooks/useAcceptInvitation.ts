@@ -44,57 +44,43 @@ interface AcceptInvitationParams {
 }
 
 /**
- * Accept invitation and create user account
+ * Accept invitation and create user account via edge function
+ * The edge function uses admin API to auto-confirm email
  */
 export const useAcceptInvitationMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ token, password, fullName, invitation }: AcceptInvitationParams) => {
-      // Sign up with role and department in metadata
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: invitation.email,
-        password: password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: invitation.role,
-            department: invitation.department,
+    mutationFn: async ({ token, password, fullName }: AcceptInvitationParams) => {
+      // Call edge function to create user with auto-confirmed email
+      const response = await fetch(
+        `https://nnrzsvtaeulxunxnbxtw.supabase.co/functions/v1/accept-invitation`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        },
-      });
+          body: JSON.stringify({
+            token,
+            password,
+            fullName,
+          }),
+        }
+      );
 
-      if (signUpError) {
-        console.error('Signup error:', signUpError);
-        throw new Error(signUpError.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create account');
       }
 
-      if (!authData.user) {
-        throw new Error('Failed to create user account');
-      }
-
-      // Update invitation status
-      const { error: updateError } = await supabase
-        .from('team_invitations')
-        .update({
-          status: 'accepted',
-          accepted_at: new Date().toISOString(),
-          user_id: authData.user.id,
-        })
-        .eq('invite_token', token);
-
-      if (updateError) {
-        console.error('Error updating invitation:', updateError);
-        // Don't throw - user was created successfully
-      }
-
-      return authData;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
       toast({
-        title: 'Account created successfully',
-        description: 'Welcome to Brooklyn Hills Apartments! Please check your email to verify your account.',
+        title: 'Account created successfully!',
+        description: 'Welcome to Brooklyn Hills Apartments! You can now sign in.',
       });
     },
     onError: (error: Error) => {
