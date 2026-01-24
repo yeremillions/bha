@@ -10,13 +10,24 @@ import { useSendInvitation, type InvitationRole, type InvitationDepartment } fro
 interface InviteTeamMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isAdmin?: boolean;
 }
 
-export const InviteTeamMemberDialog = ({ open, onOpenChange }: InviteTeamMemberDialogProps) => {
+export const InviteTeamMemberDialog = ({ open, onOpenChange, isAdmin = false }: InviteTeamMemberDialogProps) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InvitationRole>('staff');
   const [department, setDepartment] = useState<InvitationDepartment>('reception');
   const sendInvitation = useSendInvitation();
+
+  // Roles that managers can invite (non-admin can't invite admin or manager)
+  const availableRoles: { value: InvitationRole; label: string; color: string; description: string }[] = [
+    ...(isAdmin ? [
+      { value: 'admin' as InvitationRole, label: 'Admin', color: 'text-red-500', description: 'Full system access' },
+      { value: 'manager' as InvitationRole, label: 'Manager', color: 'text-blue-500', description: 'Manage operations & approvals' },
+    ] : []),
+    { value: 'receptionist' as InvitationRole, label: 'Receptionist', color: 'text-green-500', description: 'Handle bookings & check-ins' },
+    { value: 'staff' as InvitationRole, label: 'Staff', color: 'text-gray-500', description: 'Complete assigned tasks' },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,42 +105,17 @@ export const InviteTeamMemberDialog = ({ open, onOpenChange }: InviteTeamMemberD
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-red-500" />
-                    <div>
-                      <div className="font-medium">Admin</div>
-                      <div className="text-xs text-muted-foreground">Full system access</div>
+                {availableRoles.map((roleOption) => (
+                  <SelectItem key={roleOption.value} value={roleOption.value}>
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className={`h-4 w-4 ${roleOption.color}`} />
+                      <div>
+                        <div className="font-medium">{roleOption.label}</div>
+                        <div className="text-xs text-muted-foreground">{roleOption.description}</div>
+                      </div>
                     </div>
-                  </div>
-                </SelectItem>
-                <SelectItem value="manager">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-blue-500" />
-                    <div>
-                      <div className="font-medium">Manager</div>
-                      <div className="text-xs text-muted-foreground">Manage operations & approvals</div>
-                    </div>
-                  </div>
-                </SelectItem>
-                <SelectItem value="receptionist">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-green-500" />
-                    <div>
-                      <div className="font-medium">Receptionist</div>
-                      <div className="text-xs text-muted-foreground">Handle bookings & check-ins</div>
-                    </div>
-                  </div>
-                </SelectItem>
-                <SelectItem value="staff">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <div className="font-medium">Staff</div>
-                      <div className="text-xs text-muted-foreground">Complete assigned tasks</div>
-                    </div>
-                  </div>
-                </SelectItem>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 

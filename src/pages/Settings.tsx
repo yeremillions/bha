@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 import { useSettings, type EmailTemplates as EmailTemplatesType } from "@/hooks/useSettings";
 import { useSystemSetting, useUpdateSystemSetting } from "@/hooks/useHousekeeping";
 import { usePendingInvitations, useResendInvitation, useRevokeInvitation, useDeleteInvitation } from "@/hooks/useTeamInvitations";
-import { useCanManageInvitations, useAdminUsers, useIsOwner } from "@/hooks/useCurrentUser";
+import { useCanManageInvitations, useAdminUsers, useIsOwner, useIsAdmin } from "@/hooks/useCurrentUser";
 import { InviteTeamMemberDialog } from "@/components/settings/InviteTeamMemberDialog";
 import { AdminUsersList } from "@/components/settings/AdminUsersList";
 import { format } from "date-fns";
@@ -69,6 +69,7 @@ const Settings = () => {
   const revokeInvitation = useRevokeInvitation();
   const deleteInvitation = useDeleteInvitation();
   const canManageInvitations = useCanManageInvitations();
+  const isAdmin = useIsAdmin();
 
   const {
     loading,
@@ -958,12 +959,16 @@ const Settings = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                          <Label>Admin Users</Label>
-                          <p className="text-sm text-muted-foreground">Manage staff access and permissions</p>
-                        </div>
+                        {isAdmin && (
+                          <>
+                            <div className="space-y-2">
+                              <Label>Admin Users</Label>
+                              <p className="text-sm text-muted-foreground">Manage staff access and permissions</p>
+                            </div>
 
-                        <AdminUsersList />
+                            <AdminUsersList />
+                          </>
+                        )}
 
                         {/* Pending Invitations */}
                         {invitationsLoading ? (
@@ -1287,6 +1292,7 @@ const Settings = () => {
       <InviteTeamMemberDialog
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
+        isAdmin={isAdmin}
       />
     </div>
   );
