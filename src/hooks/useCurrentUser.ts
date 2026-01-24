@@ -194,6 +194,11 @@ export const useAccessibleModules = () => {
   if (!profile) return [];
 
   const accessibleModules = Object.keys(MODULE_ACCESS).filter(module => {
+    // Settings is restricted to admin and manager roles only
+    if (module === 'settings') {
+      return profile.role === 'admin' || profile.role === 'manager';
+    }
+
     // Admin can access everything
     if (profile.role === 'admin') return true;
 
