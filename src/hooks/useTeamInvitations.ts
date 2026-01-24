@@ -101,9 +101,9 @@ export const useSendInvitation = () => {
         throw new Error('This email already has a pending invitation');
       }
 
-      // Check if user already exists in user_profiles
+      // Check if user already exists in profiles
       const { data: existingUser } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('id, email')
         .eq('email', invitation.email)
         .maybeSingle();

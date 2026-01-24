@@ -91,11 +91,11 @@ export const AdminUsersList = () => {
                   Owner
                 </Badge>
               ) : (
-                canAssignOwner && (
+                canAssignOwner && admin.id !== currentUser?.id && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleMakeOwner(admin.id, admin.full_name || admin.email)}
+                    onClick={() => handleMakeOwner(admin.id, admin.full_name || admin.email || 'Admin')}
                     disabled={transferOwnership.isPending || assignOwner.isPending}
                   >
                     Make Owner
