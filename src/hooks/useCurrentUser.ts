@@ -377,3 +377,49 @@ export const useAssignOwner = () => {
     },
   });
 };
+
+/**
+ * Delete a user (admin only, via edge function)
+ * This fully removes the user from Supabase Auth + all related tables
+ */
+export const useDeleteUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error('You must be logged in to delete users');
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL || 'https://nnrzsvtaeulxunxnbxtw.supabase.co'}/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete user');
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
+      toast.success('User deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete user: ${error.message}`);
+    },
+  });
+};
