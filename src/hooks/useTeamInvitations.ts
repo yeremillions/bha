@@ -101,7 +101,7 @@ export const useSendInvitation = () => {
         throw new Error('This email already has a pending invitation');
       }
 
-      // Check if user already exists in profiles
+      // Check if user already exists in profiles (not just in auth)
       const { data: existingUser } = await supabase
         .from('profiles')
         .select('id, email')
@@ -111,6 +111,13 @@ export const useSendInvitation = () => {
       if (existingUser) {
         throw new Error('A user with this email already exists');
       }
+
+      // Clean up any old non-pending invitations for this email (allows re-inviting after user deletion)
+      await supabase
+        .from('team_invitations')
+        .delete()
+        .eq('email', invitation.email)
+        .neq('status', 'pending');
 
       // Create invitation
       const { data, error } = await supabase

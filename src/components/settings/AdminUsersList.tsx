@@ -1,8 +1,8 @@
-import { useAdminUsers, useIsOwner, useTransferOwnership, useHasOwner, useAssignOwner, useCurrentUser } from "@/hooks/useCurrentUser";
+import { useAdminUsers, useIsOwner, useTransferOwnership, useHasOwner, useAssignOwner, useCurrentUser, useDeleteUser } from "@/hooks/useCurrentUser";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Crown } from "lucide-react";
+import { User, Crown, Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useState } from "react";
 
@@ -13,25 +13,35 @@ export const AdminUsersList = () => {
   const isCurrentUserOwner = useIsOwner();
   const transferOwnership = useTransferOwnership();
   const assignOwner = useAssignOwner();
+  const deleteUser = useDeleteUser();
   
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>("");
+  const [dialogAction, setDialogAction] = useState<'transfer' | 'delete'>('transfer');
 
   const handleMakeOwner = (userId: string, userName: string) => {
     setSelectedUserId(userId);
     setSelectedUserName(userName);
+    setDialogAction('transfer');
     setConfirmDialogOpen(true);
   };
 
-  const confirmMakeOwner = () => {
+  const handleDeleteUser = (userId: string, userName: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setDialogAction('delete');
+    setConfirmDialogOpen(true);
+  };
+
+  const confirmAction = () => {
     if (!selectedUserId) return;
 
-    if (hasOwner) {
-      // Transfer ownership from current owner
+    if (dialogAction === 'delete') {
+      deleteUser.mutate(selectedUserId);
+    } else if (hasOwner) {
       transferOwnership.mutate(selectedUserId);
     } else {
-      // Assign initial owner
       assignOwner.mutate(selectedUserId);
     }
     setConfirmDialogOpen(false);
@@ -57,6 +67,8 @@ export const AdminUsersList = () => {
 
   // Can assign owner if: no owner exists, OR current user is owner
   const canAssignOwner = !hasOwner || isCurrentUserOwner;
+  // Can delete users if current user is admin (owners can delete non-owners)
+  const canDeleteUsers = isCurrentUserOwner || currentUser?.role === 'admin';
 
   return (
     <>
@@ -91,16 +103,29 @@ export const AdminUsersList = () => {
                   Owner
                 </Badge>
               ) : (
-                canAssignOwner && admin.id !== currentUser?.id && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleMakeOwner(admin.id, admin.full_name || admin.email || 'Admin')}
-                    disabled={transferOwnership.isPending || assignOwner.isPending}
-                  >
-                    Make Owner
-                  </Button>
-                )
+                <>
+                  {canAssignOwner && admin.id !== currentUser?.id && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleMakeOwner(admin.id, admin.full_name || admin.email || 'Admin')}
+                      disabled={transferOwnership.isPending || assignOwner.isPending}
+                    >
+                      Make Owner
+                    </Button>
+                  )}
+                  {canDeleteUsers && admin.id !== currentUser?.id && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteUser(admin.id, admin.full_name || admin.email || 'Admin')}
+                      disabled={deleteUser.isPending}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </>
               )}
               <Badge variant="secondary" className="capitalize">
                 {admin.department}
@@ -113,14 +138,29 @@ export const AdminUsersList = () => {
       <ConfirmDialog
         open={confirmDialogOpen}
         onOpenChange={setConfirmDialogOpen}
-        title={hasOwner ? "Transfer Ownership" : "Assign Owner"}
-        description={
-          hasOwner
-            ? `Are you sure you want to transfer ownership to ${selectedUserName}? You will lose your owner privileges.`
-            : `Are you sure you want to make ${selectedUserName} the owner? This gives them full administrative control.`
+        title={
+          dialogAction === 'delete' 
+            ? "Delete User" 
+            : hasOwner 
+              ? "Transfer Ownership" 
+              : "Assign Owner"
         }
-        confirmText={hasOwner ? "Transfer Ownership" : "Assign Owner"}
-        onConfirm={confirmMakeOwner}
+        description={
+          dialogAction === 'delete'
+            ? `Are you sure you want to permanently delete ${selectedUserName}? This will remove their account, profile, and all access. This action cannot be undone.`
+            : hasOwner
+              ? `Are you sure you want to transfer ownership to ${selectedUserName}? You will lose your owner privileges.`
+              : `Are you sure you want to make ${selectedUserName} the owner? This gives them full administrative control.`
+        }
+        confirmText={
+          dialogAction === 'delete' 
+            ? "Delete User" 
+            : hasOwner 
+              ? "Transfer Ownership" 
+              : "Assign Owner"
+        }
+        onConfirm={confirmAction}
+        variant={dialogAction === 'delete' ? 'destructive' : 'default'}
       />
     </>
   );
