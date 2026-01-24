@@ -1630,6 +1630,30 @@ export type Database = {
           },
         ]
       }
+      user_departments: {
+        Row: {
+          created_at: string
+          department: Database["public"]["Enums"]["app_department"]
+          id: string
+          is_owner: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: Database["public"]["Enums"]["app_department"]
+          id?: string
+          is_owner?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: Database["public"]["Enums"]["app_department"]
+          id?: string
+          is_owner?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           created_at: string
@@ -1909,6 +1933,13 @@ export type Database = {
       transfer_ownership: { Args: { new_owner_id: string }; Returns: boolean }
     }
     Enums: {
+      app_department:
+        | "management"
+        | "reception"
+        | "housekeeping"
+        | "bar"
+        | "maintenance"
+        | "security"
       app_role:
         | "admin"
         | "housekeeper"
@@ -2042,6 +2073,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_department: [
+        "management",
+        "reception",
+        "housekeeping",
+        "bar",
+        "maintenance",
+        "security",
+      ],
       app_role: [
         "admin",
         "housekeeper",

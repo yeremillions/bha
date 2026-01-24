@@ -9,6 +9,7 @@ export interface UserProfile {
   id: string;
   email: string;
   full_name: string | null;
+  avatar_url: string | null;
   role: UserRole;
   department: Department;
   is_owner: boolean;
@@ -16,8 +17,23 @@ export interface UserProfile {
   updated_at: string;
 }
 
+// Helper to map database app_role enum to frontend UserRole
+const mapDbRoleToUserRole = (dbRole: string): UserRole => {
+  // Database uses: 'admin', 'housekeeper', 'maintenance', 'barman', 'facility_manager'
+  // Frontend expects: 'admin', 'manager', 'receptionist', 'staff'
+  const roleMap: Record<string, UserRole> = {
+    'admin': 'admin',
+    'facility_manager': 'manager',
+    'housekeeper': 'staff',
+    'maintenance': 'staff',
+    'barman': 'staff',
+  };
+  return roleMap[dbRole] || 'staff';
+};
+
 /**
  * Get current user's profile including role and department
+ * Queries profiles joined with user_roles and user_departments
  */
 export const useCurrentUser = () => {
   return useQuery({
@@ -30,44 +46,62 @@ export const useCurrentUser = () => {
         throw new Error('Not authenticated');
       }
 
-      // Get user profile with role and department
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
+      // Get profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, avatar_url, created_at, updated_at')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        throw new Error(`Failed to fetch user profile: ${error.message}`);
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        throw new Error(`Failed to fetch profile: ${profileError.message}`);
       }
 
-      // If no profile exists, return a default admin profile for the first user
-      if (!data) {
-        console.warn('No user profile found, creating default admin profile');
-        
-        // Create a profile for this user
-        const { data: newProfile, error: createError } = await supabase
-          .from('user_profiles')
-          .insert({
-            id: user.id,
-            email: user.email || '',
-            full_name: user.user_metadata?.full_name || null,
-            role: 'admin',
-            department: 'management',
-          })
-          .select()
-          .single();
+      // Get role from user_roles
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        if (createError) {
-          console.error('Error creating user profile:', createError);
-          throw new Error(`Failed to create user profile: ${createError.message}`);
-        }
-
-        return newProfile as UserProfile;
+      if (roleError) {
+        console.error('Error fetching user role:', roleError);
       }
 
-      return data as UserProfile;
+      // Get department from user_departments
+      const { data: deptData, error: deptError } = await supabase
+        .from('user_departments')
+        .select('department, is_owner')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (deptError) {
+        console.error('Error fetching user department:', deptError);
+      }
+
+      // If profile doesn't exist, return null to trigger profile creation
+      if (!profile) {
+        console.warn('No profile found for user');
+        return null;
+      }
+
+      // Map the database role to frontend role
+      const role = roleData?.role ? mapDbRoleToUserRole(roleData.role) : 'admin';
+      const department = (deptData?.department as Department) || 'management';
+      const is_owner = deptData?.is_owner || false;
+
+      return {
+        id: profile.id,
+        email: profile.email || user.email || '',
+        full_name: profile.full_name,
+        avatar_url: profile.avatar_url,
+        role,
+        department,
+        is_owner,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+      } as UserProfile;
     },
     retry: 1,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
@@ -189,24 +223,72 @@ export const useIsOwner = () => {
 
 /**
  * Fetch all admin users for display in settings
+ * Queries profiles joined with user_roles (role='admin') and user_departments
  */
 export const useAdminUsers = () => {
   return useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('role', 'admin')
-        .order('is_owner', { ascending: false })
-        .order('created_at', { ascending: true });
+      // Get all users with admin role
+      const { data: adminRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
 
-      if (error) {
-        console.error('Error fetching admin users:', error);
-        throw new Error(`Failed to fetch admin users: ${error.message}`);
+      if (rolesError) {
+        console.error('Error fetching admin roles:', rolesError);
+        throw new Error(`Failed to fetch admin roles: ${rolesError.message}`);
       }
 
-      return data as UserProfile[];
+      if (!adminRoles || adminRoles.length === 0) {
+        return [];
+      }
+
+      const adminUserIds = adminRoles.map(r => r.user_id);
+
+      // Get profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, avatar_url, created_at, updated_at')
+        .in('id', adminUserIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
+      }
+
+      // Get departments for these users
+      const { data: departments, error: deptsError } = await supabase
+        .from('user_departments')
+        .select('user_id, department, is_owner')
+        .in('user_id', adminUserIds);
+
+      if (deptsError) {
+        console.error('Error fetching departments:', deptsError);
+      }
+
+      // Combine the data
+      const adminUsers: UserProfile[] = profiles?.map(profile => {
+        const dept = departments?.find(d => d.user_id === profile.id);
+        return {
+          id: profile.id,
+          email: profile.email || '',
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          role: 'admin' as UserRole,
+          department: (dept?.department as Department) || 'management',
+          is_owner: dept?.is_owner || false,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at,
+        };
+      }) || [];
+
+      // Sort: owner first, then by created_at
+      return adminUsers.sort((a, b) => {
+        if (a.is_owner && !b.is_owner) return -1;
+        if (!a.is_owner && b.is_owner) return 1;
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
     },
   });
 };
@@ -249,8 +331,8 @@ export const useHasOwner = () => {
     queryKey: ['has-owner'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id')
+        .from('user_departments')
+        .select('user_id')
         .eq('is_owner', true)
         .maybeSingle();
 
@@ -273,9 +355,9 @@ export const useAssignOwner = () => {
   return useMutation({
     mutationFn: async (userId: string) => {
       const { error } = await supabase
-        .from('user_profiles')
+        .from('user_departments')
         .update({ is_owner: true })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Error assigning owner:', error);
