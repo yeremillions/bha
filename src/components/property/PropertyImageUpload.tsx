@@ -33,7 +33,7 @@ export const PropertyImageUpload = ({
   const uploadImage = useUploadPropertyImage();
   const deleteImage = useDeletePropertyImage();
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
   const TARGET_FILE_SIZE = 4 * 1024 * 1024; // 4MB target after compression
   const MAX_DIMENSION = 2048; // Max width/height
 
@@ -313,7 +313,7 @@ export const PropertyImageUpload = ({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Drag images to reorder. First image will be used as the main image. Max 5MB per image.
+          Drag images to reorder. First image will be used as the main image. Images over 2MB are auto-optimized.
         </p>
       </CardContent>
     </Card>
