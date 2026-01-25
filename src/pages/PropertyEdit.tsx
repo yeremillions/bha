@@ -55,7 +55,6 @@ const propertyTypes = [
   { value: 'Duplex', label: 'Duplex' },
   { value: 'House', label: 'House' },
   { value: 'Villa', label: 'Villa' },
-  { value: 'Loft', label: 'Loft' },
 ];
 
 const statusOptions = [
