@@ -456,11 +456,11 @@ const Properties = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-popover border-border">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/dashboard/properties/${property.id}`)}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/dashboard/properties/${property.id}/edit`)}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Property
                         </DropdownMenuItem>
