@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
+import PropertyDetails from "./pages/PropertyDetails";
+import PropertyEdit from "./pages/PropertyEdit";
 import Bookings from "./pages/Bookings";
 import BookingDetails from "./pages/BookingDetails";
 import Housekeeping from "./pages/Housekeeping";
@@ -44,6 +46,8 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/properties" element={<Properties />} />
+              <Route path="/dashboard/properties/:id" element={<PropertyDetails />} />
+              <Route path="/dashboard/properties/:id/edit" element={<PropertyEdit />} />
               <Route path="/dashboard/bookings" element={<Bookings />} />
               <Route path="/dashboard/bookings/:id" element={<BookingDetails />} />
               <Route path="/dashboard/calendar" element={<Calendar />} />
