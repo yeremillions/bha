@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProperty, useUpdateProperty } from '@/hooks/useProperties';
+import { PropertyImageUpload } from '@/components/property/PropertyImageUpload';
 import { cn } from '@/lib/utils';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
@@ -90,6 +91,7 @@ const PropertyEdit = () => {
     amenities: [] as string[],
     status: 'available',
     featured: false,
+    images: [] as string[],
   });
 
   // Initialize form when property loads
@@ -109,6 +111,7 @@ const PropertyEdit = () => {
         amenities: property.amenities || [],
         status: property.status,
         featured: property.featured || false,
+        images: property.images || [],
       });
       setHasUnsavedChanges(false);
     }
@@ -130,7 +133,8 @@ const PropertyEdit = () => {
         formData.cleaning_fee !== (property.cleaning_fee || 0) ||
         JSON.stringify(formData.amenities.sort()) !== JSON.stringify((property.amenities || []).sort()) ||
         formData.status !== property.status ||
-        formData.featured !== (property.featured || false);
+        formData.featured !== (property.featured || false) ||
+        JSON.stringify(formData.images) !== JSON.stringify(property.images || []);
       setHasUnsavedChanges(changed);
     }
   }, [formData, property]);
@@ -201,6 +205,7 @@ const PropertyEdit = () => {
           amenities: formData.amenities,
           status: formData.status,
           featured: formData.featured,
+          images: formData.images,
         },
       });
       navigate(`/dashboard/properties/${property.id}`);
@@ -472,6 +477,13 @@ const PropertyEdit = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Images */}
+              <PropertyImageUpload
+                propertyId={property.id}
+                images={formData.images}
+                onImagesChange={(images) => handleInputChange('images', images)}
+              />
             </div>
 
             {/* Sidebar */}
