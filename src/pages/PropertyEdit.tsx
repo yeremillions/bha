@@ -49,11 +49,12 @@ const amenityOptions = [
 ];
 
 const propertyTypes = [
-  { value: 'apartment', label: 'Apartment' },
-  { value: 'studio', label: 'Studio' },
-  { value: 'penthouse', label: 'Penthouse' },
-  { value: 'duplex', label: 'Duplex' },
-  { value: 'villa', label: 'Villa' },
+  { value: 'Apartment', label: 'Apartment' },
+  { value: 'Studio', label: 'Studio' },
+  { value: 'Penthouse', label: 'Penthouse' },
+  { value: 'House', label: 'House' },
+  { value: 'Villa', label: 'Villa' },
+  { value: 'Loft', label: 'Loft' },
 ];
 
 const statusOptions = [
@@ -79,7 +80,7 @@ const PropertyEdit = () => {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    type: 'apartment',
+    type: 'Apartment',
     description: '',
     location: '',
     address: '',
