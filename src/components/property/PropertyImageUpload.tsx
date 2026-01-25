@@ -33,6 +33,63 @@ export const PropertyImageUpload = ({
   const uploadImage = useUploadPropertyImage();
   const deleteImage = useDeletePropertyImage();
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const TARGET_FILE_SIZE = 4 * 1024 * 1024; // 4MB target after compression
+  const MAX_DIMENSION = 2048; // Max width/height
+
+  const optimizeImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Scale down if dimensions exceed max
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Start with quality 0.9 and reduce if needed
+        const tryCompress = (quality: number) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error('Failed to compress image'));
+                return;
+              }
+
+              // If still too large and quality can be reduced, try again
+              if (blob.size > TARGET_FILE_SIZE && quality > 0.3) {
+                tryCompress(quality - 0.1);
+              } else {
+                const optimizedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(optimizedFile);
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+
+        tryCompress(0.9);
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -54,17 +111,32 @@ export const PropertyImageUpload = ({
           continue;
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
+        let fileToUpload = file;
+
+        // Optimize if file exceeds size limit
+        if (file.size > MAX_FILE_SIZE) {
           toast({
-            title: 'File too large',
-            description: `${file.name} exceeds the 5MB limit.`,
-            variant: 'destructive',
+            title: 'Optimizing image',
+            description: `${file.name} is being compressed...`,
           });
-          continue;
+
+          try {
+            fileToUpload = await optimizeImage(file);
+            toast({
+              title: 'Image optimized',
+              description: `Reduced from ${(file.size / 1024 / 1024).toFixed(1)}MB to ${(fileToUpload.size / 1024 / 1024).toFixed(1)}MB`,
+            });
+          } catch (error) {
+            toast({
+              title: 'Optimization failed',
+              description: `Could not compress ${file.name}. Please try a smaller image.`,
+              variant: 'destructive',
+            });
+            continue;
+          }
         }
 
-        const url = await uploadImage.mutateAsync({ propertyId, file });
+        const url = await uploadImage.mutateAsync({ propertyId, file: fileToUpload });
         newImages.push(url);
       }
 
