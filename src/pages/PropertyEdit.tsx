@@ -52,6 +52,7 @@ const propertyTypes = [
   { value: 'Apartment', label: 'Apartment' },
   { value: 'Studio', label: 'Studio' },
   { value: 'Penthouse', label: 'Penthouse' },
+  { value: 'Duplex', label: 'Duplex' },
   { value: 'House', label: 'House' },
   { value: 'Villa', label: 'Villa' },
   { value: 'Loft', label: 'Loft' },
