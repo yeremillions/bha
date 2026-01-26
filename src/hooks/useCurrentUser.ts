@@ -19,11 +19,11 @@ export interface UserProfile {
 
 // Helper to map database app_role enum to frontend UserRole
 const mapDbRoleToUserRole = (dbRole: string): UserRole => {
-  // Database uses: 'admin', 'housekeeper', 'maintenance', 'barman', 'facility_manager'
+  // Database uses: 'admin', 'manager', 'housekeeper', 'maintenance', 'barman'
   // Frontend expects: 'admin', 'manager', 'receptionist', 'staff'
   const roleMap: Record<string, UserRole> = {
     'admin': 'admin',
-    'facility_manager': 'manager',
+    'manager': 'manager',
     'housekeeper': 'staff',
     'maintenance': 'staff',
     'barman': 'staff',
