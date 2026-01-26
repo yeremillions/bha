@@ -60,7 +60,7 @@ export const AdminUsersList = () => {
   if (!adminUsers || adminUsers.length === 0) {
     return (
       <div className="text-sm text-muted-foreground p-4 text-center border border-dashed rounded-lg">
-        No admin users found
+        No team members found
       </div>
     );
   }
@@ -88,7 +88,7 @@ export const AdminUsersList = () => {
               </div>
               <div>
                 <p className="font-medium text-foreground">
-                  {admin.full_name || 'Admin User'}
+                  {admin.full_name || 'Team Member'}
                   {admin.id === currentUser?.id && (
                     <span className="text-muted-foreground ml-2">(You)</span>
                   )}
@@ -127,6 +127,9 @@ export const AdminUsersList = () => {
                   )}
                 </>
               )}
+              <Badge variant="outline" className="capitalize">
+                {admin.role}
+              </Badge>
               <Badge variant="secondary" className="capitalize">
                 {admin.department}
               </Badge>
