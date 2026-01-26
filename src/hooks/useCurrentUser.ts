@@ -227,22 +227,22 @@ export const useIsOwner = () => {
 };
 
 /**
- * Fetch all admin users for display in settings
- * Queries profiles joined with user_roles (role='admin') and user_departments
+ * Fetch all admin and manager users for display in settings
+ * Queries profiles joined with user_roles (role='admin' or 'manager') and user_departments
  */
 export const useAdminUsers = () => {
   return useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      // Get all users with admin role
+      // Get all users with admin or manager role
       const { data: adminRoles, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
+        .select('user_id, role')
+        .in('role', ['admin', 'manager']);
 
       if (rolesError) {
-        console.error('Error fetching admin roles:', rolesError);
-        throw new Error(`Failed to fetch admin roles: ${rolesError.message}`);
+        console.error('Error fetching admin/manager roles:', rolesError);
+        throw new Error(`Failed to fetch admin/manager roles: ${rolesError.message}`);
       }
 
       if (!adminRoles || adminRoles.length === 0) {
@@ -275,12 +275,14 @@ export const useAdminUsers = () => {
       // Combine the data
       const adminUsers: UserProfile[] = profiles?.map(profile => {
         const dept = departments?.find(d => d.user_id === profile.id);
+        const roleData = adminRoles.find(r => r.user_id === profile.id);
+        const mappedRole = roleData?.role === 'manager' ? 'manager' : 'admin';
         return {
           id: profile.id,
           email: profile.email || '',
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
-          role: 'admin' as UserRole,
+          role: mappedRole as UserRole,
           department: (dept?.department as Department) || 'management',
           is_owner: dept?.is_owner || false,
           created_at: profile.created_at,
