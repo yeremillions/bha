@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useInvitationByToken, useAcceptInvitationMutation } from '@/hooks/useAcceptInvitation';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,8 +61,24 @@ const AcceptInvitation = () => {
         invitation,
       });
 
-      // Navigate directly to auth page where they can sign in immediately
-      navigate('/auth');
+      // Auto sign-in the user after successful account creation
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: invitation.email,
+        password: password,
+      });
+
+      if (signInError) {
+        toast({
+          title: 'Account created, but sign-in failed',
+          description: 'Please sign in manually with your new credentials.',
+          variant: 'destructive',
+        });
+        navigate('/auth');
+        return;
+      }
+
+      // Navigate directly to dashboard - user is now signed in
+      navigate('/dashboard');
     } catch (error) {
       // Error is handled by the mutation
     }
