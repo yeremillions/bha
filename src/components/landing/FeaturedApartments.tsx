@@ -1,17 +1,40 @@
-import { useState } from 'react';
-import { Star, MapPin } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Star, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProperties } from '@/hooks/useProperties';
 import { BookingDialog } from '@/components/booking/BookingDialog';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from '@/components/ui/carousel';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Property = Tables<'properties'>;
 
 const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: (property: Property) => void }) => {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
   const defaultImage = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80';
-  const imageUrl = property.images?.[0] || defaultImage;
+  const images = property.images?.length ? property.images : [defaultImage];
+  const hasMultipleImages = images.length > 1;
+
+  // Update current slide when carousel changes
+  useEffect(() => {
+    if (!carouselApi) return;
+    
+    const onSelect = () => {
+      setCurrentSlide(carouselApi.selectedScrollSnap());
+    };
+    
+    carouselApi.on('select', onSelect);
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
+  }, [carouselApi]);
   
   // Format price
   const formatPrice = (price: number) => {
@@ -37,13 +60,70 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
   return (
     <Card className="overflow-hidden group hover:shadow-xl transition-shadow">
       <div className="relative h-56 overflow-hidden">
-        <img 
-          src={imageUrl} 
-          alt={property.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+        {hasMultipleImages ? (
+          <Carousel setApi={setCarouselApi} className="w-full h-full">
+            <CarouselContent className="-ml-0 h-full">
+              {images.map((image, index) => (
+                <CarouselItem key={index} className="pl-0 h-56">
+                  <img 
+                    src={image} 
+                    alt={`${property.name} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            
+            {/* Navigation Arrows */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                carouselApi?.scrollPrev();
+              }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 hover:bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                carouselApi?.scrollNext();
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 hover:bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            
+            {/* Dot Indicators */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    carouselApi?.scrollTo(index);
+                  }}
+                  className={`h-2 w-2 rounded-full transition-colors ${
+                    index === currentSlide 
+                      ? 'bg-background' 
+                      : 'bg-background/50 hover:bg-background/75'
+                  }`}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
+          </Carousel>
+        ) : (
+          <img 
+            src={images[0]} 
+            alt={property.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        )}
         {badge && (
-          <div className={`absolute top-4 left-4 px-3 py-1 text-xs font-semibold rounded-full ${badge.className}`}>
+          <div className={`absolute top-4 left-4 px-3 py-1 text-xs font-semibold rounded-full ${badge.className} z-10`}>
             {badge.label}
           </div>
         )}
