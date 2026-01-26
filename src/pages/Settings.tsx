@@ -989,8 +989,8 @@ const Settings = () => {
                         {isAdmin && (
                           <>
                             <div className="space-y-2">
-                              <Label>Admin Users</Label>
-                              <p className="text-sm text-muted-foreground">Manage staff access and permissions</p>
+                              <Label>Team Members</Label>
+                              <p className="text-sm text-muted-foreground">View and manage all registered team members</p>
                             </div>
 
                             <AdminUsersList />
