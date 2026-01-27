@@ -52,6 +52,7 @@ import { usePendingInvitations, useResendInvitation, useRevokeInvitation, useDel
 import { useCanManageInvitations, useAdminUsers, useIsOwner, useIsAdmin, useIsManager, useCurrentUser } from "@/hooks/useCurrentUser";
 import { InviteTeamMemberDialog } from "@/components/settings/InviteTeamMemberDialog";
 import { AdminUsersList } from "@/components/settings/AdminUsersList";
+import { StaffUsersList } from "@/components/settings/StaffUsersList";
 import { format } from "date-fns";
 import { Sparkles } from "lucide-react";
 
@@ -988,12 +989,19 @@ const Settings = () => {
                       <CardContent className="space-y-6">
                         {isAdmin && (
                           <>
+                            {/* Admins & Managers Section */}
                             <div className="space-y-2">
-                              <Label>Team Members</Label>
-                              <p className="text-sm text-muted-foreground">View and manage all registered team members</p>
+                              <Label>Admins & Managers</Label>
+                              <p className="text-sm text-muted-foreground">Administrative and management team members</p>
                             </div>
-
                             <AdminUsersList />
+
+                            {/* Staff Section */}
+                            <div className="space-y-2 pt-6 border-t border-border">
+                              <Label>Staff Members</Label>
+                              <p className="text-sm text-muted-foreground">Housekeeping, bar, maintenance, and other staff</p>
+                            </div>
+                            <StaffUsersList />
                           </>
                         )}
 

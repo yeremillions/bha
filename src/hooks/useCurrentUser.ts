@@ -227,17 +227,18 @@ export const useIsOwner = () => {
 };
 
 /**
- * Fetch all team users for display in settings
+ * Fetch admin and manager users for display in settings
  * Queries profiles joined with user_roles and user_departments
  */
 export const useAdminUsers = () => {
   return useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      // Get all users with any role
+      // Get users with admin or manager role
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id, role');
+        .select('user_id, role')
+        .in('role', ['admin', 'manager']);
 
       if (rolesError) {
         console.error('Error fetching user roles:', rolesError);
@@ -272,17 +273,16 @@ export const useAdminUsers = () => {
       }
 
       // Combine the data
-      const teamUsers: UserProfile[] = profiles?.map(profile => {
+      const adminUsers: UserProfile[] = profiles?.map(profile => {
         const dept = departments?.find(d => d.user_id === profile.id);
         const roleData = userRoles.find(r => r.user_id === profile.id);
-        // Map database role to display role
-        const mappedRole = (roleData?.role || 'admin') as UserRole;
+        const mappedRole = roleData?.role === 'manager' ? 'manager' : 'admin';
         return {
           id: profile.id,
           email: profile.email || '',
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
-          role: mappedRole,
+          role: mappedRole as UserRole,
           department: (dept?.department as Department) || 'management',
           is_owner: dept?.is_owner || false,
           created_at: profile.created_at,
@@ -291,13 +291,85 @@ export const useAdminUsers = () => {
       }) || [];
 
       // Sort: owner first, then admins, then managers, then by created_at
-      const roleOrder = { admin: 0, manager: 1, housekeeper: 2, maintenance: 3, barman: 4 };
-      return teamUsers.sort((a, b) => {
+      return adminUsers.sort((a, b) => {
         if (a.is_owner && !b.is_owner) return -1;
         if (!a.is_owner && b.is_owner) return 1;
-        const roleA = roleOrder[a.role as keyof typeof roleOrder] ?? 99;
-        const roleB = roleOrder[b.role as keyof typeof roleOrder] ?? 99;
-        if (roleA !== roleB) return roleA - roleB;
+        if (a.role === 'admin' && b.role !== 'admin') return -1;
+        if (a.role !== 'admin' && b.role === 'admin') return 1;
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+    },
+  });
+};
+
+/**
+ * Fetch staff users (non-admin, non-manager) for display in settings
+ */
+export const useStaffUsers = () => {
+  return useQuery({
+    queryKey: ['staff-users'],
+    queryFn: async () => {
+      // Get users with staff roles (housekeeper, maintenance, barman)
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('role', ['housekeeper', 'maintenance', 'barman']);
+
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+        throw new Error(`Failed to fetch user roles: ${rolesError.message}`);
+      }
+
+      if (!userRoles || userRoles.length === 0) {
+        return [];
+      }
+
+      const userIds = userRoles.map(r => r.user_id);
+
+      // Get profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, avatar_url, created_at, updated_at')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
+      }
+
+      // Get departments for these users
+      const { data: departments, error: deptsError } = await supabase
+        .from('user_departments')
+        .select('user_id, department, is_owner')
+        .in('user_id', userIds);
+
+      if (deptsError) {
+        console.error('Error fetching departments:', deptsError);
+      }
+
+      // Combine the data
+      const staffUsers: UserProfile[] = profiles?.map(profile => {
+        const dept = departments?.find(d => d.user_id === profile.id);
+        const roleData = userRoles.find(r => r.user_id === profile.id);
+        return {
+          id: profile.id,
+          email: profile.email || '',
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          role: (roleData?.role || 'staff') as UserRole,
+          department: (dept?.department as Department) || 'housekeeping',
+          is_owner: false,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at,
+        };
+      }) || [];
+
+      // Sort by department, then by created_at
+      const deptOrder = { housekeeping: 0, bar: 1, maintenance: 2, security: 3 };
+      return staffUsers.sort((a, b) => {
+        const deptA = deptOrder[a.department as keyof typeof deptOrder] ?? 99;
+        const deptB = deptOrder[b.department as keyof typeof deptOrder] ?? 99;
+        if (deptA !== deptB) return deptA - deptB;
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       });
     },
