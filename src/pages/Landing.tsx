@@ -29,6 +29,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { FeaturedApartments } from '@/components/landing/FeaturedApartments';
+import davidOkonkwoHeadshot from '@/assets/david-okonkwo-headshot.jpg';
 
 const Landing = () => {
   const [checkIn, setCheckIn] = useState('');
@@ -88,7 +89,7 @@ const Landing = () => {
       name: 'David Okonkwo',
       location: 'Abuja, Nigeria',
       date: 'October 2024',
-      image: 'https://images.unsplash.com/photo-1506863530036-1efeddceb993?w=400&q=80',
+      image: davidOkonkwoHeadshot,
       quote: 'Perfect for my business trip to Uyo! The apartment was spotless, WiFi was excellent, and the location couldn\'t be better. Brooklyn Hills exceeded all my expectations.',
     },
     {
