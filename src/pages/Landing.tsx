@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/accordion";
 import { FeaturedApartments } from '@/components/landing/FeaturedApartments';
 import davidOkonkwoHeadshot from '@/assets/david-okonkwo-headshot.jpg';
+import sarahEzeHeadshot from '@/assets/sarah-eze-headshot.jpg';
 
 const Landing = () => {
   const [checkIn, setCheckIn] = useState('');
@@ -96,7 +97,7 @@ const Landing = () => {
       name: 'Sarah Eze',
       location: 'Port Harcourt, Nigeria',
       date: 'December 2024',
-      image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80',
+      image: sarahEzeHeadshot,
       quote: 'My family and I had an amazing week here! The kids loved the pool, and we appreciated how well-equipped the kitchen was. True luxury at a reasonable price.',
     },
   ];
