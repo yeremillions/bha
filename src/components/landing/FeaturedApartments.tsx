@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Star, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -195,6 +196,7 @@ const PropertyCardSkeleton = () => (
 );
 
 export const FeaturedApartments = () => {
+  const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
 
@@ -254,7 +256,10 @@ export const FeaturedApartments = () => {
         </div>
 
         <div className="text-center mt-10">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button 
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => navigate('/properties')}
+          >
             View All Properties
           </Button>
         </div>
