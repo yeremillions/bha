@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,6 +35,7 @@ import davidOkonkwoHeadshot from '@/assets/david-okonkwo-headshot.jpg';
 import sarahEzeHeadshot from '@/assets/sarah-eze-headshot.jpg';
 
 const Landing = () => {
+  const navigate = useNavigate();
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -503,6 +504,7 @@ const Landing = () => {
             <Button 
               size="lg" 
               className="font-body bg-accent text-accent-foreground hover:bg-accent/90 px-10 py-6 text-base"
+              onClick={() => navigate('/properties')}
             >
               View All Properties
             </Button>
