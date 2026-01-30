@@ -31,6 +31,7 @@ import {
 import { FeaturedApartments } from '@/components/landing/FeaturedApartments';
 import { NewsletterSection } from '@/components/landing/NewsletterSection';
 import { Footer } from '@/components/landing/Footer';
+import { Header } from '@/components/landing/Header';
 import davidOkonkwoHeadshot from '@/assets/david-okonkwo-headshot.jpg';
 import sarahEzeHeadshot from '@/assets/sarah-eze-headshot.jpg';
 
@@ -158,34 +159,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-              <Building2 className="h-5 w-5 text-accent-foreground" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display text-xl font-semibold tracking-tight leading-tight">Brooklyn Hills</span>
-              <span className="text-[10px] text-muted-foreground font-medium tracking-wide">Luxury Meets Comfort</span>
-            </div>
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#properties" className="font-body text-muted-foreground hover:text-foreground transition-colors">Properties</a>
-            <a href="#about" className="font-body text-muted-foreground hover:text-foreground transition-colors">About</a>
-            <a href="#contact" className="font-body text-muted-foreground hover:text-foreground transition-colors">Contact</a>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/auth">
-              <Button variant="ghost" className="font-body">Login</Button>
-            </Link>
-            <Link to="/auth">
-              <Button className="font-body bg-accent text-accent-foreground hover:bg-accent/90">
-                Sign Up
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center pt-20">
