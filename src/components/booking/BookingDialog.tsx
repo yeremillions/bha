@@ -242,7 +242,7 @@ export const BookingDialog = ({ open, onOpenChange, property }: BookingDialogPro
                       {checkIn ? format(checkIn, 'MMM d, yyyy') : 'Select date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={4}>
+                  <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="top" sideOffset={4}>
                     <Calendar
                       mode="single"
                       selected={checkIn}
@@ -270,7 +270,7 @@ export const BookingDialog = ({ open, onOpenChange, property }: BookingDialogPro
                       {checkOut ? format(checkOut, 'MMM d, yyyy') : 'Select date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={4}>
+                  <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="top" sideOffset={4}>
                     <Calendar
                       mode="single"
                       selected={checkOut}
