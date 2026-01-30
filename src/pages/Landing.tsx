@@ -45,11 +45,10 @@ const Landing = () => {
 
   const handleCheckAvailability = () => {
     if (checkIn && checkOut) {
-      setHasSearched(true);
-      // Scroll to results after a short delay for the component to render
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      const params = new URLSearchParams();
+      params.set('checkIn', checkIn);
+      params.set('checkOut', checkOut);
+      navigate(`/properties?${params.toString()}`);
     }
   };
 
