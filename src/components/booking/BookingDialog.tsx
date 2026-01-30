@@ -20,6 +20,8 @@ interface BookingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   property: Property;
+  initialCheckIn?: string;
+  initialCheckOut?: string;
 }
 
 type BookingStep = 'dates' | 'guest-info' | 'review' | 'success';
@@ -40,10 +42,10 @@ interface PriceBreakdown {
   nights: number;
 }
 
-export const BookingDialog = ({ open, onOpenChange, property }: BookingDialogProps) => {
+export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, initialCheckOut }: BookingDialogProps) => {
   const [step, setStep] = useState<BookingStep>('dates');
-  const [checkIn, setCheckIn] = useState<Date | undefined>();
-  const [checkOut, setCheckOut] = useState<Date | undefined>();
+  const [checkIn, setCheckIn] = useState<Date | undefined>(initialCheckIn ? new Date(initialCheckIn) : undefined);
+  const [checkOut, setCheckOut] = useState<Date | undefined>(initialCheckOut ? new Date(initialCheckOut) : undefined);
   const [numGuests, setNumGuests] = useState(1);
   const [guestInfo, setGuestInfo] = useState<GuestInfo>({
     fullName: '',
@@ -59,21 +61,25 @@ export const BookingDialog = ({ open, onOpenChange, property }: BookingDialogPro
 
   const createBooking = useCreateBooking();
 
-  // Reset state when dialog opens/closes
+  // Reset state when dialog opens/closes or initial dates change
   useEffect(() => {
     if (!open) {
       setTimeout(() => {
         setStep('dates');
-        setCheckIn(undefined);
-        setCheckOut(undefined);
+        setCheckIn(initialCheckIn ? new Date(initialCheckIn) : undefined);
+        setCheckOut(initialCheckOut ? new Date(initialCheckOut) : undefined);
         setNumGuests(1);
         setGuestInfo({ fullName: '', email: '', phone: '', specialRequests: '' });
         setAvailabilityError(null);
         setPriceBreakdown(null);
         setBookingNumber(null);
       }, 300);
+    } else {
+      // Set initial dates when dialog opens
+      if (initialCheckIn) setCheckIn(new Date(initialCheckIn));
+      if (initialCheckOut) setCheckOut(new Date(initialCheckOut));
     }
-  }, [open]);
+  }, [open, initialCheckIn, initialCheckOut]);
 
   // Check availability and calculate price when dates change
   useEffect(() => {
