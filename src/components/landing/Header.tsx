@@ -1,11 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const Header = () => {
-  const location = useLocation();
-  const isHomePage = location.pathname === '/';
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
@@ -21,22 +18,18 @@ export const Header = () => {
         <div className="hidden md:flex items-center gap-8">
           <Link 
             to="/properties" 
-            className={`font-body transition-colors ${
-              location.pathname === '/properties' 
-                ? 'text-foreground font-medium' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className="font-body text-muted-foreground hover:text-foreground transition-colors"
           >
             Properties
           </Link>
           <a 
-            href={isHomePage ? '#about' : '/#about'} 
+            href="/#about" 
             className="font-body text-muted-foreground hover:text-foreground transition-colors"
           >
             About
           </a>
           <a 
-            href={isHomePage ? '#contact' : '/#contact'} 
+            href="/#contact" 
             className="font-body text-muted-foreground hover:text-foreground transition-colors"
           >
             Contact
