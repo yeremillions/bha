@@ -44,6 +44,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/properties" element={<Properties />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/properties" element={<Properties />} />
               <Route path="/dashboard/properties/:id" element={<PropertyDetails />} />
