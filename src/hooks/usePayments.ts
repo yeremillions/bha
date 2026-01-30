@@ -1,77 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  initializePayment,
-  verifyPayment,
-  processCompletedPayment,
-  generatePaymentReference,
-  type PaystackConfig,
-} from '@/lib/paystackService';
+import { generatePaymentReference } from '@/lib/paystackService';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Initialize a Paystack payment
- *
- * Usage:
- * const { mutate: initPayment, isPending } = useInitializePayment();
- * initPayment({ email, amount, metadata: { booking_id, property_id } });
- */
-export const useInitializePayment = () => {
-  return useMutation({
-    mutationFn: async (config: PaystackConfig) => {
-      const result = await initializePayment(config);
-
-      if (!result.status || !result.data) {
-        throw new Error(result.message || 'Failed to initialize payment');
-      }
-
-      return result.data;
-    },
-    onSuccess: (data) => {
-      console.log('Payment initialized successfully:', data.reference);
-    },
-    onError: (error: any) => {
-      console.error('Error initializing payment:', error);
-      toast.error(error.message || 'Failed to initialize payment');
-    },
-  });
-};
-
-/**
- * Verify a Paystack payment
- *
- * Usage:
- * const { mutate: verify } = useVerifyPayment();
- * verify(reference);
- */
-export const useVerifyPayment = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (reference: string) => {
-      const result = await verifyPayment(reference);
-
-      if (!result.success) {
-        throw new Error(result.message || 'Payment verification failed');
-      }
-
-      return result.data!;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      toast.success('Payment verified successfully');
-      console.log('Payment verified:', data);
-    },
-    onError: (error: any) => {
-      console.error('Error verifying payment:', error);
-      toast.error(error.message || 'Payment verification failed');
-    },
-  });
-};
-
-/**
- * Process a completed payment
- * Updates booking status, creates transaction record
+ * Process a completed payment via Edge Function
+ * Securely verifies payment with Paystack and updates booking
  *
  * Usage:
  * const { mutate: processPayment } = useProcessPayment();
@@ -92,21 +26,30 @@ export const useProcessPayment = () => {
       propertyId: string;
       amount: number;
       reference: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }) => {
-      const result = await processCompletedPayment(
-        bookingId,
-        propertyId,
-        amount,
-        reference,
-        metadata
-      );
+      console.log('Processing payment via Edge Function:', { bookingId, reference });
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to process payment');
+      const { data, error } = await supabase.functions.invoke('verify-payment', {
+        body: {
+          reference,
+          bookingId,
+          propertyId,
+          amount,
+          metadata,
+        },
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to verify payment');
       }
 
-      return result.booking;
+      if (!data?.success) {
+        throw new Error(data?.error || 'Payment verification failed');
+      }
+
+      return data.booking;
     },
     onSuccess: (booking) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
@@ -115,7 +58,7 @@ export const useProcessPayment = () => {
       toast.success('Payment processed successfully');
       console.log('Payment processed for booking:', booking?.booking_number);
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Error processing payment:', error);
       toast.error(error.message || 'Failed to process payment');
     },
