@@ -76,15 +76,15 @@ serve(async (req) => {
     if (!response.ok) {
       console.error("Mailchimp API error:", data);
       
-      // Handle already subscribed case
+      // Handle already subscribed case - return 200 so frontend receives the message
       if (data.title === "Member Exists") {
         return new Response(
           JSON.stringify({ 
-            success: false, 
-            error: "This email is already subscribed to our newsletter!" 
+            success: true, 
+            message: "You're already subscribed to our newsletter!" 
           }),
           {
-            status: 400,
+            status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
