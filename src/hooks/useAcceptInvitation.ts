@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { TeamInvitation } from './useTeamInvitations';
 
 /**
- * Fetch invitation by token (for acceptance flow)
+ * Fetch invitation by token via edge function (secure - bypasses RLS)
+ * This prevents token enumeration attacks by not exposing the table directly
  */
 export const useInvitationByToken = (token: string | undefined) => {
   return useQuery({
@@ -14,22 +14,33 @@ export const useInvitationByToken = (token: string | undefined) => {
         throw new Error('No invitation token provided');
       }
 
-      const { data, error } = await supabase
-        .from('team_invitations')
-        .select('*')
-        .eq('invite_token', token)
-        .maybeSingle();
+      // Call edge function to validate token securely
+      const response = await fetch(
+        `https://nnrzsvtaeulxunxnbxtw.supabase.co/functions/v1/validate-invitation`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        }
+      );
 
-      if (error) {
-        console.error('Error fetching invitation:', error);
-        throw new Error(`Failed to fetch invitation: ${error.message}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to validate invitation');
       }
 
-      if (!data) {
+      if (!data.valid || !data.invitation) {
         throw new Error('Invitation not found');
       }
 
-      return data as TeamInvitation;
+      // Map the response to match TeamInvitation interface
+      return {
+        ...data.invitation,
+        invite_token: token, // Keep token for accept flow
+      } as TeamInvitation;
     },
     enabled: !!token,
     retry: false,
