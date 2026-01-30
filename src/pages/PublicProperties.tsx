@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Star, MapPin, ChevronLeft, ChevronRight, Search, SlidersHorizontal } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Star, MapPin, ChevronLeft, ChevronRight, Search, SlidersHorizontal, CalendarDays, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAvailableProperties } from '@/hooks/useAvailableProperties';
 import { useProperties } from '@/hooks/useProperties';
 import { BookingDialog } from '@/components/booking/BookingDialog';
 import { NewsletterSection } from '@/components/landing/NewsletterSection';
@@ -24,7 +25,7 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel';
 import type { Tables } from '@/integrations/supabase/types';
-import { useEffect } from 'react';
+import { format, parseISO } from 'date-fns';
 
 type Property = Tables<'properties'>;
 
@@ -203,45 +204,76 @@ const PropertyCardSkeleton = () => (
 );
 
 const PublicProperties = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [propertyType, setPropertyType] = useState('all');
 
-  const { data: properties, isLoading, error } = useProperties({
+  // Get date range from URL params
+  const checkIn = searchParams.get('checkIn') || '';
+  const checkOut = searchParams.get('checkOut') || '';
+  const hasDateFilter = Boolean(checkIn && checkOut);
+
+  // Use availability-filtered query when dates are present
+  const { data: filteredProperties, isLoading: isLoadingFiltered, error: filteredError } = useAvailableProperties({
+    checkIn: hasDateFilter ? checkIn : undefined,
+    checkOut: hasDateFilter ? checkOut : undefined,
+    search: searchQuery,
+    type: propertyType,
+    sortBy,
+  });
+
+  // Fallback to regular properties query when no dates
+  const { data: allProperties, isLoading: isLoadingAll, error: allError } = useProperties({
     status: 'available'
   });
+
+  const isLoading = hasDateFilter ? isLoadingFiltered : isLoadingAll;
+  const error = hasDateFilter ? filteredError : allError;
+  
+  // Get properties based on whether date filter is active
+  const properties = hasDateFilter ? filteredProperties : allProperties;
+
+  // Apply client-side filters only when using allProperties (no date filter)
+  const displayedProperties = hasDateFilter 
+    ? (properties || [])
+    : (properties || [])
+        .filter(property => {
+          const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            property.location.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchesType = propertyType === 'all' || property.type === propertyType;
+          return matchesSearch && matchesType;
+        })
+        .sort((a, b) => {
+          switch (sortBy) {
+            case 'price-low':
+              return a.base_price_per_night - b.base_price_per_night;
+            case 'price-high':
+              return b.base_price_per_night - a.base_price_per_night;
+            case 'rating':
+              return (b.rating || 0) - (a.rating || 0);
+            case 'featured':
+            default:
+              return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+          }
+        });
 
   const handleBookNow = (property: Property) => {
     setSelectedProperty(property);
     setBookingDialogOpen(true);
   };
 
-  // Filter and sort properties
-  const filteredProperties = properties
-    ?.filter(property => {
-      const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        property.location.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = propertyType === 'all' || property.type === propertyType;
-      return matchesSearch && matchesType;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'price-low':
-          return a.base_price_per_night - b.base_price_per_night;
-        case 'price-high':
-          return b.base_price_per_night - a.base_price_per_night;
-        case 'rating':
-          return (b.rating || 0) - (a.rating || 0);
-        case 'featured':
-        default:
-          return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-      }
-    }) || [];
+  const clearDateFilter = () => {
+    searchParams.delete('checkIn');
+    searchParams.delete('checkOut');
+    setSearchParams(searchParams);
+  };
 
-  // Get unique property types
-  const propertyTypes = [...new Set(properties?.map(p => p.type) || [])];
+  // Get unique property types from all available properties
+  const { data: allPropertiesForTypes } = useProperties({ status: 'available' });
+  const propertyTypes = [...new Set(allPropertiesForTypes?.map(p => p.type) || [])];
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -257,6 +289,32 @@ const PublicProperties = () => {
           <p className="font-body text-muted-foreground text-lg max-w-2xl mx-auto text-center mb-8">
             Browse our collection of premium apartments and book your ideal accommodation in Uyo.
           </p>
+
+          {/* Date Filter Banner */}
+          {hasDateFilter && (
+            <div className="max-w-4xl mx-auto mb-6">
+              <div className="bg-accent/10 border border-accent/20 rounded-lg px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="h-5 w-5 text-accent" />
+                  <span className="text-sm font-medium text-foreground">
+                    Showing properties available from{' '}
+                    <span className="text-accent">{format(parseISO(checkIn), 'MMM d, yyyy')}</span>
+                    {' '}to{' '}
+                    <span className="text-accent">{format(parseISO(checkOut), 'MMM d, yyyy')}</span>
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearDateFilter}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear dates
+                </Button>
+              </div>
+            </div>
+          )}
           
           {/* Search and Filter Bar */}
           <div className="max-w-4xl mx-auto bg-background rounded-xl shadow-lg p-4 md:p-6">
@@ -311,20 +369,23 @@ const PublicProperties = () => {
             <div className="text-center py-12">
               <p className="text-muted-foreground">Unable to load properties. Please try again later.</p>
             </div>
-          ) : filteredProperties.length === 0 ? (
+          ) : displayedProperties.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
-                {searchQuery || propertyType !== 'all' 
-                  ? 'No properties match your search criteria.' 
-                  : 'No properties available at the moment.'}
+                {hasDateFilter 
+                  ? 'No properties available for the selected dates.' 
+                  : searchQuery || propertyType !== 'all' 
+                    ? 'No properties match your search criteria.' 
+                    : 'No properties available at the moment.'}
               </p>
-              {(searchQuery || propertyType !== 'all') && (
+              {(searchQuery || propertyType !== 'all' || hasDateFilter) && (
                 <Button 
                   variant="outline" 
                   className="mt-4"
                   onClick={() => {
                     setSearchQuery('');
                     setPropertyType('all');
+                    if (hasDateFilter) clearDateFilter();
                   }}
                 >
                   Clear Filters
@@ -334,10 +395,11 @@ const PublicProperties = () => {
           ) : (
             <>
               <p className="text-muted-foreground mb-6">
-                Showing {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'}
+                Showing {displayedProperties.length} {displayedProperties.length === 1 ? 'property' : 'properties'}
+                {hasDateFilter && ' available for your dates'}
               </p>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredProperties.map((property) => (
+                {displayedProperties.map((property) => (
                   <PropertyCard 
                     key={property.id} 
                     property={property} 
@@ -362,6 +424,8 @@ const PublicProperties = () => {
           open={bookingDialogOpen}
           onOpenChange={setBookingDialogOpen}
           property={selectedProperty}
+          initialCheckIn={hasDateFilter ? checkIn : undefined}
+          initialCheckOut={hasDateFilter ? checkOut : undefined}
         />
       )}
     </div>
