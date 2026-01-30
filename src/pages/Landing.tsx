@@ -212,7 +212,15 @@ const Landing = () => {
                       className="bg-background"
                     />
                   </div>
-                  <Button className="bg-accent text-accent-foreground hover:bg-accent/90 h-10">
+                  <Button 
+                    className="bg-accent text-accent-foreground hover:bg-accent/90 h-10"
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      if (checkIn) params.set('checkIn', checkIn);
+                      if (checkOut) params.set('checkOut', checkOut);
+                      navigate(`/properties${params.toString() ? `?${params.toString()}` : ''}`);
+                    }}
+                  >
                     <Search className="h-4 w-4 mr-2" />
                     Check Availability
                   </Button>
