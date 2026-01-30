@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { 
@@ -35,6 +37,36 @@ import sarahEzeHeadshot from '@/assets/sarah-eze-headshot.jpg';
 const Landing = () => {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleNewsletterSubscribe = async () => {
+    if (!newsletterEmail || !newsletterEmail.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setIsSubscribing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('subscribe-newsletter', {
+        body: { email: newsletterEmail }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(data.message || 'Successfully subscribed!');
+        setNewsletterEmail('');
+      } else {
+        toast.error(data?.error || 'Failed to subscribe');
+      }
+    } catch (error: any) {
+      console.error('Newsletter subscription error:', error);
+      toast.error(error.message || 'Failed to subscribe to newsletter');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   const trustBadges = [
     { icon: Shield, label: 'Verified Properties' },
@@ -477,9 +509,17 @@ const Landing = () => {
                 type="email" 
                 placeholder="Enter your email"
                 className="flex-1 bg-background"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleNewsletterSubscribe()}
+                disabled={isSubscribing}
               />
-              <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-                Subscribe
+              <Button 
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+                onClick={handleNewsletterSubscribe}
+                disabled={isSubscribing}
+              >
+                {isSubscribing ? 'Subscribing...' : 'Subscribe'}
               </Button>
             </div>
           </div>
