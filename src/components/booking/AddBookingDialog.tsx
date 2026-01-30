@@ -268,7 +268,7 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto [&_.rdp]:overflow-visible">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             {step === 'property' && 'Select Property'}
@@ -362,13 +362,14 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
                       {checkIn ? format(checkIn, 'MMM d, yyyy') : 'Select date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={4}>
                     <Calendar
                       mode="single"
                       selected={checkIn}
                       onSelect={(date) => handleDateSelect(date, 'checkIn')}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -389,13 +390,14 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
                       {checkOut ? format(checkOut, 'MMM d, yyyy') : 'Select date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={4}>
                     <Calendar
                       mode="single"
                       selected={checkOut}
                       onSelect={(date) => handleDateSelect(date, 'checkOut')}
                       disabled={(date) => date <= (checkIn || new Date())}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
