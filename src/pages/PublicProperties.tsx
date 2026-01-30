@@ -244,12 +244,12 @@ const PublicProperties = () => {
   const propertyTypes = [...new Set(properties?.map(p => p.type) || [])];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-20">
       {/* Header */}
       <Header />
 
       {/* Hero Section */}
-      <section className="bg-primary/5 py-12 lg:py-16 pt-28">
+      <section className="bg-primary/5 py-12 lg:py-16">
         <div className="container mx-auto px-6">
           <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-center">
             Find Your Perfect Stay
