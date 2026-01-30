@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,6 +29,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { FeaturedApartments } from '@/components/landing/FeaturedApartments';
+import { AvailabilityResults } from '@/components/landing/AvailabilityResults';
 import { NewsletterSection } from '@/components/landing/NewsletterSection';
 import { Footer } from '@/components/landing/Footer';
 import { Header } from '@/components/landing/Header';
@@ -39,7 +40,24 @@ const Landing = () => {
   const navigate = useNavigate();
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
+  const resultsRef = useRef<HTMLElement>(null);
 
+  const handleCheckAvailability = () => {
+    if (checkIn && checkOut) {
+      setHasSearched(true);
+      // Scroll to results after a short delay for the component to render
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setHasSearched(false);
+    setCheckIn('');
+    setCheckOut('');
+  };
   const trustBadges = [
     { icon: Shield, label: 'Verified Properties' },
     { icon: Lock, label: 'Secure Payments' },
@@ -214,12 +232,8 @@ const Landing = () => {
                   </div>
                   <Button 
                     className="bg-accent text-accent-foreground hover:bg-accent/90 h-10"
-                    onClick={() => {
-                      const params = new URLSearchParams();
-                      if (checkIn) params.set('checkIn', checkIn);
-                      if (checkOut) params.set('checkOut', checkOut);
-                      navigate(`/properties${params.toString() ? `?${params.toString()}` : ''}`);
-                    }}
+                    onClick={handleCheckAvailability}
+                    disabled={!checkIn || !checkOut}
                   >
                     <Search className="h-4 w-4 mr-2" />
                     Check Availability
@@ -278,6 +292,16 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* Availability Results - shows when user searches */}
+      {hasSearched && checkIn && checkOut && (
+        <AvailabilityResults 
+          ref={resultsRef}
+          checkIn={checkIn} 
+          checkOut={checkOut} 
+          onClear={handleClearSearch}
+        />
+      )}
 
       {/* Featured Apartments - Now uses real database data */}
       <FeaturedApartments />
