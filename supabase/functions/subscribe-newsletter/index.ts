@@ -8,6 +8,8 @@ const corsHeaders = {
 
 interface SubscribeRequest {
   email: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 serve(async (req) => {
@@ -31,7 +33,7 @@ serve(async (req) => {
       throw new Error("MAILCHIMP_SERVER_PREFIX is not configured");
     }
 
-    const { email }: SubscribeRequest = await req.json();
+    const { email, firstName, lastName }: SubscribeRequest = await req.json();
 
     if (!email || !email.includes("@")) {
       return new Response(
@@ -43,9 +45,22 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Subscribing email: ${email} to Mailchimp list: ${MAILCHIMP_LIST_ID}`);
+    console.log(`Subscribing email: ${email} (${firstName} ${lastName}) to Mailchimp list: ${MAILCHIMP_LIST_ID}`);
 
     const mailchimpUrl = `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members`;
+
+    const requestBody: Record<string, unknown> = {
+      email_address: email,
+      status: "subscribed",
+    };
+
+    // Add merge fields if first/last name provided
+    if (firstName || lastName) {
+      requestBody.merge_fields = {
+        FNAME: firstName || "",
+        LNAME: lastName || "",
+      };
+    }
 
     const response = await fetch(mailchimpUrl, {
       method: "POST",
@@ -53,10 +68,7 @@ serve(async (req) => {
         Authorization: `apikey ${MAILCHIMP_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        email_address: email,
-        status: "subscribed",
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
