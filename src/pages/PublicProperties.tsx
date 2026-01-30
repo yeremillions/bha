@@ -16,6 +16,7 @@ import { useProperties } from '@/hooks/useProperties';
 import { BookingDialog } from '@/components/booking/BookingDialog';
 import { NewsletterSection } from '@/components/landing/NewsletterSection';
 import { Footer } from '@/components/landing/Footer';
+import { Header } from '@/components/landing/Header';
 import {
   Carousel,
   CarouselContent,
@@ -245,27 +246,10 @@ const PublicProperties = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground py-4">
-        <div className="container mx-auto px-6 flex items-center justify-between">
-          <Link to="/" className="font-display text-2xl font-bold">
-            Brooklyn Hills
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="font-body text-sm hover:text-accent transition-colors">
-              Home
-            </Link>
-            <Link to="/properties" className="font-body text-sm text-accent">
-              Properties
-            </Link>
-            <Link to="/auth" className="font-body text-sm hover:text-accent transition-colors">
-              Sign In
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
-      <section className="bg-primary/5 py-12 lg:py-16">
+      <section className="bg-primary/5 py-12 lg:py-16 pt-28">
         <div className="container mx-auto px-6">
           <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-center">
             Find Your Perfect Stay
