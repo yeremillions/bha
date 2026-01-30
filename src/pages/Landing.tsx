@@ -38,6 +38,8 @@ const Landing = () => {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterFirstName, setNewsletterFirstName] = useState('');
+  const [newsletterLastName, setNewsletterLastName] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   const handleNewsletterSubscribe = async () => {
@@ -45,11 +47,23 @@ const Landing = () => {
       toast.error('Please enter a valid email address');
       return;
     }
+    if (!newsletterFirstName.trim()) {
+      toast.error('Please enter your first name');
+      return;
+    }
+    if (!newsletterLastName.trim()) {
+      toast.error('Please enter your last name');
+      return;
+    }
 
     setIsSubscribing(true);
     try {
       const { data, error } = await supabase.functions.invoke('subscribe-newsletter', {
-        body: { email: newsletterEmail }
+        body: { 
+          email: newsletterEmail,
+          firstName: newsletterFirstName.trim(),
+          lastName: newsletterLastName.trim()
+        }
       });
 
       if (error) throw error;
@@ -57,6 +71,8 @@ const Landing = () => {
       if (data?.success) {
         toast.success(data.message || 'Successfully subscribed!');
         setNewsletterEmail('');
+        setNewsletterFirstName('');
+        setNewsletterLastName('');
       } else {
         toast.error(data?.error || 'Failed to subscribe');
       }
@@ -504,23 +520,43 @@ const Landing = () => {
             <p className="font-body text-muted-foreground mb-8">
               Get exclusive deals, new property listings, and travel tips delivered to your inbox.
             </p>
-            <div className="flex gap-3">
-              <Input 
-                type="email" 
-                placeholder="Enter your email"
-                className="flex-1 bg-background"
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleNewsletterSubscribe()}
-                disabled={isSubscribing}
-              />
-              <Button 
-                className="bg-accent text-accent-foreground hover:bg-accent/90"
-                onClick={handleNewsletterSubscribe}
-                disabled={isSubscribing}
-              >
-                {isSubscribing ? 'Subscribing...' : 'Subscribe'}
-              </Button>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <Input 
+                  type="text" 
+                  placeholder="First name"
+                  className="bg-background"
+                  value={newsletterFirstName}
+                  onChange={(e) => setNewsletterFirstName(e.target.value)}
+                  disabled={isSubscribing}
+                />
+                <Input 
+                  type="text" 
+                  placeholder="Last name"
+                  className="bg-background"
+                  value={newsletterLastName}
+                  onChange={(e) => setNewsletterLastName(e.target.value)}
+                  disabled={isSubscribing}
+                />
+              </div>
+              <div className="flex gap-3">
+                <Input 
+                  type="email" 
+                  placeholder="Enter your email"
+                  className="flex-1 bg-background"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleNewsletterSubscribe()}
+                  disabled={isSubscribing}
+                />
+                <Button 
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  onClick={handleNewsletterSubscribe}
+                  disabled={isSubscribing}
+                >
+                  {isSubscribing ? 'Subscribing...' : 'Subscribe'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
