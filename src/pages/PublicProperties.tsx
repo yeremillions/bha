@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/select';
 import { useProperties } from '@/hooks/useProperties';
 import { BookingDialog } from '@/components/booking/BookingDialog';
+import { NewsletterSection } from '@/components/landing/NewsletterSection';
+import { Footer } from '@/components/landing/Footer';
 import {
   Carousel,
   CarouselContent,
@@ -364,14 +366,11 @@ const PublicProperties = () => {
         </div>
       </section>
 
+      {/* Newsletter Section */}
+      <NewsletterSection />
+
       {/* Footer */}
-      <footer className="bg-primary text-primary-foreground py-8">
-        <div className="container mx-auto px-6 text-center">
-          <p className="font-body text-sm text-primary-foreground/70">
-            © {new Date().getFullYear()} Brooklyn Hills Apartments. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Booking Dialog */}
       {selectedProperty && (
