@@ -211,9 +211,6 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
     setStep('success');
   };
 
-  const handleSkipPayment = () => {
-    setStep('success');
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -565,15 +562,8 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
               className="w-full"
             />
 
-            <Button
-              variant="ghost"
-              className="w-full text-muted-foreground"
-              onClick={handleSkipPayment}
-            >
-              Pay Later
-            </Button>
             <p className="text-xs text-center text-muted-foreground">
-              You can pay later, but your booking will remain pending until payment is received.
+              Your booking will be confirmed once payment is complete.
             </p>
           </div>
         )}
