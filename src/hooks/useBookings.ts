@@ -319,11 +319,18 @@ export const calculateBookingPrice = async ({
 // MUTATION HOOKS
 // ============================================================================
 
+interface CreateBookingOptions {
+  /** Skip toast notification and email (e.g., for online bookings that require payment first) */
+  skipNotifications?: boolean;
+}
+
 /**
  * Create a new booking
+ * @param options.skipNotifications - If true, suppresses toast and email (useful for payment-first flows)
  */
-export const useCreateBooking = () => {
+export const useCreateBooking = (options?: CreateBookingOptions) => {
   const queryClient = useQueryClient();
+  const { skipNotifications = false } = options || {};
 
   return useMutation({
     mutationFn: async (newBooking: NewBooking) => {
@@ -368,6 +375,13 @@ export const useCreateBooking = () => {
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
+      
+      // Skip notifications for payment-first flows (online self-booking)
+      if (skipNotifications) {
+        console.log('Booking created (awaiting payment):', data.booking_number);
+        return;
+      }
+
       toast({
         title: 'Booking created',
         description: `Booking ${data.booking_number} has been created successfully.`,
