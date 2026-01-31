@@ -294,4 +294,17 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Safari and Chrome */
   }
+
+  /* Paystack popup overlay - ensure it's above all dialogs */
+  .paystack-inline-embed,
+  .paystack-inline-embed ~ div,
+  [class*="paystack"],
+  iframe[src*="paystack"] {
+    z-index: 99999 !important;
+  }
+
+  /* Paystack overlay container */
+  body > div[style*="z-index"]:has(iframe[src*="paystack"]) {
+    z-index: 99999 !important;
+  }
 }

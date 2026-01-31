@@ -73,9 +73,27 @@ export const PaymentDialog = ({
 
   const isPaid = booking.payment_status === 'paid';
 
+  // Prevent dialog from closing when interacting with Paystack popup
+  const handlePointerDownOutside = (e: Event) => {
+    // Prevent closing when clicking outside as user might be interacting with Paystack popup
+    if (!isPaid) {
+      e.preventDefault();
+    }
+  };
+
+  const handleInteractOutside = (e: Event) => {
+    if (!isPaid) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        className="sm:max-w-[500px]"
+        onPointerDownOutside={handlePointerDownOutside}
+        onInteractOutside={handleInteractOutside}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Payment for Booking</span>
