@@ -61,7 +61,8 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
 
-  const createBooking = useCreateBooking();
+  // Skip notifications for online booking - wait for payment confirmation
+  const createBooking = useCreateBooking({ skipNotifications: true });
 
   // Track if we've already auto-advanced for this dialog session
   const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
