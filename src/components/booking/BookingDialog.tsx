@@ -245,28 +245,9 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   const canProceedFromDates = checkIn && checkOut && !availabilityError && priceBreakdown && !isCheckingAvailability;
   const canProceedFromGuestInfo = guestInfo.fullName && guestInfo.email && guestInfo.phone;
 
-  // Prevent dialog from closing when interacting with Paystack popup
-  const handlePointerDownOutside = (e: Event) => {
-    // During payment step, prevent closing when clicking outside
-    // as user might be interacting with Paystack popup
-    if (step === 'payment') {
-      e.preventDefault();
-    }
-  };
-
-  const handleInteractOutside = (e: Event) => {
-    if (step === 'payment') {
-      e.preventDefault();
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto [&_.rdp]:overflow-visible"
-        onPointerDownOutside={handlePointerDownOutside}
-        onInteractOutside={handleInteractOutside}
-      >
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto [&_.rdp]:overflow-visible">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             {step === 'dates' && 'Select Your Dates'}
