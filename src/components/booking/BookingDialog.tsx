@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { format, addDays, differenceInDays } from 'date-fns';
-import { Calendar as CalendarIcon, Users, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Loader2, Check, AlertCircle, CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { PaystackButton } from '@/components/payment/PaystackButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,7 +25,7 @@ interface BookingDialogProps {
   initialCheckOut?: string;
 }
 
-type BookingStep = 'dates' | 'guest-info' | 'review' | 'success';
+type BookingStep = 'dates' | 'guest-info' | 'review' | 'payment' | 'success';
 
 interface GuestInfo {
   fullName: string;
@@ -58,6 +59,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
+  const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
 
   const createBooking = useCreateBooking();
 
@@ -73,6 +75,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
         setAvailabilityError(null);
         setPriceBreakdown(null);
         setBookingNumber(null);
+        setCreatedBookingId(null);
       }, 300);
     } else {
       // Set initial dates when dialog opens
@@ -197,10 +200,19 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
       });
 
       setBookingNumber(booking.booking_number);
-      setStep('success');
+      setCreatedBookingId(booking.id);
+      setStep('payment');
     } catch (error) {
       console.error('Error creating booking:', error);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setStep('success');
+  };
+
+  const handleSkipPayment = () => {
+    setStep('success');
   };
 
   const formatCurrency = (amount: number) => {
@@ -222,10 +234,12 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
             {step === 'dates' && 'Select Your Dates'}
             {step === 'guest-info' && 'Guest Information'}
             {step === 'review' && 'Review Your Booking'}
+            {step === 'payment' && 'Complete Payment'}
             {step === 'success' && 'Booking Confirmed!'}
           </DialogTitle>
           <DialogDescription>
-            {step !== 'success' && property.name}
+            {step !== 'success' && step !== 'payment' && property.name}
+            {step === 'payment' && `Booking ${bookingNumber}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -507,6 +521,60 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
                 )}
               </Button>
             </div>
+          </div>
+        )}
+
+        {/* Step: Payment */}
+        {step === 'payment' && priceBreakdown && createdBookingId && (
+          <div className="py-8 space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mb-4">
+                <CreditCard className="h-8 w-8 text-accent" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Secure Payment</h3>
+              <p className="text-muted-foreground text-sm">
+                Complete your booking by paying securely with Paystack
+              </p>
+            </div>
+
+            <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Property</span>
+                <span className="font-medium">{property.name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Dates</span>
+                <span className="font-medium">
+                  {checkIn && format(checkIn, 'MMM d')} - {checkOut && format(checkOut, 'MMM d, yyyy')}
+                </span>
+              </div>
+              <div className="flex justify-between font-semibold pt-2 border-t text-lg">
+                <span>Total</span>
+                <span>{formatCurrency(priceBreakdown.totalAmount)}</span>
+              </div>
+            </div>
+
+            <PaystackButton
+              bookingId={createdBookingId}
+              propertyId={property.id}
+              customerEmail={guestInfo.email}
+              customerName={guestInfo.fullName}
+              amount={priceBreakdown.totalAmount}
+              bookingNumber={bookingNumber || ''}
+              onSuccess={handlePaymentSuccess}
+              className="w-full"
+            />
+
+            <Button
+              variant="ghost"
+              className="w-full text-muted-foreground"
+              onClick={handleSkipPayment}
+            >
+              Pay Later
+            </Button>
+            <p className="text-xs text-center text-muted-foreground">
+              You can pay later, but your booking will remain pending until payment is received.
+            </p>
           </div>
         )}
 
