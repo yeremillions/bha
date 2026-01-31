@@ -597,9 +597,9 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
             </div>
             
             <div>
-              <h3 className="text-xl font-semibold mb-2">Booking Confirmed!</h3>
+              <h3 className="text-xl font-semibold mb-2">Payment Successful!</h3>
               <p className="text-muted-foreground">
-                Your reservation has been successfully created.
+                Your booking has been confirmed and payment received.
               </p>
             </div>
 
