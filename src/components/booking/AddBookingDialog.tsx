@@ -54,6 +54,8 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
   });
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
@@ -137,10 +139,18 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
       if (date && (!checkOut || checkOut <= date)) {
         setCheckOut(addDays(date, 1));
       }
+      // Close check-in popover and open check-out popover
+      setCheckInOpen(false);
+      setTimeout(() => setCheckOutOpen(true), 100);
     } else {
       setCheckOut(date);
+      setCheckOutOpen(false);
     }
   };
+
+  // Get today at midnight for comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const handlePropertySelect = (propertyId: string) => {
     const property = properties.find(p => p.id === propertyId);
@@ -349,7 +359,7 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Check-in Date</Label>
-                <Popover>
+                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -367,7 +377,7 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
                       mode="single"
                       selected={checkIn}
                       onSelect={(date) => handleDateSelect(date, 'checkIn')}
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      disabled={(date) => date < today}
                       initialFocus
                       className="pointer-events-auto"
                     />
@@ -377,7 +387,7 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
 
               <div className="space-y-2">
                 <Label>Check-out Date</Label>
-                <Popover>
+                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -395,7 +405,7 @@ export const AddBookingDialog = ({ open, onOpenChange }: AddBookingDialogProps) 
                       mode="single"
                       selected={checkOut}
                       onSelect={(date) => handleDateSelect(date, 'checkOut')}
-                      disabled={(date) => date <= (checkIn || new Date())}
+                      disabled={(date) => date <= (checkIn || today)}
                       initialFocus
                       className="pointer-events-auto"
                     />
