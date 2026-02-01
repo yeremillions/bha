@@ -50,7 +50,15 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
 
     // Check if Paystack is properly configured
     const publicKey = getPaystackPublicKey();
-    const isConfigured = !!publicKey;
+    const isValidKeyFormat = publicKey && (publicKey.startsWith('pk_test_') || publicKey.startsWith('pk_live_'));
+    const isConfigured = !!publicKey && isValidKeyFormat;
+
+    // Warn if key format is invalid
+    useEffect(() => {
+      if (publicKey && !isValidKeyFormat) {
+        console.error('Invalid Paystack public key format. Key should start with pk_test_ or pk_live_');
+      }
+    }, [publicKey, isValidKeyFormat]);
 
     // Check Paystack script availability
     useEffect(() => {
@@ -60,6 +68,19 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
       }, 100);
       return () => clearTimeout(timer);
     }, []);
+
+    // Debug: Log configuration on mount and when values change
+    useEffect(() => {
+      console.log('PaystackButton config:', {
+        publicKey: publicKey ? `${publicKey.slice(0, 15)}...` : 'MISSING',
+        email: customerEmail,
+        amount: amount,
+        amountInKobo: Math.round(amount * 100),
+        reference,
+        bookingId,
+        isConfigured,
+      });
+    }, [publicKey, customerEmail, amount, reference, bookingId, isConfigured]);
 
     // Paystack configuration
     const config = {
@@ -139,7 +160,10 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
       if (!isConfigured) errors.push('Payment system not configured');
       if (!customerEmail) errors.push('Customer email required');
       if (!customerName) errors.push('Customer name required');
-      if (amount <= 0) errors.push('Invalid payment amount');
+      if (!amount || amount <= 0 || isNaN(amount)) errors.push('Invalid payment amount');
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (customerEmail && !emailRegex.test(customerEmail)) errors.push('Invalid email format');
       return errors;
     }, [isConfigured, customerEmail, customerName, amount]);
 
@@ -164,15 +188,30 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
         return;
       }
 
+      // Log payment attempt for debugging
+      console.log('Initiating Paystack payment with config:', {
+        reference,
+        email: customerEmail,
+        amount: Math.round(amount * 100),
+        publicKey: publicKey ? `${publicKey.slice(0, 20)}...` : 'MISSING',
+      });
+
       // Initialize payment popup
       try {
         initializePayment({
           onSuccess: handlePaymentSuccess,
           onClose: handlePaymentClose,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to initialize Paystack:', error);
-        toast.error('Failed to open payment window. Please try again.');
+        // Provide more specific error messages
+        if (error.message?.includes('timeout') || error.message?.includes('Timeout')) {
+          toast.error('Payment service timed out. Please check your internet connection and try again.');
+        } else if (error.message?.includes('key')) {
+          toast.error('Payment configuration error. Please contact support.');
+        } else {
+          toast.error('Failed to open payment window. Please try again.');
+        }
       }
     };
 
