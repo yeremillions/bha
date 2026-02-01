@@ -247,7 +247,27 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto [&_.rdp]:overflow-visible">
+      <DialogContent 
+        className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto [&_.rdp]:overflow-visible"
+        onPointerDownOutside={(e) => {
+          // Prevent dialog from closing when clicking Paystack popup overlay
+          if (step === 'payment') {
+            e.preventDefault();
+          }
+        }}
+        onInteractOutside={(e) => {
+          // Prevent dialog from closing when interacting with Paystack popup
+          if (step === 'payment') {
+            e.preventDefault();
+          }
+        }}
+        // Disable focus trap during payment step to allow Paystack popup to receive focus
+        onOpenAutoFocus={(e) => {
+          if (step === 'payment') {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             {step === 'dates' && 'Select Your Dates'}
