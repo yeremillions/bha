@@ -294,4 +294,13 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Safari and Chrome */
   }
+
+  /* Paystack popup z-index override to ensure it appears above Radix dialogs */
+  iframe[src*="paystack"],
+  .paystack-checkout,
+  [id^="paystack"],
+  .paystack-inline-checkout,
+  div[style*="paystack"] {
+    z-index: 999999 !important;
+  }
 }
