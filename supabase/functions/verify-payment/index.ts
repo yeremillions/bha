@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     }
 
     // Create transaction record
-    const { error: transactionError } = await supabase
+    const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
       .insert({
         transaction_type: "income",
@@ -153,11 +153,15 @@ Deno.serve(async (req) => {
           paystack_channel: paymentData.channel,
           customer_email: paymentData.customer?.email,
         },
-      });
+      })
+      .select()
+      .single();
 
+    let transactionWarning: string | null = null;
     if (transactionError) {
       console.error("Error creating transaction:", transactionError);
-      // Continue anyway - payment was successful
+      transactionWarning = `Transaction record not created: ${transactionError.message}`;
+      // Continue - payment was successful, but track the warning
     }
 
     // Update booking payment status
@@ -190,11 +194,13 @@ Deno.serve(async (req) => {
         message: "Payment verified and processed successfully",
         booking: updatedBooking,
         transaction: {
+          id: transaction?.id,
           reference: reference,
           amount: amount,
           channel: paymentData.channel,
           paid_at: paymentData.paid_at,
         },
+        warning: transactionWarning,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
