@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import { useState, forwardRef, useMemo } from 'react';
 import { usePaystackPayment } from 'react-paystack';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Loader2 } from 'lucide-react';
@@ -44,35 +44,41 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
     const [isProcessing, setIsProcessing] = useState(false);
     const { mutate: processPayment } = useProcessPayment();
 
-    // Generate unique payment reference
-    const reference = generatePaymentReference(bookingId);
+    // Generate unique payment reference - memoized to prevent regeneration on re-renders
+    const reference = useMemo(
+      () => generatePaymentReference(bookingId),
+      [bookingId]
+    );
 
-    // Paystack configuration
-    const config = {
-      reference,
-      email: customerEmail,
-      amount: Math.round(amount * 100), // Convert Naira to kobo
-      publicKey: getPaystackPublicKey(),
-      metadata: {
-        booking_id: bookingId,
-        property_id: propertyId,
-        booking_number: bookingNumber,
-        customer_name: customerName,
-        custom_fields: [
-          {
-            display_name: 'Booking Number',
-            variable_name: 'booking_number',
-            value: bookingNumber,
-          },
-          {
-            display_name: 'Customer Name',
-            variable_name: 'customer_name',
-            value: customerName,
-          },
-        ],
-      },
-      channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'] as any,
-    };
+    // Paystack configuration - memoized for stable reference
+    const config = useMemo(
+      () => ({
+        reference,
+        email: customerEmail,
+        amount: Math.round(amount * 100), // Convert Naira to kobo
+        publicKey: getPaystackPublicKey(),
+        metadata: {
+          booking_id: bookingId,
+          property_id: propertyId,
+          booking_number: bookingNumber,
+          customer_name: customerName,
+          custom_fields: [
+            {
+              display_name: 'Booking Number',
+              variable_name: 'booking_number',
+              value: bookingNumber,
+            },
+            {
+              display_name: 'Customer Name',
+              variable_name: 'customer_name',
+              value: customerName,
+            },
+          ],
+        },
+        channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'] as any,
+      }),
+      [reference, customerEmail, amount, bookingId, propertyId, bookingNumber, customerName]
+    );
 
     // Payment success handler
     const handlePaymentSuccess = (paystackResponse: any) => {

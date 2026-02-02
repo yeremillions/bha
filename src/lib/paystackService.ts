@@ -175,11 +175,10 @@ export const createPaymentTransaction = async (
         amount: amount,
         payment_method: 'paystack',
         booking_id: bookingId,
-        property_id: propertyId,
         description: `Payment for booking ${booking?.booking_number || bookingId} - ${property?.name || 'Property'}`,
-        reference_number: reference,
+        payment_reference: reference,
         metadata: metadata,
-        transaction_date: new Date().toISOString(),
+        status: 'completed',
       })
       .select()
       .single();

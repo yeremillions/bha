@@ -49,14 +49,22 @@ export const useProcessPayment = () => {
         throw new Error(data?.error || 'Payment verification failed');
       }
 
-      return data.booking;
+      // Log warning if transaction creation had issues
+      if (data?.warning) {
+        console.warn('Payment warning:', data.warning);
+      }
+
+      return { booking: data.booking, warning: data.warning };
     },
-    onSuccess: (booking) => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['booking', booking?.id] });
+      queryClient.invalidateQueries({ queryKey: ['booking', result?.booking?.id] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Payment processed successfully');
-      console.log('Payment processed for booking:', booking?.booking_number);
+      if (result?.warning) {
+        toast.warning(result.warning);
+      }
+      console.log('Payment processed for booking:', result?.booking?.booking_number);
     },
     onError: (error: Error) => {
       console.error('Error processing payment:', error);
