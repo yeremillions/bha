@@ -47,6 +47,19 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
     // Generate unique payment reference
     const reference = generatePaymentReference(bookingId);
 
+    // Debug: Log configuration on mount and when values change
+    useEffect(() => {
+      console.log('PaystackButton config:', {
+        publicKey: publicKey ? `${publicKey.slice(0, 15)}...` : 'MISSING',
+        email: customerEmail,
+        amount: amount,
+        amountInKobo: Math.round(amount * 100),
+        reference,
+        bookingId,
+        isConfigured,
+      });
+    }, [publicKey, customerEmail, amount, reference, bookingId, isConfigured]);
+
     // Paystack configuration
     const config = {
       reference,
@@ -137,6 +150,14 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
         toast.error('Invalid payment amount');
         return;
       }
+
+      // Log payment attempt for debugging
+      console.log('Initiating Paystack payment with config:', {
+        reference,
+        email: customerEmail,
+        amount: Math.round(amount * 100),
+        publicKey: publicKey ? `${publicKey.slice(0, 20)}...` : 'MISSING',
+      });
 
       // Initialize payment popup
       initializePayment({
