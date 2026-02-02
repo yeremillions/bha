@@ -50,13 +50,15 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
       [bookingId]
     );
 
+    const publicKey = getPaystackPublicKey();
+
     // Paystack configuration - memoized for stable reference
     const config = useMemo(
       () => ({
         reference,
         email: customerEmail,
         amount: Math.round(amount * 100), // Convert Naira to kobo
-        publicKey: getPaystackPublicKey(),
+        publicKey,
         metadata: {
           booking_id: bookingId,
           property_id: propertyId,
@@ -75,10 +77,20 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
             },
           ],
         },
-        channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'] as any,
+        // Use only widely-supported payment channels to avoid timeout issues
+        channels: ['card', 'bank', 'ussd', 'bank_transfer'] as any,
       }),
-      [reference, customerEmail, amount, bookingId, propertyId, bookingNumber, customerName]
+      [reference, customerEmail, amount, publicKey, bookingId, propertyId, bookingNumber, customerName]
     );
+
+    // Debug: Log configuration on mount
+    console.log('PaystackButton config:', {
+      reference: config.reference,
+      email: config.email,
+      amount: config.amount,
+      publicKey: config.publicKey ? `${config.publicKey.substring(0, 10)}...` : 'MISSING',
+      channels: config.channels,
+    });
 
     // Payment success handler
     const handlePaymentSuccess = (paystackResponse: any) => {
@@ -144,11 +156,23 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
         return;
       }
 
-      // Initialize payment popup
-      initializePayment({
-        onSuccess: handlePaymentSuccess,
-        onClose: handlePaymentClose,
+      console.log('Initiating Paystack payment with:', {
+        reference: config.reference,
+        email: customerEmail,
+        amount: config.amount,
+        amountInNaira: amount,
       });
+
+      // Initialize payment popup
+      try {
+        initializePayment({
+          onSuccess: handlePaymentSuccess,
+          onClose: handlePaymentClose,
+        });
+      } catch (error) {
+        console.error('Error initializing Paystack payment:', error);
+        toast.error('Failed to initialize payment. Please try again.');
+      }
     };
 
     return (
