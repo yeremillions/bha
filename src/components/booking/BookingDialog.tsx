@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { format, addDays, differenceInDays } from 'date-fns';
 import { Calendar as CalendarIcon, Users, Loader2, Check, AlertCircle, CreditCard } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogPortal, DialogOverlay } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 import { PaystackButton } from '@/components/payment/PaystackButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +58,8 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   });
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
@@ -154,10 +158,18 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
       if (date && (!checkOut || checkOut <= date)) {
         setCheckOut(addDays(date, 1));
       }
+      // Close check-in popover and open check-out popover
+      setCheckInOpen(false);
+      setTimeout(() => setCheckOutOpen(true), 100);
     } else {
       setCheckOut(date);
+      setCheckOutOpen(false);
     }
   };
+
+  // Get today at midnight for comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const handleNextStep = () => {
     if (step === 'dates') setStep('guest-info');
@@ -245,28 +257,35 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   const canProceedFromDates = checkIn && checkOut && !availabilityError && priceBreakdown && !isCheckingAvailability;
   const canProceedFromGuestInfo = guestInfo.fullName && guestInfo.email && guestInfo.phone;
 
-  // Prevent dialog from closing when interacting with Paystack popup
-  const handlePointerDownOutside = (e: Event) => {
-    // During payment step, prevent closing when clicking outside
-    // as user might be interacting with Paystack popup
-    if (step === 'payment') {
-      e.preventDefault();
-    }
-  };
-
-  const handleInteractOutside = (e: Event) => {
-    if (step === 'payment') {
-      e.preventDefault();
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto [&_.rdp]:overflow-visible"
-        onPointerDownOutside={handlePointerDownOutside}
-        onInteractOutside={handleInteractOutside}
-      >
+    <Dialog open={open} onOpenChange={step === 'payment' ? undefined : onOpenChange}>
+      <DialogPortal>
+        {/* Skip overlay entirely during payment to let Paystack's overlay take over */}
+        {step !== 'payment' && (
+          <DialogOverlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        )}
+        <DialogPrimitive.Content 
+          className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg sm:max-w-[500px] max-h-[90vh] overflow-y-auto [&_.rdp]:overflow-visible"
+          onPointerDownOutside={(e) => {
+            if (step === 'payment') {
+              e.preventDefault();
+            }
+          }}
+          onInteractOutside={(e) => {
+            if (step === 'payment') {
+              e.preventDefault();
+            }
+          }}
+          onOpenAutoFocus={(e) => {
+            if (step === 'payment') {
+              e.preventDefault();
+            }
+          }}
+        >
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-foreground">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             {step === 'dates' && 'Select Your Dates'}
@@ -287,7 +306,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Check-in Date</Label>
-                <Popover>
+                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -305,7 +324,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
                       mode="single"
                       selected={checkIn}
                       onSelect={(date) => handleDateSelect(date, 'checkIn')}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date) => date < today}
                       initialFocus
                       className="pointer-events-auto"
                     />
@@ -315,7 +334,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
 
               <div className="space-y-2">
                 <Label>Check-out Date</Label>
-                <Popover>
+                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -333,7 +352,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
                       mode="single"
                       selected={checkOut}
                       onSelect={(date) => handleDateSelect(date, 'checkOut')}
-                      disabled={(date) => date <= (checkIn || new Date())}
+                      disabled={(date) => date <= (checkIn || today)}
                       initialFocus
                       className="pointer-events-auto"
                     />
@@ -639,7 +658,8 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
             </Button>
           </div>
         )}
-      </DialogContent>
+      </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   );
 };

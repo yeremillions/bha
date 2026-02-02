@@ -1,11 +1,13 @@
 import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Building2, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   RefreshCw, 
   Zap, 
   Percent, 
@@ -33,29 +35,53 @@ import { AvailabilityResults } from '@/components/landing/AvailabilityResults';
 import { NewsletterSection } from '@/components/landing/NewsletterSection';
 import { Footer } from '@/components/landing/Footer';
 import { Header } from '@/components/landing/Header';
+import { cn } from '@/lib/utils';
 import davidOkonkwoHeadshot from '@/assets/david-okonkwo-headshot.jpg';
 import sarahEzeHeadshot from '@/assets/sarah-eze-headshot.jpg';
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState<Date | undefined>();
+  const [checkOut, setCheckOut] = useState<Date | undefined>();
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
+
+  // Get today at midnight for comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const handleCheckAvailability = () => {
     if (checkIn && checkOut) {
       const params = new URLSearchParams();
-      params.set('checkIn', checkIn);
-      params.set('checkOut', checkOut);
+      params.set('checkIn', format(checkIn, 'yyyy-MM-dd'));
+      params.set('checkOut', format(checkOut, 'yyyy-MM-dd'));
       navigate(`/properties?${params.toString()}`);
     }
   };
 
   const handleClearSearch = () => {
     setHasSearched(false);
-    setCheckIn('');
-    setCheckOut('');
+    setCheckIn(undefined);
+    setCheckOut(undefined);
+  };
+
+  const handleCheckInSelect = (date: Date | undefined) => {
+    setCheckIn(date);
+    if (date && (!checkOut || checkOut <= date)) {
+      // Auto-set checkout to next day
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      setCheckOut(nextDay);
+    }
+    setCheckInOpen(false);
+    setTimeout(() => setCheckOutOpen(true), 100);
+  };
+
+  const handleCheckOutSelect = (date: Date | undefined) => {
+    setCheckOut(date);
+    setCheckOutOpen(false);
   };
   const trustBadges = [
     { icon: Shield, label: 'Verified Properties' },
@@ -213,21 +239,57 @@ const Landing = () => {
                 <div className="grid md:grid-cols-3 gap-4 items-end">
                   <div className="space-y-2">
                     <label className="font-body text-sm text-muted-foreground">Check-in</label>
-                    <Input 
-                      type="date" 
-                      value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                      className="bg-background"
-                    />
+                    <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full justify-start text-left font-normal bg-background',
+                            !checkIn && 'text-muted-foreground'
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {checkIn ? format(checkIn, 'MMM d, yyyy') : 'Select date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={checkIn}
+                          onSelect={handleCheckInSelect}
+                          disabled={(date) => date < today}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <label className="font-body text-sm text-muted-foreground">Check-out</label>
-                    <Input 
-                      type="date" 
-                      value={checkOut}
-                      onChange={(e) => setCheckOut(e.target.value)}
-                      className="bg-background"
-                    />
+                    <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full justify-start text-left font-normal bg-background',
+                            !checkOut && 'text-muted-foreground'
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {checkOut ? format(checkOut, 'MMM d, yyyy') : 'Select date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={checkOut}
+                          onSelect={handleCheckOutSelect}
+                          disabled={(date) => date <= (checkIn || today)}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <Button 
                     className="bg-accent text-accent-foreground hover:bg-accent/90 h-10"
@@ -296,8 +358,8 @@ const Landing = () => {
       {hasSearched && checkIn && checkOut && (
         <AvailabilityResults 
           ref={resultsRef}
-          checkIn={checkIn} 
-          checkOut={checkOut} 
+          checkIn={format(checkIn, 'yyyy-MM-dd')} 
+          checkOut={format(checkOut, 'yyyy-MM-dd')} 
           onClear={handleClearSearch}
         />
       )}
