@@ -88,19 +88,34 @@ Deno.serve(async (req) => {
     }
 
     // Step 2: Verify property availability
-    const { data: availability } = await supabase
+    console.log(`Checking availability for property ${propertyId} from ${checkInDate} to ${checkOutDate}`);
+
+    const { data: availability, error: availabilityError } = await supabase
       .rpc("check_property_availability", {
         p_property_id: propertyId,
         p_check_in: checkInDate,
         p_check_out: checkOutDate,
       });
 
+    console.log(`Availability check result:`, { availability, error: availabilityError });
+
+    if (availabilityError) {
+      console.error("Error checking availability:", availabilityError);
+      return new Response(
+        JSON.stringify({ error: "Failed to check property availability", details: availabilityError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!availability) {
+      console.log("Property not available for selected dates");
       return new Response(
         JSON.stringify({ error: "Property is not available for the selected dates" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("Property is available, creating booking...");
 
     // Step 3: Create the booking
     const { data: booking, error: bookingError } = await supabase
