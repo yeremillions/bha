@@ -14,6 +14,7 @@ interface PaystackButtonProps {
   bookingNumber: string;
   onSuccess?: () => void;
   onClose?: () => void;
+  onPaymentStart?: () => void;
   className?: string;
   disabled?: boolean;
 }
@@ -34,6 +35,7 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
       bookingNumber,
       onSuccess,
       onClose,
+      onPaymentStart,
       className,
       disabled = false,
     },
@@ -144,6 +146,8 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
       });
 
       if (handler) {
+        // Notify parent that payment popup is opening
+        onPaymentStart?.();
         handler.openIframe();
       } else {
         // Fallback: Load Paystack script dynamically if not available
