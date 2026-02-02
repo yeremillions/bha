@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { checkAvailability, calculateBookingPrice, useCreateBooking } from '@/hooks/useBookings';
+import { checkAvailability, calculateBookingPrice } from '@/hooks/useBookings';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Property = Tables<'properties'>;
@@ -65,10 +65,8 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
 
-  // Skip notifications for online booking - wait for payment confirmation
-  const createBooking = useCreateBooking({ skipNotifications: true });
-
-  // Track if we've already auto-advanced for this dialog session
+  // Track booking creation state
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
   const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
 
   // Reset state when dialog opens/closes or initial dates change
@@ -184,60 +182,42 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   const handleConfirmBooking = async () => {
     if (!checkIn || !checkOut || !priceBreakdown) return;
 
+    setIsCreatingBooking(true);
     try {
-      // First, check if customer exists or create new one
-      const { data: existingCustomer } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('email', guestInfo.email)
-        .maybeSingle();
-
-      let customerId: string;
-
-      if (existingCustomer) {
-        customerId = existingCustomer.id;
-      } else {
-        // Create new customer
-        const { data: newCustomer, error: customerError } = await supabase
-          .from('customers')
-          .insert({
-            full_name: guestInfo.fullName,
+      // Use Edge Function to create booking (bypasses RLS for public bookings)
+      const { data, error } = await supabase.functions.invoke('create-booking', {
+        body: {
+          propertyId: property.id,
+          checkInDate: format(checkIn, 'yyyy-MM-dd'),
+          checkOutDate: format(checkOut, 'yyyy-MM-dd'),
+          numGuests,
+          guestInfo: {
+            fullName: guestInfo.fullName,
             email: guestInfo.email,
             phone: guestInfo.phone,
-          })
-          .select('id')
-          .single();
-
-        if (customerError || !newCustomer) {
-          throw new Error('Failed to create customer record');
-        }
-        customerId = newCustomer.id;
-      }
-
-      // Create booking
-      const booking = await createBooking.mutateAsync({
-        property_id: property.id,
-        customer_id: customerId,
-        check_in_date: format(checkIn, 'yyyy-MM-dd'),
-        check_out_date: format(checkOut, 'yyyy-MM-dd'),
-        num_guests: numGuests,
-        base_amount: priceBreakdown.baseAmount,
-        cleaning_fee: priceBreakdown.cleaningFee,
-        tax_amount: priceBreakdown.taxAmount,
-        discount_amount: priceBreakdown.discountAmount,
-        total_amount: priceBreakdown.totalAmount,
-        special_requests: guestInfo.specialRequests || undefined,
-        booked_via: 'website',
-        source: 'direct',
-        status: 'pending',
-        payment_status: 'pending',
+            specialRequests: guestInfo.specialRequests,
+          },
+          pricing: {
+            baseAmount: priceBreakdown.baseAmount,
+            cleaningFee: priceBreakdown.cleaningFee,
+            taxAmount: priceBreakdown.taxAmount,
+            discountAmount: priceBreakdown.discountAmount,
+            totalAmount: priceBreakdown.totalAmount,
+          },
+        },
       });
 
-      setBookingNumber(booking.booking_number);
-      setCreatedBookingId(booking.id);
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || 'Failed to create booking');
+      }
+
+      setBookingNumber(data.booking.booking_number);
+      setCreatedBookingId(data.booking.id);
       setStep('payment');
     } catch (error) {
       console.error('Error creating booking:', error);
+    } finally {
+      setIsCreatingBooking(false);
     }
   };
 
@@ -566,9 +546,9 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
               <Button
                 className="flex-1"
                 onClick={handleConfirmBooking}
-                disabled={createBooking.isPending}
+                disabled={isCreatingBooking}
               >
-                {createBooking.isPending ? (
+                {isCreatingBooking ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processing...
