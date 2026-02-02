@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { checkAvailability, calculateBookingPrice } from '@/hooks/useBookings';
+import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Property = Tables<'properties'>;
@@ -183,39 +184,56 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
     if (!checkIn || !checkOut || !priceBreakdown) return;
 
     setIsCreatingBooking(true);
+
+    const bookingPayload = {
+      propertyId: property.id,
+      checkInDate: format(checkIn, 'yyyy-MM-dd'),
+      checkOutDate: format(checkOut, 'yyyy-MM-dd'),
+      numGuests,
+      guestInfo: {
+        fullName: guestInfo.fullName,
+        email: guestInfo.email,
+        phone: guestInfo.phone,
+        specialRequests: guestInfo.specialRequests,
+      },
+      pricing: {
+        baseAmount: priceBreakdown.baseAmount,
+        cleaningFee: priceBreakdown.cleaningFee,
+        taxAmount: priceBreakdown.taxAmount,
+        discountAmount: priceBreakdown.discountAmount,
+        totalAmount: priceBreakdown.totalAmount,
+      },
+    };
+
+    console.log('Creating booking with payload:', bookingPayload);
+
     try {
       // Use Edge Function to create booking (bypasses RLS for public bookings)
       const { data, error } = await supabase.functions.invoke('create-booking', {
-        body: {
-          propertyId: property.id,
-          checkInDate: format(checkIn, 'yyyy-MM-dd'),
-          checkOutDate: format(checkOut, 'yyyy-MM-dd'),
-          numGuests,
-          guestInfo: {
-            fullName: guestInfo.fullName,
-            email: guestInfo.email,
-            phone: guestInfo.phone,
-            specialRequests: guestInfo.specialRequests,
-          },
-          pricing: {
-            baseAmount: priceBreakdown.baseAmount,
-            cleaningFee: priceBreakdown.cleaningFee,
-            taxAmount: priceBreakdown.taxAmount,
-            discountAmount: priceBreakdown.discountAmount,
-            totalAmount: priceBreakdown.totalAmount,
-          },
-        },
+        body: bookingPayload,
       });
 
-      if (error || !data?.success) {
-        throw new Error(data?.error || error?.message || 'Failed to create booking');
+      console.log('Create booking response:', { data, error });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        toast.error(error.message || 'Failed to create booking. Please try again.');
+        return;
       }
 
+      if (!data?.success) {
+        console.error('Booking creation failed:', data);
+        toast.error(data?.error || 'Failed to create booking. Please try again.');
+        return;
+      }
+
+      console.log('Booking created successfully:', data.booking);
       setBookingNumber(data.booking.booking_number);
       setCreatedBookingId(data.booking.id);
       setStep('payment');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating booking:', error);
+      toast.error(error.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsCreatingBooking(false);
     }
