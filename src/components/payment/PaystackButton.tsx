@@ -1,5 +1,4 @@
 import { useState, forwardRef, useMemo } from 'react';
-import { usePaystackPayment } from 'react-paystack';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,8 +21,7 @@ interface PaystackButtonProps {
 /**
  * Paystack Payment Button Component
  *
- * Integrates with Paystack Inline to process payments
- * Handles payment initialization, success, and verification
+ * Uses Paystack Popup directly via script injection for better compatibility
  */
 export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>(
   (
@@ -52,13 +50,40 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
 
     const publicKey = getPaystackPublicKey();
 
-    // Paystack configuration - memoized for stable reference
-    const config = useMemo(
-      () => ({
+    // Handle payment button click - use direct PaystackPop
+    const handlePaymentClick = () => {
+      if (!publicKey) {
+        toast.error('Payment system not configured. Please contact support.');
+        console.error('Paystack public key not configured');
+        return;
+      }
+
+      if (!customerEmail || !customerName) {
+        toast.error('Customer information is required for payment');
+        return;
+      }
+
+      if (amount <= 0) {
+        toast.error('Invalid payment amount');
+        return;
+      }
+
+      const amountInKobo = Math.round(amount * 100);
+
+      console.log('Initiating Paystack payment with:', {
         reference,
         email: customerEmail,
-        amount: Math.round(amount * 100), // Convert Naira to kobo
-        publicKey,
+        amount: amountInKobo,
+        amountInNaira: amount,
+      });
+
+      // Use PaystackPop directly from the global script
+      const handler = (window as any).PaystackPop?.setup({
+        key: publicKey,
+        email: customerEmail,
+        amount: amountInKobo,
+        currency: 'NGN',
+        ref: reference,
         metadata: {
           booking_id: bookingId,
           property_id: propertyId,
@@ -77,101 +102,62 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
             },
           ],
         },
-        // Use only widely-supported payment channels to avoid timeout issues
-        channels: ['card', 'bank', 'ussd', 'bank_transfer'] as any,
-      }),
-      [reference, customerEmail, amount, publicKey, bookingId, propertyId, bookingNumber, customerName]
-    );
-
-    // Debug: Log configuration on mount
-    console.log('PaystackButton config:', {
-      reference: config.reference,
-      email: config.email,
-      amount: config.amount,
-      publicKey: config.publicKey ? `${config.publicKey.substring(0, 10)}...` : 'MISSING',
-      channels: config.channels,
-    });
-
-    // Payment success handler
-    const handlePaymentSuccess = (paystackResponse: any) => {
-      console.log('Paystack payment successful:', paystackResponse);
-      setIsProcessing(true);
-
-      // Process payment on our backend
-      processPayment(
-        {
-          bookingId,
-          propertyId,
-          amount,
-          reference: paystackResponse.reference,
-          metadata: {
-            paystack_reference: paystackResponse.reference,
-            paystack_transaction: paystackResponse.transaction,
-            paystack_status: paystackResponse.status,
-            customer_email: customerEmail,
-            customer_name: customerName,
-            booking_number: bookingNumber,
-          },
+        channels: ['card', 'bank', 'ussd', 'bank_transfer'],
+        onClose: () => {
+          console.log('Payment popup closed');
+          toast.info('Payment cancelled');
+          onClose?.();
         },
-        {
-          onSuccess: () => {
-            setIsProcessing(false);
-            toast.success('Payment completed successfully!');
-            onSuccess?.();
-          },
-          onError: (error: any) => {
-            setIsProcessing(false);
-            toast.error(error.message || 'Failed to process payment');
-          },
-        }
-      );
-    };
+        callback: (response: any) => {
+          console.log('Paystack payment successful:', response);
+          setIsProcessing(true);
 
-    // Payment close handler (user closed popup)
-    const handlePaymentClose = () => {
-      console.log('Payment popup closed');
-      toast.info('Payment cancelled');
-      onClose?.();
-    };
-
-    // Initialize Paystack payment
-    const initializePayment = usePaystackPayment(config);
-
-    // Handle payment button click
-    const handlePaymentClick = () => {
-      // Validate configuration
-      if (!config.publicKey) {
-        toast.error('Payment system not configured. Please contact support.');
-        console.error('Paystack public key not configured');
-        return;
-      }
-
-      if (!customerEmail || !customerName) {
-        toast.error('Customer information is required for payment');
-        return;
-      }
-
-      if (amount <= 0) {
-        toast.error('Invalid payment amount');
-        return;
-      }
-
-      console.log('Initiating Paystack payment with:', {
-        reference: config.reference,
-        email: customerEmail,
-        amount: config.amount,
-        amountInNaira: amount,
+          // Process payment on our backend
+          processPayment(
+            {
+              bookingId,
+              propertyId,
+              amount,
+              reference: response.reference,
+              metadata: {
+                paystack_reference: response.reference,
+                paystack_transaction: response.transaction,
+                paystack_status: response.status,
+                customer_email: customerEmail,
+                customer_name: customerName,
+                booking_number: bookingNumber,
+              },
+            },
+            {
+              onSuccess: () => {
+                setIsProcessing(false);
+                toast.success('Payment completed successfully!');
+                onSuccess?.();
+              },
+              onError: (error: any) => {
+                setIsProcessing(false);
+                toast.error(error.message || 'Failed to process payment');
+              },
+            }
+          );
+        },
       });
 
-      // Initialize payment popup
-      try {
-        initializePayment({
-          onSuccess: handlePaymentSuccess,
-          onClose: handlePaymentClose,
-        });
-      } catch (error) {
-        console.error('Error initializing Paystack payment:', error);
-        toast.error('Failed to initialize payment. Please try again.');
+      if (handler) {
+        handler.openIframe();
+      } else {
+        // Fallback: Load Paystack script dynamically if not available
+        console.log('PaystackPop not found, loading script...');
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.onload = () => {
+          console.log('Paystack script loaded, retrying...');
+          handlePaymentClick();
+        };
+        script.onerror = () => {
+          toast.error('Failed to load payment system. Please refresh and try again.');
+        };
+        document.body.appendChild(script);
       }
     };
 
