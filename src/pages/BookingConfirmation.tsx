@@ -47,41 +47,18 @@ export default function BookingConfirmation() {
       }
 
       try {
-        const { data, error: fetchError } = await supabase
-          .from('bookings')
-          .select(`
-            id,
-            booking_number,
-            check_in_date,
-            check_out_date,
-            num_guests,
-            total_amount,
-            status,
-            payment_status,
-            special_requests,
-            property:properties (
-              id,
-              name,
-              address,
-              city,
-              featured_image
-            ),
-            customer:customers (
-              full_name,
-              email,
-              phone
-            )
-          `)
-          .eq('booking_number', bookingNumber)
-          .single();
+        // Use edge function to bypass RLS (guest is not authenticated)
+        const { data, error: fetchError } = await supabase.functions.invoke('get-booking', {
+          body: { bookingNumber },
+        });
 
-        if (fetchError) {
-          console.error('Error fetching booking:', fetchError);
+        if (fetchError || !data?.success) {
+          console.error('Error fetching booking:', fetchError || data?.error);
           setError('Booking not found');
           return;
         }
 
-        setBooking(data as unknown as BookingDetails);
+        setBooking(data.booking as BookingDetails);
       } catch (err) {
         console.error('Error:', err);
         setError('Failed to load booking details');
