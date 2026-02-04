@@ -295,12 +295,21 @@
     display: none;  /* Safari and Chrome */
   }
 
-  /* Paystack popup z-index override to ensure it appears above Radix dialogs */
+  /* Paystack popup z-index override - ensure it appears above ALL dialogs */
+  /* Target all possible Paystack elements */
   iframe[src*="paystack"],
+  iframe[name*="paystack"],
   .paystack-checkout,
-  [id^="paystack"],
-  .paystack-inline-checkout,
-  div[style*="paystack"] {
-    z-index: 999999 !important;
+  [id*="paystack"],
+  [class*="paystack"],
+  div[style*="z-index"][style*="position: fixed"] {
+    z-index: 2147483647 !important;
+    position: fixed !important;
+  }
+
+  /* Paystack overlay/backdrop */
+  body > div[style*="position: fixed"][style*="inset: 0"],
+  body > div[style*="position: fixed"][style*="top: 0"][style*="left: 0"] {
+    z-index: 2147483646 !important;
   }
 }
