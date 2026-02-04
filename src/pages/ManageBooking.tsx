@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { Search, Calendar, MapPin, Users, CreditCard, Mail, Phone, Home, ArrowLeft, AlertCircle, Check, Clock } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
+import { Search, Calendar, MapPin, Users, CreditCard, Mail, Phone, Home, ArrowLeft, AlertCircle, Check, Clock, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface BookingDetails {
   id: string;
@@ -24,6 +34,8 @@ interface BookingDetails {
   payment_status: string;
   special_requests: string | null;
   created_at: string;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
   property: {
     id: string;
     name: string;
@@ -38,6 +50,20 @@ interface BookingDetails {
   };
 }
 
+interface CancellationPolicy {
+  fullRefundDays: number;
+  partialRefundDays: number;
+  partialRefundPercent: number;
+  noRefundMessage: string;
+}
+
+const defaultCancellationPolicy: CancellationPolicy = {
+  fullRefundDays: 7,
+  partialRefundDays: 3,
+  partialRefundPercent: 50,
+  noRefundMessage: "Cancellations made less than 3 days before check-in are non-refundable.",
+};
+
 export default function ManageBooking() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -48,6 +74,12 @@ export default function ManageBooking() {
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
 
+  // Cancellation state
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancellationPolicy, setCancellationPolicy] = useState<CancellationPolicy>(defaultCancellationPolicy);
+
   // Pre-fill from navigation state if coming from confirmation page
   useEffect(() => {
     if (location.state?.email && location.state?.bookingNumber) {
@@ -57,6 +89,22 @@ export default function ManageBooking() {
       handleSearch(location.state.email, location.state.bookingNumber);
     }
   }, [location.state]);
+
+  // Fetch cancellation policy
+  useEffect(() => {
+    const fetchPolicy = async () => {
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'cancellation_policy')
+        .single();
+
+      if (data?.value) {
+        setCancellationPolicy({ ...defaultCancellationPolicy, ...(data.value as unknown as CancellationPolicy) });
+      }
+    };
+    fetchPolicy();
+  }, []);
 
   const handleSearch = async (searchEmail?: string, searchBookingNumber?: string) => {
     const emailToSearch = searchEmail || email;
@@ -88,6 +136,8 @@ export default function ManageBooking() {
           payment_status,
           special_requests,
           created_at,
+          cancelled_at,
+          cancellation_reason,
           property:properties (
             id,
             name,
@@ -129,6 +179,77 @@ export default function ManageBooking() {
     }
   };
 
+  // Calculate refund based on cancellation policy
+  const calculateRefund = () => {
+    if (!booking || booking.payment_status !== 'paid') {
+      return { amount: 0, percent: 0, message: 'No refund applicable - booking was not paid' };
+    }
+
+    const checkInDate = new Date(booking.check_in_date);
+    const now = new Date();
+    const daysUntilCheckIn = differenceInDays(checkInDate, now);
+
+    if (daysUntilCheckIn >= cancellationPolicy.fullRefundDays) {
+      return {
+        amount: booking.total_amount,
+        percent: 100,
+        message: `Full refund - cancelling more than ${cancellationPolicy.fullRefundDays} days before check-in`,
+      };
+    } else if (daysUntilCheckIn >= cancellationPolicy.partialRefundDays) {
+      const refundAmount = Math.round(booking.total_amount * (cancellationPolicy.partialRefundPercent / 100) * 100) / 100;
+      return {
+        amount: refundAmount,
+        percent: cancellationPolicy.partialRefundPercent,
+        message: `${cancellationPolicy.partialRefundPercent}% refund - cancelling ${daysUntilCheckIn} days before check-in`,
+      };
+    } else {
+      return {
+        amount: 0,
+        percent: 0,
+        message: cancellationPolicy.noRefundMessage,
+      };
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    if (!booking) return;
+
+    setIsCancelling(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('cancel-booking', {
+        body: {
+          bookingId: booking.id,
+          reason: cancellationReason || 'Customer requested cancellation',
+          email: email,
+        },
+      });
+
+      if (error) {
+        console.error('Cancellation error:', error);
+        toast.error(error.message || 'Failed to cancel booking');
+        return;
+      }
+
+      if (!data?.success) {
+        toast.error(data?.error || 'Failed to cancel booking');
+        return;
+      }
+
+      toast.success('Booking cancelled successfully');
+      setShowCancelDialog(false);
+
+      // Refresh booking data
+      handleSearch(email, bookingNumber);
+
+    } catch (err: any) {
+      console.error('Error cancelling booking:', err);
+      toast.error(err.message || 'An unexpected error occurred');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -141,8 +262,10 @@ export default function ManageBooking() {
     const statusConfig: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
       confirmed: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-800 dark:text-emerald-400', icon: <Check className="h-3 w-3" /> },
       pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-400', icon: <Clock className="h-3 w-3" /> },
-      cancelled: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-400', icon: <AlertCircle className="h-3 w-3" /> },
+      cancelled: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-400', icon: <XCircle className="h-3 w-3" /> },
       completed: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-400', icon: <Check className="h-3 w-3" /> },
+      checked_in: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-800 dark:text-purple-400', icon: <Check className="h-3 w-3" /> },
+      checked_out: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-800 dark:text-gray-400', icon: <Check className="h-3 w-3" /> },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -150,10 +273,18 @@ export default function ManageBooking() {
     return (
       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}>
         {config.icon}
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
       </span>
     );
   };
+
+  const canCancelBooking = booking &&
+    booking.status !== 'cancelled' &&
+    booking.status !== 'checked_in' &&
+    booking.status !== 'checked_out' &&
+    booking.status !== 'completed';
+
+  const refundInfo = booking ? calculateRefund() : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -258,6 +389,22 @@ export default function ManageBooking() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Cancelled Notice */}
+              {booking.status === 'cancelled' && (
+                <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
+                  <XCircle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800 dark:text-red-200">
+                    <strong>This booking was cancelled</strong>
+                    {booking.cancelled_at && (
+                      <> on {format(new Date(booking.cancelled_at), 'MMM d, yyyy at h:mm a')}</>
+                    )}
+                    {booking.cancellation_reason && (
+                      <><br />Reason: {booking.cancellation_reason}</>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Property Info */}
               <div className="flex gap-4">
                 {booking.property.featured_image && (
@@ -368,12 +515,38 @@ export default function ManageBooking() {
                       <CreditCard className="h-4 w-4" />
                       Payment Status
                     </span>
-                    <span className={`font-medium ${booking.payment_status === 'paid' ? 'text-emerald-600' : 'text-yellow-600'}`}>
-                      {booking.payment_status === 'paid' ? 'Paid' : booking.payment_status}
+                    <span className={`font-medium ${
+                      booking.payment_status === 'paid' ? 'text-emerald-600' :
+                      booking.payment_status === 'refunded' ? 'text-blue-600' : 'text-yellow-600'
+                    }`}>
+                      {booking.payment_status === 'paid' ? 'Paid' :
+                       booking.payment_status === 'refunded' ? 'Refunded' :
+                       booking.payment_status.charAt(0).toUpperCase() + booking.payment_status.slice(1)}
                     </span>
                   </div>
                 </div>
               </div>
+
+              {/* Cancel Booking Button */}
+              {canCancelBooking && (
+                <>
+                  <Separator />
+                  <div className="pt-2">
+                    <Button
+                      variant="destructive"
+                      onClick={() => setShowCancelDialog(true)}
+                      className="w-full sm:w-auto"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Cancel Booking
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Cancellation policy: Full refund if cancelled {cancellationPolicy.fullRefundDays}+ days before check-in,
+                      {cancellationPolicy.partialRefundPercent}% refund if cancelled {cancellationPolicy.partialRefundDays}-{cancellationPolicy.fullRefundDays - 1} days before.
+                    </p>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
@@ -403,6 +576,81 @@ export default function ManageBooking() {
           </a>
         </p>
       </main>
+
+      {/* Cancel Booking Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Cancel Booking</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel booking {booking?.booking_number}?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Refund Information */}
+            {refundInfo && (
+              <div className={`p-4 rounded-lg ${
+                refundInfo.percent === 100 ? 'bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/20' :
+                refundInfo.percent > 0 ? 'bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20' :
+                'bg-red-50 border border-red-200 dark:bg-red-900/20'
+              }`}>
+                <h4 className="font-semibold mb-1">Refund Information</h4>
+                <p className="text-sm">{refundInfo.message}</p>
+                {refundInfo.amount > 0 && (
+                  <p className="text-lg font-bold mt-2">
+                    Refund Amount: {formatCurrency(refundInfo.amount)}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Cancellation Reason */}
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason for cancellation (optional)</Label>
+              <Textarea
+                id="reason"
+                placeholder="Please let us know why you're cancelling..."
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            {/* Warning */}
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                This action cannot be undone. If you need to rebook, you'll need to make a new reservation.
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+              disabled={isCancelling}
+            >
+              Keep Booking
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelBooking}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                'Yes, Cancel Booking'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

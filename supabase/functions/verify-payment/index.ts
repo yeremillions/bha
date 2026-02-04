@@ -188,6 +188,39 @@ Deno.serve(async (req) => {
 
     console.log(`Payment processed successfully for booking: ${booking?.booking_number}`);
 
+    // Send confirmation email (fire and forget - don't block on email)
+    try {
+      const emailPayload = {
+        bookingId: bookingId,
+        emailType: "confirmation",
+        additionalData: {
+          transactionRef: reference,
+        },
+      };
+
+      // Call the send-booking-email function
+      const emailResponse = await fetch(
+        `${supabaseUrl}/functions/v1/send-booking-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify(emailPayload),
+        }
+      );
+
+      if (emailResponse.ok) {
+        console.log("Confirmation email sent successfully");
+      } else {
+        console.warn("Failed to send confirmation email:", await emailResponse.text());
+      }
+    } catch (emailError) {
+      console.warn("Error sending confirmation email:", emailError);
+      // Don't fail the payment if email fails
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
