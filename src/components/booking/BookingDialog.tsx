@@ -218,13 +218,35 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
 
       if (error) {
         console.error('Edge function error:', error);
-        toast.error(error.message || 'Failed to create booking. Please try again.');
+        // Try to extract error message from various sources
+        let errorMessage = 'Failed to create booking. Please try again.';
+        if (error.message) {
+          errorMessage = error.message;
+        }
+        // Check if there's error details in the context
+        if (error.context?.body) {
+          try {
+            const bodyError = typeof error.context.body === 'string'
+              ? JSON.parse(error.context.body)
+              : error.context.body;
+            if (bodyError?.error) {
+              errorMessage = bodyError.error;
+              if (bodyError.details) {
+                errorMessage += `: ${bodyError.details}`;
+              }
+            }
+          } catch (e) {
+            // Ignore JSON parse errors
+          }
+        }
+        toast.error(errorMessage);
         return;
       }
 
       if (!data?.success) {
         console.error('Booking creation failed:', data);
-        toast.error(data?.error || 'Failed to create booking. Please try again.');
+        const errorMessage = data?.error || 'Failed to create booking. Please try again.';
+        toast.error(data?.details ? `${errorMessage}: ${data.details}` : errorMessage);
         return;
       }
 
