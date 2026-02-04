@@ -120,55 +120,28 @@ export default function ManageBooking() {
     setSearched(true);
 
     try {
-      const { data, error: fetchError } = await supabase
-        .from('bookings')
-        .select(`
-          id,
-          booking_number,
-          check_in_date,
-          check_out_date,
-          num_guests,
-          total_amount,
-          base_amount,
-          cleaning_fee,
-          tax_amount,
-          status,
-          payment_status,
-          special_requests,
-          created_at,
-          cancelled_at,
-          cancellation_reason,
-          property:properties (
-            id,
-            name,
-            address,
-            city,
-            featured_image
-          ),
-          customer:customers (
-            full_name,
-            email,
-            phone
-          )
-        `)
-        .eq('booking_number', bookingToSearch.toUpperCase())
-        .single();
+      // Use edge function to bypass RLS (guest is not authenticated)
+      const { data, error: fetchError } = await supabase.functions.invoke('get-booking', {
+        body: {
+          bookingNumber: bookingToSearch.toUpperCase(),
+          email: emailToSearch,
+        },
+      });
 
-      if (fetchError || !data) {
+      if (fetchError) {
+        console.error('Error fetching booking:', fetchError);
         setError('Booking not found. Please check your booking number and email.');
         setBooking(null);
         return;
       }
 
-      // Verify email matches
-      const bookingData = data as unknown as BookingDetails;
-      if (bookingData.customer.email.toLowerCase() !== emailToSearch.toLowerCase()) {
-        setError('The email address does not match our records for this booking.');
+      if (!data?.success) {
+        setError(data?.error || 'Booking not found. Please check your booking number and email.');
         setBooking(null);
         return;
       }
 
-      setBooking(bookingData);
+      setBooking(data.booking as BookingDetails);
       setError(null);
     } catch (err) {
       console.error('Error:', err);
