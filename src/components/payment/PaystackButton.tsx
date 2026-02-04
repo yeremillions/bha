@@ -171,11 +171,13 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
           },
         });
 
-        // Notify parent that payment is starting
+        // Notify parent that payment is starting (hides the dialog)
         onPaymentStart?.();
 
-        // Open the Paystack popup
-        handler.openIframe();
+        // Small delay to ensure React re-renders and hides the dialog before popup opens
+        setTimeout(() => {
+          handler.openIframe();
+        }, 100);
 
       } catch (error: any) {
         console.error('Error initializing Paystack:', error);
