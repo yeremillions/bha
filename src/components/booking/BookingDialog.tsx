@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format, addDays, differenceInDays } from 'date-fns';
 import { Calendar as CalendarIcon, Users, Loader2, Check, AlertCircle, CreditCard } from 'lucide-react';
 import * as DialogPrimitive from "@radix-ui/react-dialog";
@@ -47,6 +48,7 @@ interface PriceBreakdown {
 }
 
 export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, initialCheckOut }: BookingDialogProps) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<BookingStep>('dates');
   const [checkIn, setCheckIn] = useState<Date | undefined>(initialCheckIn ? new Date(initialCheckIn) : undefined);
   const [checkOut, setCheckOut] = useState<Date | undefined>(initialCheckOut ? new Date(initialCheckOut) : undefined);
@@ -264,7 +266,11 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
 
   const handlePaymentSuccess = () => {
     setIsPaymentPopupOpen(false);
-    setStep('success');
+    // Close the dialog and redirect to confirmation page
+    onOpenChange(false);
+    if (bookingNumber) {
+      navigate(`/booking-confirmation/${bookingNumber}`);
+    }
   };
 
   const handlePaymentStart = () => {

@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.create-booking]
 verify_jwt = false
+
+[functions.cancel-booking]
+verify_jwt = false
+
+[functions.send-booking-email]
+verify_jwt = false

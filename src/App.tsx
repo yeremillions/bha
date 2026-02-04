@@ -32,6 +32,8 @@ import Reports from "./pages/Reports";
 import Financial from "./pages/Financial";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import BookingConfirmation from "./pages/BookingConfirmation";
+import ManageBooking from "./pages/ManageBooking";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +72,8 @@ const App = () => (
               <Route path="/dashboard/settings" element={<Settings />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
+              <Route path="/booking-confirmation/:bookingNumber" element={<BookingConfirmation />} />
+              <Route path="/manage-booking" element={<ManageBooking />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
