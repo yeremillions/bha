@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Check, Home, Calendar, MapPin, Users, CreditCard, Mail, Phone, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import { Header } from '@/components/landing/Header';
+import { Footer } from '@/components/landing/Footer';
 
 interface BookingDetails {
   id: string;
@@ -87,48 +89,37 @@ export default function BookingConfirmation() {
     }).format(amount);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading booking details...</div>
-      </div>
-    );
-  }
-
-  if (error || !booking) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Booking Not Found</h2>
-            <p className="text-muted-foreground mb-4">{error || 'Unable to find your booking'}</p>
-            <Button onClick={() => navigate('/')}>
-              <Home className="mr-2 h-4 w-4" />
-              Return Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const checkInDate = new Date(booking.check_in_date);
-  const checkOutDate = new Date(booking.check_out_date);
-  const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+  const checkInDate = booking ? new Date(booking.check_in_date) : null;
+  const checkOutDate = booking ? new Date(booking.check_out_date) : null;
+  const nights = checkInDate && checkOutDate
+    ? Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/" className="font-display text-2xl font-bold text-primary">
-            BHA
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background pt-20">
+      <Header />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-pulse text-muted-foreground">Loading booking details...</div>
+          </div>
+        ) : error || !booking ? (
+          <div className="flex items-center justify-center py-20">
+            <Card className="max-w-md w-full mx-4">
+              <CardContent className="pt-6 text-center">
+                <h2 className="text-xl font-semibold mb-2">Booking Not Found</h2>
+                <p className="text-muted-foreground mb-4">{error || 'Unable to find your booking'}</p>
+                <Button onClick={() => navigate('/')}>
+                  <Home className="mr-2 h-4 w-4" />
+                  Return Home
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+        <>
         {/* Success Message */}
         <div className="text-center mb-8">
           <div className="mx-auto w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
@@ -275,14 +266,11 @@ export default function BookingConfirmation() {
           </Button>
         </div>
 
-        {/* Help Text */}
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          Need help? Contact us at{' '}
-          <a href="mailto:support@bha.com" className="text-accent hover:underline">
-            support@bha.com
-          </a>
-        </p>
+        </>
+        )}
       </main>
+
+      <Footer />
     </div>
   );
 }

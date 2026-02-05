@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
-import { Search, Calendar, MapPin, Users, CreditCard, Mail, Phone, Home, ArrowLeft, AlertCircle, Check, Clock, XCircle, Loader2 } from 'lucide-react';
+import { Search, Calendar, MapPin, Users, CreditCard, Mail, Phone, AlertCircle, Check, Clock, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Header } from '@/components/landing/Header';
+import { Footer } from '@/components/landing/Footer';
 
 interface BookingDetails {
   id: string;
@@ -260,19 +262,8 @@ export default function ManageBooking() {
   const refundInfo = booking ? calculateRefund() : null;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/" className="font-display text-2xl font-bold text-primary">
-            BHA
-          </Link>
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            <Home className="mr-2 h-4 w-4" />
-            Home
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background pt-20">
+      <Header />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
@@ -533,22 +524,9 @@ export default function ManageBooking() {
           </Card>
         )}
 
-        {/* Back Link */}
-        <div className="mt-8 text-center">
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
-        </div>
-
-        {/* Help Text */}
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          Need help? Contact us at{' '}
-          <a href="mailto:support@bha.com" className="text-accent hover:underline">
-            support@bha.com
-          </a>
-        </p>
       </main>
+
+      <Footer />
 
       {/* Cancel Booking Dialog */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
