@@ -87,8 +87,15 @@ export default function ManageBooking() {
     if (location.state?.email && location.state?.bookingNumber) {
       setEmail(location.state.email);
       setBookingNumber(location.state.bookingNumber);
-      // Auto-search if we have both values
-      handleSearch(location.state.email, location.state.bookingNumber);
+
+      // If full booking data was passed, use it directly
+      if (location.state?.booking) {
+        setBooking(location.state.booking as BookingDetails);
+        setSearched(true);
+      } else {
+        // Fallback: fetch from edge function
+        handleSearch(location.state.email, location.state.bookingNumber);
+      }
     }
   }, [location.state]);
 
