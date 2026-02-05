@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
     const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
       .insert({
-        transaction_type: "income",
+        transaction_type: "booking",
         category: "accommodation",
         amount: amount,
         payment_method: "paystack",

@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
         .from("transactions")
         .select("*")
         .eq("booking_id", bookingId)
-        .eq("transaction_type", "income")
+        .eq("transaction_type", "booking")
         .eq("status", "completed")
         .order("created_at", { ascending: false })
         .limit(1)
@@ -214,12 +214,11 @@ Deno.serve(async (req) => {
       const { error: refundTxnError } = await supabase
         .from("transactions")
         .insert({
-          transaction_type: "expense", // Refund is money going out
+          transaction_type: "refund",
           category: "other_expenses",
           amount: refundAmount,
           booking_id: bookingId,
           customer_id: booking.customer_id,
-          property_id: booking.property_id,
           payment_method: originalTransaction?.payment_method || "bank_transfer",
           payment_reference: paystackRefundResult?.data?.id
             ? `REFUND-${paystackRefundResult.data.id}`
