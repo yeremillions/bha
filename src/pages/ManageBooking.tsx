@@ -139,7 +139,10 @@ export default function ManageBooking() {
 
       if (fetchError) {
         console.error('Error fetching booking:', fetchError);
-        setError('Booking not found. Please check your booking number and email.');
+        // Extract error message from the edge function response body
+        // (supabase-js puts parsed response in error.context for non-2xx responses)
+        const errorBody = (fetchError as any)?.context;
+        setError(errorBody?.error || 'Booking not found. Please check your booking number and email.');
         setBooking(null);
         return;
       }
