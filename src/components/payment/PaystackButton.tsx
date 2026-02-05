@@ -158,12 +158,10 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
               {
                 onSuccess: () => {
                   setIsProcessing(false);
-                  toast.success('Payment completed successfully!');
                   onSuccess?.();
                 },
                 onError: (error: any) => {
                   setIsProcessing(false);
-                  toast.error(error.message || 'Failed to process payment');
                   console.error('Payment processing error:', error);
                 },
               }

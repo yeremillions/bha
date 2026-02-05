@@ -89,7 +89,7 @@ export const useBookingPayments = (bookingId?: string) => {
         .from('transactions')
         .select('*')
         .eq('booking_id', bookingId)
-        .eq('transaction_type', 'income')
+        .eq('transaction_type', 'booking')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -116,7 +116,7 @@ export const usePaymentTransactions = () => {
       const { data, error } = await supabase
         .from('transactions')
         .select('*, booking:bookings(booking_number), property:properties(name)')
-        .eq('transaction_type', 'income')
+        .eq('transaction_type', 'booking')
         .eq('payment_method', 'paystack')
         .order('created_at', { ascending: false });
 
