@@ -248,7 +248,7 @@ export default function BookingConfirmation() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Button
-            onClick={() => navigate('/manage-booking', { state: { email: booking.customer.email, bookingNumber: booking.booking_number } })}
+            onClick={() => navigate('/manage-booking', { state: { email: booking.customer.email, bookingNumber: booking.booking_number, booking } })}
             className="flex-1"
             size="lg"
           >
