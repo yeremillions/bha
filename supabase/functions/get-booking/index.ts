@@ -25,8 +25,8 @@ Deno.serve(async (req) => {
 
     if (!bookingNumber) {
       return new Response(
-        JSON.stringify({ error: "Missing required field: bookingNumber" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "Missing required field: bookingNumber" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -67,8 +67,8 @@ Deno.serve(async (req) => {
     if (bookingError || !booking) {
       console.error("Booking not found:", bookingError);
       return new Response(
-        JSON.stringify({ error: "Booking not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "Booking not found" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
       const customerEmail = (booking.customer as any)?.email;
       if (!customerEmail || customerEmail.toLowerCase() !== email.toLowerCase()) {
         return new Response(
-          JSON.stringify({ error: "Email does not match booking records" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ success: false, error: "Booking not found. Please check your booking number and email." }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     }
