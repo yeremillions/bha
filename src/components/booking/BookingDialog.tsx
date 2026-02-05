@@ -70,7 +70,6 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
 
   // Track booking creation state
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
-  const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
   const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
 
   // Reset state when dialog opens/closes or initial dates change
@@ -86,7 +85,6 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
         setPriceBreakdown(null);
         setBookingNumber(null);
         setCreatedBookingId(null);
-        setHasAutoAdvanced(false);
       }, 300);
     } else {
       // Set initial dates when dialog opens
@@ -94,23 +92,6 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
       if (initialCheckOut) setCheckOut(new Date(initialCheckOut));
     }
   }, [open, initialCheckIn, initialCheckOut]);
-
-  // Auto-advance to guest-info step when dates are pre-filled and availability is confirmed
-  useEffect(() => {
-    if (
-      open &&
-      initialCheckIn &&
-      initialCheckOut &&
-      priceBreakdown &&
-      !availabilityError &&
-      !isCheckingAvailability &&
-      step === 'dates' &&
-      !hasAutoAdvanced
-    ) {
-      setStep('guest-info');
-      setHasAutoAdvanced(true);
-    }
-  }, [open, initialCheckIn, initialCheckOut, priceBreakdown, availabilityError, isCheckingAvailability, step, hasAutoAdvanced]);
 
   // Check availability and calculate price when dates change
   useEffect(() => {
