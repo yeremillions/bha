@@ -5,7 +5,6 @@ import { Check, Home, Calendar, MapPin, Users, CreditCard, Mail, Phone, ArrowRig
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 
@@ -42,7 +41,9 @@ export default function BookingConfirmation() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if booking data was passed via navigation state (from BookingDialog)
+    // Only show confirmation when booking data was passed via navigation state
+    // (i.e., user just completed a payment). This prevents unauthorized access
+    // to guest details by guessing booking numbers in the URL.
     const stateBooking = (location.state as any)?.booking;
     if (stateBooking) {
       setBooking(stateBooking as BookingDetails);
@@ -50,36 +51,10 @@ export default function BookingConfirmation() {
       return;
     }
 
-    // Fallback: fetch from edge function (e.g., page refresh)
-    const fetchBooking = async () => {
-      if (!bookingNumber) {
-        setError('Booking number not provided');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error: fetchError } = await supabase.functions.invoke('get-booking', {
-          body: { bookingNumber },
-        });
-
-        if (fetchError || !data?.success) {
-          console.error('Error fetching booking:', fetchError || data?.error);
-          setError('Booking not found. Please check your booking reference or contact support.');
-          return;
-        }
-
-        setBooking(data.booking as BookingDetails);
-      } catch (err) {
-        console.error('Error:', err);
-        setError('Failed to load booking details. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBooking();
-  }, [bookingNumber, location.state]);
+    // No navigation state — redirect to Manage Booking where the user
+    // must verify their identity with email + booking reference.
+    navigate('/manage-booking', { replace: true });
+  }, [bookingNumber, location.state, navigate]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
