@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Check, Home, Calendar, MapPin, Users, CreditCard, Mail, Phone, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,8 @@ interface BookingDetails {
     id: string;
     name: string;
     address: string;
-    city: string;
-    featured_image: string | null;
+    location: string;
+    images: string[] | null;
   };
   customer: {
     full_name: string;
@@ -34,11 +34,21 @@ interface BookingDetails {
 export default function BookingConfirmation() {
   const { bookingNumber } = useParams<{ bookingNumber: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if booking data was passed via navigation state (from BookingDialog)
+    const stateBooking = (location.state as any)?.booking;
+    if (stateBooking) {
+      setBooking(stateBooking as BookingDetails);
+      setLoading(false);
+      return;
+    }
+
+    // Fallback: fetch from edge function (e.g., page refresh)
     const fetchBooking = async () => {
       if (!bookingNumber) {
         setError('Booking number not provided');
@@ -47,28 +57,27 @@ export default function BookingConfirmation() {
       }
 
       try {
-        // Use edge function to bypass RLS (guest is not authenticated)
         const { data, error: fetchError } = await supabase.functions.invoke('get-booking', {
           body: { bookingNumber },
         });
 
         if (fetchError || !data?.success) {
           console.error('Error fetching booking:', fetchError || data?.error);
-          setError('Booking not found');
+          setError('Booking not found. Please check your booking reference or contact support.');
           return;
         }
 
         setBooking(data.booking as BookingDetails);
       } catch (err) {
         console.error('Error:', err);
-        setError('Failed to load booking details');
+        setError('Failed to load booking details. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchBooking();
-  }, [bookingNumber]);
+  }, [bookingNumber, location.state]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -147,9 +156,9 @@ export default function BookingConfirmation() {
           <CardContent className="pt-6">
             {/* Property Info */}
             <div className="flex gap-4 mb-6">
-              {booking.property.featured_image && (
+              {booking.property.images?.[0] && (
                 <img
-                  src={booking.property.featured_image}
+                  src={booking.property.images[0]}
                   alt={booking.property.name}
                   className="w-24 h-24 object-cover rounded-lg"
                 />
@@ -158,7 +167,7 @@ export default function BookingConfirmation() {
                 <h2 className="font-display text-xl font-semibold">{booking.property.name}</h2>
                 <p className="text-muted-foreground flex items-center gap-1 mt-1">
                   <MapPin className="h-4 w-4" />
-                  {booking.property.address}, {booking.property.city}
+                  {booking.property.address ? `${booking.property.address}, ` : ''}{booking.property.location}
                 </p>
               </div>
             </div>

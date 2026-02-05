@@ -266,10 +266,36 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
 
   const handlePaymentSuccess = () => {
     setIsPaymentPopupOpen(false);
-    // Close the dialog and redirect to confirmation page
+    // Close the dialog and redirect to confirmation page with booking data
     onOpenChange(false);
     if (bookingNumber) {
-      navigate(`/booking-confirmation/${bookingNumber}`);
+      navigate(`/booking-confirmation/${bookingNumber}`, {
+        state: {
+          booking: {
+            id: createdBookingId,
+            booking_number: bookingNumber,
+            check_in_date: checkIn ? format(checkIn, 'yyyy-MM-dd') : '',
+            check_out_date: checkOut ? format(checkOut, 'yyyy-MM-dd') : '',
+            num_guests: numGuests,
+            total_amount: priceBreakdown?.totalAmount || 0,
+            status: 'confirmed',
+            payment_status: 'paid',
+            special_requests: guestInfo.specialRequests || null,
+            property: {
+              id: property.id,
+              name: property.name,
+              address: property.address || '',
+              location: property.location || '',
+              images: property.images || null,
+            },
+            customer: {
+              full_name: guestInfo.fullName,
+              email: guestInfo.email,
+              phone: guestInfo.phone || null,
+            },
+          },
+        },
+      });
     }
   };
 

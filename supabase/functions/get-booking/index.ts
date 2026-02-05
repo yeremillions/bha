@@ -52,8 +52,8 @@ Deno.serve(async (req) => {
           id,
           name,
           address,
-          city,
-          featured_image
+          location,
+          images
         ),
         customer:customers (
           full_name,
