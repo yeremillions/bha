@@ -40,8 +40,8 @@ interface BookingDetails {
     id: string;
     name: string;
     address: string;
-    city: string;
-    featured_image: string | null;
+    location: string;
+    images: string[] | null;
   };
   customer: {
     full_name: string;
@@ -380,9 +380,9 @@ export default function ManageBooking() {
 
               {/* Property Info */}
               <div className="flex gap-4">
-                {booking.property.featured_image && (
+                {booking.property.images?.[0] && (
                   <img
-                    src={booking.property.featured_image}
+                    src={booking.property.images[0]}
                     alt={booking.property.name}
                     className="w-24 h-24 object-cover rounded-lg"
                   />
@@ -391,7 +391,7 @@ export default function ManageBooking() {
                   <h3 className="font-display text-xl font-semibold">{booking.property.name}</h3>
                   <p className="text-muted-foreground flex items-center gap-1 mt-1">
                     <MapPin className="h-4 w-4" />
-                    {booking.property.address}, {booking.property.city}
+                    {booking.property.address ? `${booking.property.address}, ` : ''}{booking.property.location}
                   </p>
                 </div>
               </div>
