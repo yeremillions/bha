@@ -409,6 +409,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
                       selected={checkOut}
                       onSelect={(date) => handleDateSelect(date, 'checkOut')}
                       disabled={(date) => date <= (checkIn || today)}
+                      defaultMonth={checkIn || undefined}
                       initialFocus
                       className="pointer-events-auto"
                     />
