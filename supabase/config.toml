@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.get-booking]
 verify_jwt = false
+
+[functions.claim-account]
+verify_jwt = false
+
+[functions.validate-invitation]
+verify_jwt = false
