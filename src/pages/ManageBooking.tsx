@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
-import { Search, Calendar, MapPin, Users, CreditCard, Mail, Phone, AlertCircle, Check, Clock, XCircle, Loader2 } from 'lucide-react';
+import { Search, Calendar, MapPin, Users, CreditCard, Mail, Phone, AlertCircle, Check, Clock, XCircle, Loader2, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -81,6 +81,13 @@ export default function ManageBooking() {
   const [cancellationReason, setCancellationReason] = useState('');
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancellationPolicy, setCancellationPolicy] = useState<CancellationPolicy>(defaultCancellationPolicy);
+
+  // Claim account state
+  const [showClaimDialog, setShowClaimDialog] = useState(false);
+  const [claimPassword, setClaimPassword] = useState('');
+  const [claimPasswordConfirm, setClaimPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   // Pre-fill from navigation state if coming from confirmation page
   useEffect(() => {
@@ -232,6 +239,73 @@ export default function ManageBooking() {
       toast.error(err.message || 'An unexpected error occurred');
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handleClaimAccount = async () => {
+    if (!booking) return;
+
+    // Validate passwords
+    if (claimPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    if (claimPassword !== claimPasswordConfirm) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    setIsClaiming(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('claim-account', {
+        body: {
+          bookingNumber: booking.booking_number,
+          email: email,
+          password: claimPassword,
+        },
+      });
+
+      if (error) {
+        console.error('Claim account error:', error);
+        const errorBody = (error as any)?.context;
+        toast.error(errorBody?.error || error.message || 'Failed to create account');
+        return;
+      }
+
+      if (!data?.success) {
+        toast.error(data?.error || 'Failed to create account');
+        return;
+      }
+
+      toast.success('Account created successfully! Signing you in...');
+      setShowClaimDialog(false);
+
+      // Auto-login the user
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: claimPassword,
+      });
+
+      if (signInError) {
+        console.error('Auto sign-in error:', signInError);
+        toast.error('Account created but auto-login failed. Please sign in manually.');
+        navigate('/auth');
+        return;
+      }
+
+      // Navigate to dashboard
+      toast.success('Welcome! You are now signed in.');
+      navigate('/dashboard');
+
+    } catch (err: any) {
+      console.error('Error claiming account:', err);
+      toast.error(err.message || 'An unexpected error occurred');
+    } finally {
+      setIsClaiming(false);
+      setClaimPassword('');
+      setClaimPasswordConfirm('');
     }
   };
 
@@ -501,11 +575,22 @@ export default function ManageBooking() {
                 </div>
               </div>
 
-              {/* Cancel Booking Button */}
-              {canCancelBooking && (
-                <>
-                  <Separator />
-                  <div className="pt-2">
+              {/* Action Buttons */}
+              <Separator />
+              <div className="pt-2 space-y-4">
+                <div className="flex flex-wrap gap-3">
+                  {/* Claim Account Button */}
+                  <Button
+                    variant="default"
+                    onClick={() => setShowClaimDialog(true)}
+                    className="w-full sm:w-auto"
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Claim this Account
+                  </Button>
+
+                  {/* Cancel Booking Button */}
+                  {canCancelBooking && (
                     <Button
                       variant="destructive"
                       onClick={() => setShowCancelDialog(true)}
@@ -514,13 +599,20 @@ export default function ManageBooking() {
                       <XCircle className="mr-2 h-4 w-4" />
                       Cancel Booking
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Cancellation policy: Full refund if cancelled {cancellationPolicy.fullRefundDays}+ days before check-in,
-                      {cancellationPolicy.partialRefundPercent}% refund if cancelled {cancellationPolicy.partialRefundDays}-{cancellationPolicy.fullRefundDays - 1} days before.
-                    </p>
-                  </div>
-                </>
-              )}
+                  )}
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  <strong>Claim Account:</strong> Create a login to manage all your bookings online.
+                  {canCancelBooking && (
+                    <>
+                      <br />
+                      <strong>Cancellation Policy:</strong> Full refund if cancelled {cancellationPolicy.fullRefundDays}+ days before check-in,
+                      {' '}{cancellationPolicy.partialRefundPercent}% refund if cancelled {cancellationPolicy.partialRefundDays}-{cancellationPolicy.fullRefundDays - 1} days before.
+                    </>
+                  )}
+                </p>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -607,6 +699,102 @@ export default function ManageBooking() {
                 </>
               ) : (
                 'Yes, Cancel Booking'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Claim Account Dialog */}
+      <Dialog open={showClaimDialog} onOpenChange={(open) => {
+        setShowClaimDialog(open);
+        if (!open) {
+          setClaimPassword('');
+          setClaimPasswordConfirm('');
+        }
+      }}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Create Your Account</DialogTitle>
+            <DialogDescription>
+              Set a password to create your account with <strong>{booking?.customer?.email}</strong>.
+              You'll be able to manage all your bookings online.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="claimPassword">Password</Label>
+              <div className="relative">
+                <Input
+                  id="claimPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Create a password"
+                  value={claimPassword}
+                  onChange={(e) => setClaimPassword(e.target.value)}
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
+            </div>
+
+            {/* Confirm Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="claimPasswordConfirm">Confirm Password</Label>
+              <Input
+                id="claimPasswordConfirm"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Confirm your password"
+                value={claimPasswordConfirm}
+                onChange={(e) => setClaimPasswordConfirm(e.target.value)}
+              />
+            </div>
+
+            {/* Info */}
+            <Alert>
+              <UserPlus className="h-4 w-4" />
+              <AlertDescription>
+                Your account will be linked to your booking history. You can sign in anytime to view and manage your reservations.
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowClaimDialog(false)}
+              disabled={isClaiming}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleClaimAccount}
+              disabled={isClaiming || claimPassword.length < 6 || claimPassword !== claimPasswordConfirm}
+            >
+              {isClaiming ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Create Account
+                </>
               )}
             </Button>
           </DialogFooter>
