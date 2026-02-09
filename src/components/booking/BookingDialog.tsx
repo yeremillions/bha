@@ -63,6 +63,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [checkOutMonth, setCheckOutMonth] = useState<Date>(checkOut || checkIn || new Date());
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
@@ -139,13 +140,16 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
       setCheckIn(date);
       // Auto-set checkout to next day if not set or if it's before new checkin
       if (date && (!checkOut || checkOut <= date)) {
-        setCheckOut(addDays(date, 1));
+        const newCheckOut = addDays(date, 1);
+        setCheckOut(newCheckOut);
+        setCheckOutMonth(newCheckOut);
       }
       // Close check-in popover and open check-out popover
       setCheckInOpen(false);
       setTimeout(() => setCheckOutOpen(true), 100);
     } else {
       setCheckOut(date);
+      if (date) setCheckOutMonth(date);
       setCheckOutOpen(false);
     }
   };
@@ -405,12 +409,12 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="top" sideOffset={4}>
                     <Calendar
-                      key={checkOut?.toISOString() || checkIn?.toISOString() || 'checkout'}
                       mode="single"
                       selected={checkOut}
                       onSelect={(date) => handleDateSelect(date, 'checkOut')}
                       disabled={(date) => date <= (checkIn || today)}
-                      defaultMonth={checkOut || checkIn || undefined}
+                      month={checkOutMonth}
+                      onMonthChange={setCheckOutMonth}
                       initialFocus
                       className="pointer-events-auto"
                     />
