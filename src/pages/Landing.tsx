@@ -45,6 +45,7 @@ const Landing = () => {
   const [checkOut, setCheckOut] = useState<Date | undefined>();
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [checkOutMonth, setCheckOutMonth] = useState<Date>(new Date());
   const [hasSearched, setHasSearched] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
 
@@ -70,17 +71,24 @@ const Landing = () => {
   const handleCheckInSelect = (date: Date | undefined) => {
     setCheckIn(date);
     if (date && (!checkOut || checkOut <= date)) {
-      // Auto-set checkout to next day
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
       setCheckOut(nextDay);
+      setCheckOutMonth(nextDay);
+    } else if (date && checkOut) {
+      setCheckOutMonth(checkOut);
+    } else if (date) {
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      setCheckOutMonth(nextDay);
     }
     setCheckInOpen(false);
-    setTimeout(() => setCheckOutOpen(true), 100);
+    setTimeout(() => setCheckOutOpen(true), 200);
   };
 
   const handleCheckOutSelect = (date: Date | undefined) => {
     setCheckOut(date);
+    if (date) setCheckOutMonth(date);
     setCheckOutOpen(false);
   };
   const trustBadges = [
@@ -285,6 +293,8 @@ const Landing = () => {
                           selected={checkOut}
                           onSelect={handleCheckOutSelect}
                           disabled={(date) => date <= (checkIn || today)}
+                          month={checkOutMonth}
+                          onMonthChange={setCheckOutMonth}
                           initialFocus
                           className="pointer-events-auto"
                         />
