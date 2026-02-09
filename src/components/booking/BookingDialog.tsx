@@ -63,7 +63,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
-  const [checkOutMonth, setCheckOutMonth] = useState<Date>(checkOut || checkIn || new Date());
+  const [checkOutMonth, setCheckOutMonth] = useState<Date>(() => checkOut || (checkIn ? addDays(checkIn, 1) : new Date()));
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
@@ -139,14 +139,16 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
     if (type === 'checkIn') {
       setCheckIn(date);
       // Auto-set checkout to next day if not set or if it's before new checkin
-      if (date && (!checkOut || checkOut <= date)) {
-        const newCheckOut = addDays(date, 1);
+      const newCheckOut = date && (!checkOut || checkOut <= date) ? addDays(date, 1) : checkOut;
+      if (newCheckOut && newCheckOut !== checkOut) {
         setCheckOut(newCheckOut);
-        setCheckOutMonth(newCheckOut);
       }
-      // Close check-in popover and open check-out popover
+      // Set the month the checkout calendar should show BEFORE opening it
+      const targetMonth = newCheckOut || (date ? addDays(date, 1) : new Date());
+      setCheckOutMonth(targetMonth);
+      // Close check-in popover and open check-out popover after state flush
       setCheckInOpen(false);
-      setTimeout(() => setCheckOutOpen(true), 100);
+      setTimeout(() => setCheckOutOpen(true), 200);
     } else {
       setCheckOut(date);
       if (date) setCheckOutMonth(date);
