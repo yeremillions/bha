@@ -405,6 +405,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="top" sideOffset={4}>
                     <Calendar
+                      key={checkOut?.toISOString() || checkIn?.toISOString() || 'checkout'}
                       mode="single"
                       selected={checkOut}
                       onSelect={(date) => handleDateSelect(date, 'checkOut')}
