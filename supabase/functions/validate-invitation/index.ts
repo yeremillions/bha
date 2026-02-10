@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 interface ValidateInvitationRequest {
   token: string;
@@ -12,9 +8,8 @@ interface ValidateInvitationRequest {
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
 
   try {
     const { token }: ValidateInvitationRequest = await req.json();
@@ -22,7 +17,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!token) {
       return new Response(
         JSON.stringify({ error: "Missing required field: token" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
@@ -41,17 +36,17 @@ const handler = async (req: Request): Promise<Response> => {
       .maybeSingle();
 
     if (invitationError) {
-      console.error("Invitation fetch error:", invitationError);
+      console.error("Invitation fetch error");
       return new Response(
         JSON.stringify({ error: "Failed to validate invitation" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 500, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
     if (!invitation) {
       return new Response(
         JSON.stringify({ error: "Invitation not found", valid: false }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 404, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
@@ -69,14 +64,14 @@ const handler = async (req: Request): Promise<Response> => {
           created_at: invitation.created_at,
         }
       }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 200, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
     );
 
   } catch (error: any) {
-    console.error("Error in validate-invitation function:", error);
+    console.error("Error in validate-invitation function");
     return new Response(
       JSON.stringify({ error: error.message || "Internal server error" }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 500, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
     );
   }
 };

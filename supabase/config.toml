@@ -1,15 +1,22 @@
 project_id = "nnrzsvtaeulxunxnbxtw"
 
+# Auth-required: these functions perform internal auth checks;
+# verify_jwt = true adds defense-in-depth at the gateway level.
 [functions.send-team-invitation]
-verify_jwt = false
+verify_jwt = true
 
+[functions.delete-user]
+verify_jwt = true
+
+[functions.send-booking-email]
+verify_jwt = true
+
+# Public endpoints: accessible without authentication.
+# These rely on other verification mechanisms (email match, invite token, rate limiting, etc.).
 [functions.send-password-reset]
 verify_jwt = false
 
 [functions.accept-invitation]
-verify_jwt = false
-
-[functions.delete-user]
 verify_jwt = false
 
 [functions.subscribe-newsletter]
@@ -22,9 +29,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.cancel-booking]
-verify_jwt = false
-
-[functions.send-booking-email]
 verify_jwt = false
 
 [functions.get-booking]

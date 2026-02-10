@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 interface SubscribeRequest {
   email: string;
@@ -14,9 +10,12 @@ interface SubscribeRequest {
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  // Rate limit: 3 subscribe attempts per minute per IP
+  const rateLimited = checkRateLimit(req, getCorsHeaders(req), { maxRequests: 3, windowSeconds: 60 });
+  if (rateLimited) return rateLimited;
 
   try {
     const SENDFOX_API_TOKEN = Deno.env.get("SENDFOX_API_TOKEN");
@@ -36,12 +35,12 @@ serve(async (req) => {
         JSON.stringify({ success: false, error: "Invalid email address" }),
         {
           status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         }
       );
     }
 
-    console.log(`Subscribing email: ${email} (${firstName} ${lastName}) to SendFox list: ${SENDFOX_LIST_ID}`);
+    console.log('Processing newsletter subscription');
 
     const sendfoxUrl = "https://api.sendfox.com/contacts";
 
@@ -64,7 +63,7 @@ serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("SendFox API error:", data);
+      console.error("SendFox API error, status:", response.status);
       
       // Handle already subscribed case (SendFox returns 200 for existing contacts, but check for duplicates)
       if (response.status === 400 && data.message?.includes("already")) {
@@ -75,7 +74,7 @@ serve(async (req) => {
           }),
           {
             status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           }
         );
       }
@@ -85,10 +84,10 @@ serve(async (req) => {
         throw new Error("Newsletter subscription limit reached. Please try again later.");
       }
 
-      throw new Error(`SendFox API error [${response.status}]: ${data.message || JSON.stringify(data)}`);
+      throw new Error(`SendFox API error [${response.status}]`);
     }
 
-    console.log(`Successfully subscribed ${email} to newsletter`);
+    console.log('Newsletter subscription processed successfully');
 
     return new Response(
       JSON.stringify({ 
@@ -97,17 +96,17 @@ serve(async (req) => {
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       }
     );
   } catch (error: unknown) {
-    console.error("Newsletter subscription error:", error);
+    console.error("Newsletter subscription error");
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       }
     );
   }

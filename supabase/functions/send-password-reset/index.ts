@@ -1,12 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
 
 interface PasswordResetRequest {
   email: string;
@@ -94,9 +90,12 @@ const generatePasswordResetEmail = (resetLink: string): string => {
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  // Rate limit: 3 password reset attempts per minute per IP
+  const rateLimited = checkRateLimit(req, getCorsHeaders(req), { maxRequests: 3, windowSeconds: 60 });
+  if (rateLimited) return rateLimited;
 
   try {
     const { email, resetLink }: PasswordResetRequest = await req.json();
@@ -105,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Email and resetLink are required");
     }
 
-    console.log(`Sending password reset email to: ${email}`);
+    console.log('Processing password reset email request');
 
     const html = generatePasswordResetEmail(resetLink);
 
@@ -125,27 +124,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!res.ok) {
       const errorData = await res.text();
-      console.error("Resend API error:", errorData);
-      throw new Error(`Failed to send email: ${errorData}`);
+      console.error("Resend API error, status:", res.status);
+      throw new Error('Failed to send password reset email');
     }
 
     const data = await res.json();
-    console.log("Password reset email sent successfully:", data);
+    console.log("Password reset email sent successfully");
 
     return new Response(JSON.stringify({ success: true, data }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        ...corsHeaders,
+        ...getCorsHeaders(req),
       },
     });
   } catch (error: any) {
-    console.error("Error sending password reset email:", error);
+    console.error("Error sending password reset email");
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { "Content-Type": "application/json", ...getCorsHeaders(req) },
       }
     );
   }

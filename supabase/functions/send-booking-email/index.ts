@@ -1,10 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 type EmailType = "confirmation" | "cancellation" | "payment_receipt" | "check_in_reminder";
 
@@ -20,9 +15,9 @@ interface SendBookingEmailRequest {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  // Handle CORS preflight
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
 
   try {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
@@ -30,7 +25,7 @@ Deno.serve(async (req) => {
       console.error("RESEND_API_KEY not configured");
       return new Response(
         JSON.stringify({ error: "Email service not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -43,7 +38,7 @@ Deno.serve(async (req) => {
     if (!bookingId || !emailType) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: bookingId, emailType" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -69,17 +64,17 @@ Deno.serve(async (req) => {
       .single();
 
     if (bookingError || !booking) {
-      console.error("Booking not found:", bookingError);
+      console.error("Booking not found for email sending");
       return new Response(
         JSON.stringify({ error: "Booking not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
     if (!booking.customer?.email) {
       return new Response(
         JSON.stringify({ error: "Customer email not found" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -165,7 +160,7 @@ Deno.serve(async (req) => {
       default:
         return new Response(
           JSON.stringify({ error: "Invalid email type" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
         );
     }
 
@@ -187,14 +182,14 @@ Deno.serve(async (req) => {
     const emailResult = await emailResponse.json();
 
     if (!emailResponse.ok) {
-      console.error("Failed to send email:", emailResult);
+      console.error("Failed to send email, status:", emailResponse.status);
       return new Response(
         JSON.stringify({ error: "Failed to send email", details: emailResult }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Email sent successfully: ${emailType} to ${booking.customer.email}`);
+    console.log(`Email sent successfully: type=${emailType}, booking=${bookingId}`);
 
     return new Response(
       JSON.stringify({
@@ -203,14 +198,14 @@ Deno.serve(async (req) => {
         emailId: emailResult.id,
         recipient: booking.customer.email,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending booking email");
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });

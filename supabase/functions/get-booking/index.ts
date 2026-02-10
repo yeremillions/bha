@@ -1,10 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 interface GetBookingRequest {
   bookingNumber: string;
@@ -12,9 +7,9 @@ interface GetBookingRequest {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  // Handle CORS preflight
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -26,7 +21,7 @@ Deno.serve(async (req) => {
     if (!bookingNumber) {
       return new Response(
         JSON.stringify({ success: false, error: "Missing required field: bookingNumber" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -65,10 +60,10 @@ Deno.serve(async (req) => {
       .single();
 
     if (bookingError || !booking) {
-      console.error("Booking not found:", bookingError);
+      console.error("Booking not found");
       return new Response(
         JSON.stringify({ success: false, error: "Booking not found" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -78,21 +73,21 @@ Deno.serve(async (req) => {
       if (!customerEmail || customerEmail.toLowerCase() !== email.toLowerCase()) {
         return new Response(
           JSON.stringify({ success: false, error: "Booking not found. Please check your booking number and email." }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
         );
       }
     }
 
     return new Response(
       JSON.stringify({ success: true, booking }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Error fetching booking:", error);
+    console.error("Error fetching booking");
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });

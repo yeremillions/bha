@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, User, Building2, ArrowLeft } from 'lucide-react';
+import { validatePassword } from '@/lib/passwordValidation';
 
 type AuthView = 'signin' | 'signup' | 'forgot-password' | 'reset-password';
 
@@ -54,7 +55,7 @@ const Auth = () => {
     if (error) {
       toast({
         title: 'Sign in failed',
-        description: error.message,
+        description: 'Invalid email or password. Please try again.',
         variant: 'destructive',
       });
     }
@@ -71,10 +72,11 @@ const Auth = () => {
       return;
     }
 
-    if (password.length < 6) {
+    const pwResult = validatePassword(password);
+    if (!pwResult.valid) {
       toast({
-        title: 'Error',
-        description: 'Password must be at least 6 characters',
+        title: 'Weak password',
+        description: pwResult.errors.join('. '),
         variant: 'destructive',
       });
       return;
@@ -94,7 +96,7 @@ const Auth = () => {
       } else {
         toast({
           title: 'Sign up failed',
-          description: error.message,
+          description: 'Unable to create account. Please try again later.',
           variant: 'destructive',
         });
       }
@@ -124,7 +126,7 @@ const Auth = () => {
     if (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: 'Unable to send reset link. Please verify your email and try again.',
         variant: 'destructive',
       });
     } else {
@@ -156,10 +158,11 @@ const Auth = () => {
       return;
     }
 
-    if (password.length < 6) {
+    const pwResult = validatePassword(password);
+    if (!pwResult.valid) {
       toast({
-        title: 'Error',
-        description: 'Password must be at least 6 characters',
+        title: 'Weak password',
+        description: pwResult.errors.join('. '),
         variant: 'destructive',
       });
       return;
@@ -172,7 +175,7 @@ const Auth = () => {
     if (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: 'Unable to reset password. Please try again or request a new reset link.',
         variant: 'destructive',
       });
     } else {

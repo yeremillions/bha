@@ -1,10 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 interface CancelBookingRequest {
   bookingId: string;
@@ -28,9 +24,12 @@ const defaultCancellationPolicy: CancellationPolicy = {
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  // Rate limit: 5 cancellation attempts per minute per IP
+  const rateLimited = checkRateLimit(req, getCorsHeaders(req), { maxRequests: 5, windowSeconds: 60 });
+  if (rateLimited) return rateLimited;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -44,7 +43,7 @@ Deno.serve(async (req) => {
     if (!bookingId || !email) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: bookingId, email" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -70,10 +69,10 @@ Deno.serve(async (req) => {
       .single();
 
     if (bookingError || !booking) {
-      console.error("Booking not found:", bookingError);
+      console.error("Booking not found for cancellation");
       return new Response(
         JSON.stringify({ error: "Booking not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -81,7 +80,7 @@ Deno.serve(async (req) => {
     if (booking.customer?.email?.toLowerCase() !== email.toLowerCase()) {
       return new Response(
         JSON.stringify({ error: "Email does not match booking records" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -89,14 +88,14 @@ Deno.serve(async (req) => {
     if (booking.status === "cancelled") {
       return new Response(
         JSON.stringify({ error: "Booking is already cancelled" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
     if (booking.status === "checked_in" || booking.status === "checked_out" || booking.status === "completed") {
       return new Response(
         JSON.stringify({ error: "Cannot cancel a booking that has already started or completed" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -111,7 +110,7 @@ Deno.serve(async (req) => {
       ? { ...defaultCancellationPolicy, ...(settingsData.value as unknown as CancellationPolicy) }
       : defaultCancellationPolicy;
 
-    console.log("Cancellation policy:", cancellationPolicy);
+    console.log("Cancellation policy loaded");
 
     // Step 3: Calculate refund amount based on policy
     const checkInDate = new Date(booking.check_in_date);
@@ -140,7 +139,7 @@ Deno.serve(async (req) => {
       refundMessage = "No refund applicable - booking was not paid";
     }
 
-    console.log(`Refund calculation: ${refundPercent}% = ${refundAmount}, Days until check-in: ${daysUntilCheckIn}`);
+    console.log(`Refund calculation: ${refundPercent}%, days until check-in: ${daysUntilCheckIn}`);
 
     // Step 4: Get original payment transaction for Paystack refund
     let originalTransaction = null;
@@ -162,7 +161,7 @@ Deno.serve(async (req) => {
       // Step 5: Process Paystack refund if applicable
       if (originalTransaction?.payment_method === "paystack" && originalTransaction?.payment_reference && paystackSecretKey) {
         try {
-          console.log("Processing Paystack refund for reference:", originalTransaction.payment_reference);
+          console.log("Processing Paystack refund for booking:", bookingId);
 
           // First, get the transaction details from Paystack
           const verifyResponse = await fetch(
@@ -197,15 +196,15 @@ Deno.serve(async (req) => {
             );
 
             paystackRefundResult = await refundResponse.json();
-            console.log("Paystack refund result:", paystackRefundResult);
+            console.log("Paystack refund processed, success:", paystackRefundResult?.status);
 
             if (!paystackRefundResult.status) {
-              console.warn("Paystack refund failed:", paystackRefundResult.message);
+              console.warn("Paystack refund failed");
               // Continue with cancellation but note the refund failure
             }
           }
         } catch (paystackError) {
-          console.error("Error processing Paystack refund:", paystackError);
+          console.error("Error processing Paystack refund");
           // Continue with cancellation - refund will need manual processing
         }
       }
@@ -235,7 +234,7 @@ Deno.serve(async (req) => {
         });
 
       if (refundTxnError) {
-        console.error("Error creating refund transaction:", refundTxnError);
+        console.error("Error creating refund transaction");
         // Continue - the booking will still be cancelled
       }
     }
@@ -256,10 +255,10 @@ Deno.serve(async (req) => {
       .eq("id", bookingId);
 
     if (updateError) {
-      console.error("Error updating booking:", updateError);
+      console.error("Error updating booking status");
       return new Response(
         JSON.stringify({ error: "Failed to cancel booking", details: updateError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -275,7 +274,7 @@ Deno.serve(async (req) => {
       .select();
 
     if (hkError) {
-      console.warn("Error cancelling housekeeping tasks:", hkError);
+      console.warn("Error cancelling housekeeping tasks");
     } else {
       console.log(`Cancelled ${housekeepingTasks?.length || 0} housekeeping tasks`);
     }
@@ -307,18 +306,18 @@ Deno.serve(async (req) => {
       },
     };
 
-    console.log("Cancellation completed:", response);
+    console.log("Cancellation completed for booking:", bookingId);
 
     return new Response(
       JSON.stringify(response),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Error processing cancellation:", error);
+    console.error("Error processing cancellation");
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });
