@@ -34,8 +34,11 @@ export const PropertyImageUpload = ({
   const deleteImage = useDeletePropertyImage();
 
   const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+  const HARD_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB absolute max
   const TARGET_FILE_SIZE = 4 * 1024 * 1024; // 4MB target after compression
   const MAX_DIMENSION = 2048; // Max width/height
+  const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+  const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
   const optimizeImage = async (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {

@@ -1,15 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { writeAuditLog } from "../_shared/audit.ts";
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
 
   try {
     // Get authorization header to verify the caller is authenticated
@@ -17,7 +13,7 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -49,7 +45,7 @@ Deno.serve(async (req) => {
     if (callerError || !callerUser) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -60,10 +56,10 @@ Deno.serve(async (req) => {
       .eq('user_id', callerUser.id);
 
     if (rolesError) {
-      console.error('Error checking caller roles:', rolesError);
+      console.error('Error checking caller roles');
       return new Response(
         JSON.stringify({ error: 'Failed to verify permissions' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -71,7 +67,7 @@ Deno.serve(async (req) => {
     if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: 'Only admins can delete users' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -81,7 +77,7 @@ Deno.serve(async (req) => {
     if (!userId) {
       return new Response(
         JSON.stringify({ error: 'User ID is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -89,7 +85,7 @@ Deno.serve(async (req) => {
     if (userId === callerUser.id) {
       return new Response(
         JSON.stringify({ error: 'You cannot delete your own account' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -101,13 +97,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (deptError) {
-      console.error('Error checking target user department:', deptError);
+      console.error('Error checking target user department');
     }
 
     if (targetDepartment?.is_owner) {
       return new Response(
         JSON.stringify({ error: 'Cannot delete the account owner. Transfer ownership first.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -115,24 +111,31 @@ Deno.serve(async (req) => {
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteError) {
-      console.error('Error deleting user:', deleteError);
+      console.error('Error deleting user');
       return new Response(
         JSON.stringify({ error: `Failed to delete user: ${deleteError.message}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`User ${userId} deleted successfully by ${callerUser.id}`);
+    console.log('User deleted successfully');
+
+    await writeAuditLog(supabaseAdmin, {
+      action: 'user.deleted',
+      userId: callerUser.id,
+      userEmail: callerUser.email,
+      details: `User ${userId} deleted by admin`,
+    });
 
     return new Response(
       JSON.stringify({ success: true, message: 'User deleted successfully' }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('Unexpected error in delete-user');
     return new Response(
       JSON.stringify({ error: 'An unexpected error occurred' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     );
   }
 });

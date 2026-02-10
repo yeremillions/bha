@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 interface ClaimAccountRequest {
   bookingNumber: string;
@@ -14,26 +11,29 @@ interface ClaimAccountRequest {
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  // Rate limit: 5 account claim attempts per minute per IP
+  const rateLimited = checkRateLimit(req, getCorsHeaders(req), { maxRequests: 5, windowSeconds: 60 });
+  if (rateLimited) return rateLimited;
 
   try {
     const { bookingNumber, email, password }: ClaimAccountRequest = await req.json();
 
-    console.log("Claim account request for:", email, "booking:", bookingNumber);
+    console.log("Processing account claim request");
 
     if (!bookingNumber || !email || !password) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: bookingNumber, email, password" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
-    if (password.length < 6) {
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
       return new Response(
-        JSON.stringify({ error: "Password must be at least 6 characters" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ error: "Password must be at least 8 characters and contain uppercase, lowercase, and a number" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
@@ -62,17 +62,17 @@ const handler = async (req: Request): Promise<Response> => {
       .maybeSingle();
 
     if (bookingError) {
-      console.error("Booking fetch error:", bookingError);
+      console.error("Booking fetch error during account claim");
       return new Response(
         JSON.stringify({ error: "Failed to verify booking" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 500, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
     if (!booking) {
       return new Response(
         JSON.stringify({ error: "Booking not found" }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 404, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
@@ -88,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (customer.email.toLowerCase() !== email.toLowerCase()) {
       return new Response(
         JSON.stringify({ error: "Email does not match booking" }),
-        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 403, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
@@ -96,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (customer.user_id) {
       return new Response(
         JSON.stringify({ error: "An account already exists for this email. Please sign in instead." }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
@@ -114,16 +114,16 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("id", customer.id);
 
       if (linkError) {
-        console.error("Error linking existing user:", linkError);
+        console.error("Error linking existing user to customer");
       }
 
       return new Response(
         JSON.stringify({ error: "An account with this email already exists. Please sign in instead." }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
-    console.log("Creating user account for:", customer.email, "name:", customer.full_name);
+    console.log("Creating user account for claimed booking");
 
     // Create user with Admin API - email is auto-confirmed
     const { data: userData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
@@ -137,21 +137,21 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (createUserError) {
-      console.error("User creation error:", createUserError);
+      console.error("User creation error during account claim");
       return new Response(
         JSON.stringify({ error: createUserError.message }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
     if (!userData.user) {
       return new Response(
         JSON.stringify({ error: "Failed to create user account" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 500, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
-    console.log("User created successfully:", userData.user.id);
+    console.log("User created successfully for account claim");
 
     // Link the user to the customer record
     const { error: updateError } = await supabaseAdmin
@@ -160,11 +160,11 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("id", customer.id);
 
     if (updateError) {
-      console.error("Error linking user to customer:", updateError);
+      console.error("Error linking user to customer record");
       // Don't fail - user was created successfully
     }
 
-    console.log("Account claimed successfully for user:", userData.user.id);
+    console.log("Account claimed successfully");
 
     return new Response(
       JSON.stringify({
@@ -174,14 +174,14 @@ const handler = async (req: Request): Promise<Response> => {
           email: userData.user.email,
         },
       }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 200, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
     );
 
   } catch (error: any) {
-    console.error("Error in claim-account function:", error);
+    console.error("Error in claim-account function");
     return new Response(
       JSON.stringify({ error: error.message || "Internal server error" }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 500, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
     );
   }
 };

@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { writeAuditLog } from "../_shared/audit.ts";
 
 interface AcceptInvitationRequest {
   token: string;
@@ -14,19 +11,18 @@ interface AcceptInvitationRequest {
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
 
   try {
     const { token, password, fullName }: AcceptInvitationRequest = await req.json();
 
-    console.log("Accept invitation request for token:", token);
+    console.log("Accept invitation request received");
 
     if (!token || !password || !fullName) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: token, password, fullName" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
@@ -45,10 +41,10 @@ const handler = async (req: Request): Promise<Response> => {
       .maybeSingle();
 
     if (invitationError || !invitation) {
-      console.error("Invitation fetch error:", invitationError);
+      console.error("Invitation fetch error");
       return new Response(
         JSON.stringify({ error: "Invitation not found" }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 404, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
@@ -56,25 +52,25 @@ const handler = async (req: Request): Promise<Response> => {
     if (invitation.status === "accepted") {
       return new Response(
         JSON.stringify({ error: "Invitation has already been accepted" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
     if (invitation.status === "revoked") {
       return new Response(
         JSON.stringify({ error: "Invitation has been revoked" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
     if (new Date(invitation.expires_at) < new Date()) {
       return new Response(
         JSON.stringify({ error: "Invitation has expired" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
-    console.log("Creating user with email:", invitation.email, "role:", invitation.role, "department:", invitation.department);
+    console.log("Creating user for invitation, role:", invitation.role, "department:", invitation.department);
 
     // Create user with Admin API - email is auto-confirmed!
     const { data: userData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
@@ -89,21 +85,21 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (createUserError) {
-      console.error("User creation error:", createUserError);
+      console.error("User creation error");
       return new Response(
         JSON.stringify({ error: createUserError.message }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
     if (!userData.user) {
       return new Response(
         JSON.stringify({ error: "Failed to create user" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 500, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
       );
     }
 
-    console.log("User created successfully:", userData.user.id);
+    console.log("User created successfully");
 
     // Update invitation status
     const { error: updateError } = await supabaseAdmin
@@ -116,11 +112,17 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("invite_token", token);
 
     if (updateError) {
-      console.error("Error updating invitation status:", updateError);
+      console.error("Error updating invitation status");
       // Don't fail - user was created successfully
     }
 
-    console.log("Invitation accepted successfully for user:", userData.user.id);
+    console.log("Invitation accepted successfully");
+
+    await writeAuditLog(supabaseAdmin, {
+      action: 'invitation.accepted',
+      userId: userData.user.id,
+      details: `Invitation accepted, role: ${invitation.role}, department: ${invitation.department}`,
+    });
 
     return new Response(
       JSON.stringify({ 
@@ -130,14 +132,14 @@ const handler = async (req: Request): Promise<Response> => {
           email: userData.user.email 
         } 
       }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 200, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
     );
 
   } catch (error: any) {
-    console.error("Error in accept-invitation function:", error);
+    console.error("Error in accept-invitation function");
     return new Response(
       JSON.stringify({ error: error.message || "Internal server error" }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 500, headers: { "Content-Type": "application/json", ...getCorsHeaders(req) } }
     );
   }
 };

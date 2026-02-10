@@ -1,10 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
+import { writeAuditLog } from "../_shared/audit.ts";
 
 interface PaymentVerifyRequest {
   reference: string;
@@ -35,9 +32,12 @@ interface PaystackVerifyResponse {
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  // Rate limit: 10 verification attempts per minute per IP
+  const rateLimited = checkRateLimit(req, getCorsHeaders(req), { maxRequests: 10, windowSeconds: 60 });
+  if (rateLimited) return rateLimited;
 
   try {
     const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY");
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       console.error("PAYSTACK_SECRET_KEY not configured");
       return new Response(
         JSON.stringify({ error: "Payment service not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -53,16 +53,46 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { reference, bookingId, propertyId, amount, metadata }: PaymentVerifyRequest = await req.json();
+    const { reference, bookingId, propertyId, metadata }: PaymentVerifyRequest = await req.json();
 
     if (!reference || !bookingId) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: reference, bookingId" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Verifying payment: ${reference} for booking: ${bookingId}`);
+    // Idempotency: check if this reference was already processed
+    const { data: existingTxn } = await supabase
+      .from("transactions")
+      .select("id")
+      .eq("payment_reference", reference)
+      .eq("status", "completed")
+      .maybeSingle();
+
+    if (existingTxn) {
+      return new Response(
+        JSON.stringify({ error: "This payment reference has already been processed" }),
+        { status: 409, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get booking details first to verify amount server-side (don't trust client amount)
+    const { data: booking, error: bookingError } = await supabase
+      .from("bookings")
+      .select("booking_number, customer_id, total_amount")
+      .eq("id", bookingId)
+      .single();
+
+    if (bookingError || !booking) {
+      return new Response(
+        JSON.stringify({ error: "Booking not found" }),
+        { status: 404, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+      );
+    }
+
+    // Use the server-side booking amount, not the client-supplied value
+    const amount = booking.total_amount;
 
     // Verify payment with Paystack
     const paystackResponse = await fetch(
@@ -77,48 +107,30 @@ Deno.serve(async (req) => {
     );
 
     const paystackData: PaystackVerifyResponse = await paystackResponse.json();
-    console.log("Paystack verification response:", paystackData.status, paystackData.message);
 
     if (!paystackResponse.ok || !paystackData.status) {
       return new Response(
-        JSON.stringify({ 
-          error: "Payment verification failed", 
-          details: paystackData.message 
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Payment verification failed" }),
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
     const paymentData = paystackData.data;
     if (!paymentData || paymentData.status !== "success") {
       return new Response(
-        JSON.stringify({ 
-          error: "Payment not successful", 
-          paymentStatus: paymentData?.status 
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Payment not successful" }),
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
-    // Verify amount matches (Paystack returns amount in kobo)
+    // Verify amount matches the booking's stored total (Paystack returns amount in kobo)
     const expectedAmountKobo = Math.round(amount * 100);
     if (paymentData.amount !== expectedAmountKobo) {
-      console.error(`Amount mismatch: expected ${expectedAmountKobo}, got ${paymentData.amount}`);
+      console.error('Payment amount mismatch for booking:', bookingId);
       return new Response(
-        JSON.stringify({ error: "Payment amount mismatch" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Payment amount does not match booking total" }),
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
-    }
-
-    // Get booking details
-    const { data: booking, error: bookingError } = await supabase
-      .from("bookings")
-      .select("booking_number, customer_id")
-      .eq("id", bookingId)
-      .single();
-
-    if (bookingError) {
-      console.error("Error fetching booking:", bookingError);
     }
 
     // Get property details
@@ -129,7 +141,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (propertyError) {
-      console.error("Error fetching property:", propertyError);
+      console.error("Error fetching property");
     }
 
     // Create transaction record
@@ -159,7 +171,7 @@ Deno.serve(async (req) => {
 
     let transactionWarning: string | null = null;
     if (transactionError) {
-      console.error("Error creating transaction:", transactionError);
+      console.error("Error creating transaction record");
       transactionWarning = `Transaction record not created: ${transactionError.message}`;
       // Continue - payment was successful, but track the warning
     }
@@ -176,13 +188,13 @@ Deno.serve(async (req) => {
       .single();
 
     if (updateError) {
-      console.error("Error updating booking:", updateError);
+      console.error("Error updating booking payment status");
       return new Response(
         JSON.stringify({ 
           error: "Payment verified but failed to update booking",
           paymentVerified: true 
         }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -214,12 +226,17 @@ Deno.serve(async (req) => {
       if (emailResponse.ok) {
         console.log("Confirmation email sent successfully");
       } else {
-        console.warn("Failed to send confirmation email:", await emailResponse.text());
+        console.warn("Failed to send confirmation email, status:", emailResponse.status);
       }
     } catch (emailError) {
-      console.warn("Error sending confirmation email:", emailError);
+      console.warn("Error sending confirmation email");
       // Don't fail the payment if email fails
     }
+
+    await writeAuditLog(supabase, {
+      action: 'payment.verified',
+      details: `Payment verified for booking ${bookingId}, reference ${reference}`,
+    });
 
     return new Response(
       JSON.stringify({
@@ -235,14 +252,14 @@ Deno.serve(async (req) => {
         },
         warning: transactionWarning,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Error processing payment:", error);
+    console.error("Error processing payment");
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });

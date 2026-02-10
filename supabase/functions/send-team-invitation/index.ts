@@ -1,15 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0';
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { escapeHtml } from "../_shared/sanitize.ts";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const APP_URL = Deno.env.get('APP_URL') || 'http://localhost:5173';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 interface InvitationEmailRequest {
   invitationId: string;
@@ -17,9 +14,8 @@ interface InvitationEmailRequest {
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
 
   try {
     console.log('send-team-invitation: Starting request processing');
@@ -29,7 +25,7 @@ serve(async (req) => {
       console.log('send-team-invitation: Invalid method:', req.method);
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 405, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -39,7 +35,7 @@ serve(async (req) => {
       console.log('send-team-invitation: Missing authorization header');
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -56,14 +52,14 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
-      console.log('send-team-invitation: Auth error:', authError?.message || 'No user');
+      console.log('send-team-invitation: Auth error');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('send-team-invitation: User authenticated:', user.email);
+    console.log('send-team-invitation: User authenticated');
 
     // Check if user has permission (admin or manager)
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -72,13 +68,13 @@ serve(async (req) => {
       .eq('id', user.id)
       .maybeSingle();
 
-    console.log('send-team-invitation: Profile lookup:', profile, profileError);
+    console.log('send-team-invitation: Profile lookup completed');
 
     if (profileError) {
-      console.error('send-team-invitation: Profile error:', profileError);
+      console.error('send-team-invitation: Profile lookup error');
       return new Response(
         JSON.stringify({ error: 'Failed to verify permissions' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -86,7 +82,7 @@ serve(async (req) => {
       console.log('send-team-invitation: Insufficient permissions, role:', profile?.role);
       return new Response(
         JSON.stringify({ error: 'Insufficient permissions' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -97,7 +93,7 @@ serve(async (req) => {
     if (!invitationId) {
       return new Response(
         JSON.stringify({ error: 'Missing invitationId' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -109,14 +105,14 @@ serve(async (req) => {
       .single();
 
     if (invitationError || !invitation) {
-      console.error('send-team-invitation: Invitation not found:', invitationError);
+      console.error('send-team-invitation: Invitation not found');
       return new Response(
         JSON.stringify({ error: 'Invitation not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('send-team-invitation: Found invitation for:', invitation.email);
+    console.log('send-team-invitation: Found invitation:', invitationId);
 
     // Get inviter details
     let inviterName = 'Your team';
@@ -126,8 +122,8 @@ serve(async (req) => {
         .select('full_name, email')
         .eq('id', invitation.invited_by)
         .maybeSingle();
-      
-      inviterName = inviterProfile?.full_name || inviterProfile?.email || 'Your team';
+
+      inviterName = escapeHtml(inviterProfile?.full_name || inviterProfile?.email) || 'Your team';
     }
 
     // Check if Resend API key is configured
@@ -135,17 +131,17 @@ serve(async (req) => {
       console.error('send-team-invitation: RESEND_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'Email service not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       );
     }
 
     // Build acceptance URL
     const acceptanceUrl = `${APP_URL}/accept-invitation/${invitation.invite_token}`;
-    console.log('send-team-invitation: Acceptance URL:', acceptanceUrl);
+    console.log('send-team-invitation: Acceptance URL generated');
 
     // Format role and department for display
-    const roleDisplay = invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1);
-    const departmentDisplay = invitation.department.charAt(0).toUpperCase() + invitation.department.slice(1);
+    const roleDisplay = escapeHtml(invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1));
+    const departmentDisplay = escapeHtml(invitation.department.charAt(0).toUpperCase() + invitation.department.slice(1));
 
     // Prepare email HTML
     const emailHtml = `
@@ -272,7 +268,7 @@ Brooklyn Hills - Hospitality Management System
 This is an automated message, please do not reply to this email.
     `.trim();
 
-    console.log('send-team-invitation: Sending email via Resend to:', invitation.email);
+    console.log('send-team-invitation: Sending invitation email');
 
     // Send email using Resend
     const resendResponse = await fetch('https://api.resend.com/emails', {
@@ -291,10 +287,10 @@ This is an automated message, please do not reply to this email.
     });
 
     const resendData = await resendResponse.json();
-    console.log('send-team-invitation: Resend response:', resendResponse.status, resendData);
+    console.log('send-team-invitation: Resend response status:', resendResponse.status);
 
     if (!resendResponse.ok) {
-      console.error('send-team-invitation: Resend error:', resendData);
+      console.error('send-team-invitation: Resend email sending failed');
       return new Response(
         JSON.stringify({
           error: 'Failed to send email',
@@ -302,7 +298,7 @@ This is an automated message, please do not reply to this email.
         }),
         {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
         }
       );
     }
@@ -318,12 +314,12 @@ This is an automated message, please do not reply to this email.
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       }
     );
 
   } catch (error: unknown) {
-    console.error('send-team-invitation: Unexpected error:', error);
+    console.error('send-team-invitation: Unexpected error');
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({
@@ -332,7 +328,7 @@ This is an automated message, please do not reply to this email.
       }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       }
     );
   }

@@ -1,10 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 interface CreateBookingRequest {
   propertyId: string;
@@ -28,9 +24,12 @@ interface CreateBookingRequest {
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  // Rate limit: 5 booking attempts per minute per IP
+  const rateLimited = checkRateLimit(req, getCorsHeaders(req), { maxRequests: 5, windowSeconds: 60 });
+  if (rateLimited) return rateLimited;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -46,11 +45,11 @@ Deno.serve(async (req) => {
     if (!propertyId || !checkInDate || !checkOutDate || !guestInfo?.email || !guestInfo?.fullName) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Creating booking for ${guestInfo.email} at property ${propertyId}`);
+    console.log('Creating booking for property', propertyId);
 
     // Step 1: Check if customer exists or create new one
     const { data: existingCustomer } = await supabase
@@ -63,7 +62,7 @@ Deno.serve(async (req) => {
 
     if (existingCustomer) {
       customerId = existingCustomer.id;
-      console.log(`Found existing customer: ${customerId}`);
+      console.log('Found existing customer');
     } else {
       // Create new customer
       const { data: newCustomer, error: customerError } = await supabase
@@ -77,14 +76,14 @@ Deno.serve(async (req) => {
         .single();
 
       if (customerError || !newCustomer) {
-        console.error("Error creating customer:", customerError);
+        console.error("Error creating customer record");
         return new Response(
           JSON.stringify({ error: "Failed to create customer record", details: customerError?.message }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
         );
       }
       customerId = newCustomer.id;
-      console.log(`Created new customer: ${customerId}`);
+      console.log('Created new customer');
     }
 
     // Step 2: Verify property availability
@@ -97,13 +96,13 @@ Deno.serve(async (req) => {
         p_check_out: checkOutDate,
       });
 
-    console.log(`Availability check result:`, { availability, error: availabilityError });
+    console.log('Availability check result:', availability ? 'available' : 'unavailable');
 
     if (availabilityError) {
-      console.error("Error checking availability:", availabilityError);
+      console.error("Error checking availability");
       return new Response(
         JSON.stringify({ error: "Failed to check property availability", details: availabilityError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -111,7 +110,7 @@ Deno.serve(async (req) => {
       console.log("Property not available for selected dates");
       return new Response(
         JSON.stringify({ error: "Property is not available for the selected dates" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -141,10 +140,10 @@ Deno.serve(async (req) => {
       .single();
 
     if (bookingError || !booking) {
-      console.error("Error creating booking:", bookingError);
+      console.error("Error creating booking");
       return new Response(
         JSON.stringify({ error: "Failed to create booking", details: bookingError?.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -159,14 +158,14 @@ Deno.serve(async (req) => {
         },
         customerId,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Error in create-booking:", error);
+    console.error("Error in create-booking");
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });
