@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { writeAuditLog } from "../_shared/audit.ts";
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -118,6 +119,13 @@ Deno.serve(async (req) => {
     }
 
     console.log('User deleted successfully');
+
+    await writeAuditLog(supabaseAdmin, {
+      action: 'user.deleted',
+      userId: callerUser.id,
+      userEmail: callerUser.email,
+      details: `User ${userId} deleted by admin`,
+    });
 
     return new Response(
       JSON.stringify({ success: true, message: 'User deleted successfully' }),

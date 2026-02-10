@@ -1,6 +1,8 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 type AppRole = 'admin' | 'housekeeper' | 'maintenance' | 'barman' | 'facility_manager';
 
@@ -26,6 +28,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(async () => {
+      // Only sign out if there's an active session
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        await supabase.auth.signOut();
+        setRoles([]);
+      }
+    }, IDLE_TIMEOUT_MS);
+  }, []);
+
+  // Set up idle timeout: listen for user activity events
+  useEffect(() => {
+    if (!user) return;
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach((e) => window.addEventListener(e, resetIdleTimer));
+    resetIdleTimer(); // Start the timer
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, resetIdleTimer));
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [user, resetIdleTimer]);
 
   useEffect(() => {
     // Set up auth state listener FIRST

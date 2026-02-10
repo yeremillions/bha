@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { escapeHtml } from "../_shared/sanitize.ts";
 
 type EmailType = "confirmation" | "cancellation" | "payment_receipt" | "check_in_reminder";
 
@@ -103,14 +104,20 @@ Deno.serve(async (req) => {
 
     const baseUrl = Deno.env.get("SITE_URL") || "https://brooklynhillsapartment.com";
 
+    // Sanitize all user-controlled data before interpolation into HTML templates
+    const safeName = escapeHtml(booking.customer.full_name);
+    const safeBookingNumber = escapeHtml(booking.booking_number);
+    const safePropertyName = escapeHtml(booking.property?.name || "Property");
+    const safePropertyAddress = escapeHtml(`${booking.property?.address || ""}, ${booking.property?.city || ""}`);
+
     switch (emailType) {
       case "confirmation":
         subject = `Booking Confirmed - ${booking.booking_number}`;
         html = generateConfirmationEmail({
-          customerName: booking.customer.full_name,
-          bookingNumber: booking.booking_number,
-          propertyName: booking.property?.name || "Property",
-          propertyAddress: `${booking.property?.address || ""}, ${booking.property?.city || ""}`,
+          customerName: safeName,
+          bookingNumber: safeBookingNumber,
+          propertyName: safePropertyName,
+          propertyAddress: safePropertyAddress,
           checkInDate: formatDate(booking.check_in_date),
           checkOutDate: formatDate(booking.check_out_date),
           numGuests: booking.num_guests,
@@ -122,25 +129,25 @@ Deno.serve(async (req) => {
       case "cancellation":
         subject = `Booking Cancelled - ${booking.booking_number}`;
         html = generateCancellationEmail({
-          customerName: booking.customer.full_name,
-          bookingNumber: booking.booking_number,
-          propertyName: booking.property?.name || "Property",
+          customerName: safeName,
+          bookingNumber: safeBookingNumber,
+          propertyName: safePropertyName,
           cancellationDate: formatDate(new Date().toISOString()),
           refundAmount: formatCurrency(additionalData?.refundAmount || 0),
           refundPercent: additionalData?.refundPercent || 0,
-          refundMessage: additionalData?.refundMessage || "",
+          refundMessage: escapeHtml(additionalData?.refundMessage) || "",
         });
         break;
 
       case "payment_receipt":
         subject = `Payment Receipt - ${booking.booking_number}`;
         html = generatePaymentReceiptEmail({
-          customerName: booking.customer.full_name,
-          bookingNumber: booking.booking_number,
+          customerName: safeName,
+          bookingNumber: safeBookingNumber,
           amount: formatCurrency(booking.total_amount),
-          transactionRef: additionalData?.transactionRef || booking.booking_number,
+          transactionRef: escapeHtml(additionalData?.transactionRef as string) || safeBookingNumber,
           paymentDate: formatDate(new Date().toISOString()),
-          propertyName: booking.property?.name || "Property",
+          propertyName: safePropertyName,
           checkInDate: formatDate(booking.check_in_date),
           checkOutDate: formatDate(booking.check_out_date),
         });
@@ -149,10 +156,10 @@ Deno.serve(async (req) => {
       case "check_in_reminder":
         subject = `Check-in Tomorrow - ${booking.booking_number}`;
         html = generateCheckInReminderEmail({
-          customerName: booking.customer.full_name,
-          bookingNumber: booking.booking_number,
-          propertyName: booking.property?.name || "Property",
-          propertyAddress: `${booking.property?.address || ""}, ${booking.property?.city || ""}`,
+          customerName: safeName,
+          bookingNumber: safeBookingNumber,
+          propertyName: safePropertyName,
+          propertyAddress: safePropertyAddress,
           checkInDate: formatDate(booking.check_in_date),
         });
         break;

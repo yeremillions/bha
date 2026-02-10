@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate-limit.ts";
+import { writeAuditLog } from "../_shared/audit.ts";
 
 interface CancelBookingRequest {
   bookingId: string;
@@ -307,6 +308,11 @@ Deno.serve(async (req) => {
     };
 
     console.log("Cancellation completed for booking:", bookingId);
+
+    await writeAuditLog(supabase, {
+      action: 'booking.cancelled',
+      details: `Booking ${bookingId} cancelled. Reason: ${reason}`,
+    });
 
     return new Response(
       JSON.stringify(response),

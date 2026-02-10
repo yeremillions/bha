@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0';
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { escapeHtml } from "../_shared/sanitize.ts";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -121,8 +122,8 @@ serve(async (req) => {
         .select('full_name, email')
         .eq('id', invitation.invited_by)
         .maybeSingle();
-      
-      inviterName = inviterProfile?.full_name || inviterProfile?.email || 'Your team';
+
+      inviterName = escapeHtml(inviterProfile?.full_name || inviterProfile?.email) || 'Your team';
     }
 
     // Check if Resend API key is configured
@@ -139,8 +140,8 @@ serve(async (req) => {
     console.log('send-team-invitation: Acceptance URL generated');
 
     // Format role and department for display
-    const roleDisplay = invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1);
-    const departmentDisplay = invitation.department.charAt(0).toUpperCase() + invitation.department.slice(1);
+    const roleDisplay = escapeHtml(invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1));
+    const departmentDisplay = escapeHtml(invitation.department.charAt(0).toUpperCase() + invitation.department.slice(1));
 
     // Prepare email HTML
     const emailHtml = `

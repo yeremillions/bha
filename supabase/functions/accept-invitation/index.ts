@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { writeAuditLog } from "../_shared/audit.ts";
 
 interface AcceptInvitationRequest {
   token: string;
@@ -116,6 +117,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("Invitation accepted successfully");
+
+    await writeAuditLog(supabaseAdmin, {
+      action: 'invitation.accepted',
+      userId: userData.user.id,
+      details: `Invitation accepted, role: ${invitation.role}, department: ${invitation.department}`,
+    });
 
     return new Response(
       JSON.stringify({ 
