@@ -367,52 +367,38 @@ Both `package-lock.json` and `bun.lockb` exist. This can cause dependency drift 
 
 ## Summary Table
 
-| # | Finding | Severity | File(s) |
-|---|---------|----------|---------|
-| 1 | JWT verification disabled on all edge functions | Critical | `supabase/config.toml` |
-| 2 | Wildcard CORS on all edge functions | Critical | All edge function `index.ts` |
-| 3 | Resend API key in client-side bundle | Critical | `src/lib/emailService.ts:5` |
-| 4 | `.env` committed to git history | Critical | `.env` |
-| 5 | No rate limiting on any endpoint | Critical | All endpoints |
-| 6 | Payment verification is client-initiated & unauthenticated | Critical | `supabase/functions/verify-payment/index.ts` |
-| 7 | Auth tokens in localStorage (XSS-exfiltrable) | High | `src/integrations/supabase/client.ts:13` |
-| 8 | Service role key in unauthenticated functions | High | `create-booking/index.ts`, `verify-payment/index.ts` |
-| 9 | Weak password policy (6 chars, no complexity) | High | `src/pages/Auth.tsx` |
-| 10 | Known dependency vulnerabilities | High | `package.json` |
-| 11 | Error messages expose implementation details | High | `Auth.tsx`, edge functions |
-| 12 | No HTTP security headers | Medium | `vite.config.ts`, `vercel.json` |
-| 13 | No CSRF protection | Medium | Edge functions |
-| 14 | Client-side-only file upload validation | Medium | `PropertyImageUpload.tsx` |
-| 15 | Sensitive data in console logs | Medium | Edge functions |
-| 16 | Audit trail table exists but unused | Medium | Edge functions |
-| 17 | `dangerouslySetInnerHTML` usage | Medium | `chart.tsx` |
-| 18 | Email template injection risk | Medium | `emailService.ts` |
-| 19 | No session timeout | Medium | `useAuth.tsx` |
-| 20 | Dual lock files | Info | Root directory |
+| # | Finding | Severity | Status | Resolution |
+|---|---------|----------|--------|------------|
+| 1 | JWT verification disabled on all edge functions | Critical | FIXED | `verify_jwt = true` on `send-team-invitation`, `delete-user`, `send-booking-email` |
+| 2 | Wildcard CORS on all edge functions | Critical | FIXED | Shared `_shared/cors.ts` module restricts to production domain |
+| 3 | Resend API key in client-side bundle | Critical | FIXED | Rewrote `emailService.ts` to proxy through `send-booking-email` edge function |
+| 4 | `.env` committed to git history | Critical | PARTIAL | Removed secret keys from `.env`; **manual action needed: rotate keys + scrub git history** |
+| 5 | No rate limiting on any endpoint | Critical | FIXED | Shared `_shared/rate-limit.ts` added to 6 public edge functions |
+| 6 | Payment verification client-initiated & unauthenticated | Critical | FIXED | Amount verified against DB (not client); idempotency check added |
+| 7 | Auth tokens in localStorage (XSS-exfiltrable) | High | MITIGATED | CSP headers restrict script execution (Fix #12); full fix requires httpOnly cookie proxy |
+| 8 | Service role key in unauthenticated functions | High | MITIGATED | JWT gate on auth-required functions (Fix #1); public functions have rate limits |
+| 9 | Weak password policy (6 chars, no complexity) | High | FIXED | `passwordValidation.ts`: 8+ chars, uppercase, lowercase, number |
+| 10 | Known dependency vulnerabilities | High | FIXED | `npm audit fix` resolved high-severity issues; 2 moderate remain (Vite v7 upgrade needed) |
+| 11 | Error messages expose implementation details | High | FIXED | Redacted raw error messages across `Auth.tsx` and edge functions |
+| 12 | No HTTP security headers | Medium | FIXED | `vercel.json`: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy |
+| 13 | No CSRF protection | Medium | MITIGATED | CORS restriction (Fix #2) prevents cross-origin POST from unauthorized sites |
+| 14 | Client-side-only file upload validation | Medium | FIXED | Added file extension allowlist and hard max file size to `PropertyImageUpload.tsx` |
+| 15 | Sensitive data in console logs | Medium | FIXED | 76 console statements redacted across all 12 edge functions |
+| 16 | Audit trail table exists but unused | Medium | FIXED | `_shared/audit.ts`: logging in `delete-user`, `verify-payment`, `cancel-booking`, `accept-invitation` |
+| 17 | `dangerouslySetInnerHTML` usage | Medium | ACCEPTED | Documented as safe: data is developer-defined `ChartConfig`, no user input path |
+| 18 | Email template injection risk | Medium | FIXED | `_shared/sanitize.ts` with `escapeHtml()` applied to all user-controlled template data |
+| 19 | No session timeout | Medium | FIXED | 30-minute idle timeout with automatic sign-out in `useAuth.tsx` |
+| 20 | Dual lock files | Info | OPEN | Requires team decision on package manager standardization |
 
 ---
 
-## Recommended Remediation Priority
+## Remaining Manual Actions Required
 
-**Immediate (before production launch):**
-1. Rotate all secrets exposed via `.env` in git history
-2. Enable `verify_jwt = true` on auth-required edge functions
-3. Restrict CORS to your production domain
-4. Move Resend API key out of client-side code
-5. Implement Paystack webhook verification
-6. Run `npm audit fix`
-
-**Short-term (within 2 weeks of launch):**
-7. Add rate limiting to auth and public endpoints
-8. Add HTTP security headers
-9. Strengthen password policy
-10. Sanitize error messages
-11. Implement server-side file upload validation
-12. Remove sensitive console logging
-
-**Medium-term:**
-13. Implement audit logging
-14. Add session timeout and management
-15. Evaluate moving to httpOnly cookie-based auth
-16. Add CAPTCHA to public booking flow
-17. Set up automated dependency vulnerability scanning (e.g., Dependabot/Snyk)
+1. **Rotate all secrets** that were exposed via `.env` in git history (Supabase anon key, Paystack key)
+2. **Scrub git history** using `git filter-repo` or BFG Repo-Cleaner to remove `.env` from past commits
+3. **Upgrade Vite to v7** to resolve remaining 2 moderate `esbuild` vulnerabilities
+4. **Set `ALLOWED_ORIGINS` environment variable** in Supabase Edge Function secrets for your production domain
+5. **Evaluate httpOnly cookie auth** as a future architecture improvement for token storage
+6. **Add CAPTCHA** to the public booking flow to prevent automated abuse
+7. **Set up Dependabot/Snyk** for automated dependency vulnerability scanning
+8. **Standardize on one package manager** (npm or bun) and remove the unused lock file
