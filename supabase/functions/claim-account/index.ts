@@ -76,7 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const customer = booking.customer as {
+    const customer = booking.customer as unknown as {
       id: string;
       full_name: string;
       email: string;

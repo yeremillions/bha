@@ -118,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Invitation accepted successfully");
 
-    await writeAuditLog(supabaseAdmin, {
+    await writeAuditLog(supabaseAdmin as any, {
       action: 'invitation.accepted',
       userId: userData.user.id,
       details: `Invitation accepted, role: ${invitation.role}, department: ${invitation.department}`,
