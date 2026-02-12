@@ -22,7 +22,8 @@ SELECT cron.schedule(
 );
 
 -- Alternative: Refresh every 30 minutes
--- SELECT cron.schedule('refresh-revenue-summary-30min', '*/30 * * * *', 'SELECT refresh_revenue_summary()');
+-- Note: The cron expression below uses 'star slash 30' - removed to avoid comment parsing issues
+-- SELECT cron.schedule('refresh-revenue-summary-30min', '0,30 * * * *', 'SELECT refresh_revenue_summary()');
 
 -- Alternative: Refresh every night at 2 AM
 -- SELECT cron.schedule('refresh-revenue-summary-nightly', '0 2 * * *', 'SELECT refresh_revenue_summary()');
