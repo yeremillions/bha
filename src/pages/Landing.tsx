@@ -40,6 +40,8 @@ import { Header } from '@/components/landing/Header';
 import { cn } from '@/lib/utils';
 import davidOkonkwoHeadshot from '@/assets/david-okonkwo-headshot.jpg';
 import sarahEzeHeadshot from '@/assets/sarah-eze-headshot.jpg';
+import heroBg from '@/assets/hero-bg.jpg';
+import standardFeature from '@/assets/standard-feature.jpg';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -239,7 +241,7 @@ const Landing = () => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-scale-slow"
           style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=3270&auto=format&fit=crop)',
+            backgroundImage: `url(${heroBg})`,
           }}
         >
           {/* Multi-layer Gradient Overlay for Text Readability */}
@@ -561,7 +563,7 @@ const Landing = () => {
             {/* Visual Element / Image Grid */}
             <div className="relative">
               <div className="aspect-[3/4] bg-muted overflow-hidden relative z-10">
-                <img src="https://images.unsplash.com/photo-1600607686527-6fb886090705?w=800&q=80" className="object-cover w-full h-full opacity-80" alt="Interior" />
+                <img src={standardFeature} className="object-cover w-full h-full opacity-80" alt="Interior" />
                 <div className="absolute inset-0 border border-[#D4AF37]/30 m-4" />
               </div>
               <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-[#D4AF37] z-0 hidden md:block" />
