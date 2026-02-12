@@ -8,119 +8,123 @@
 
 @layer base {
   :root {
-    /* Cream/Off-white backgrounds */
-    --background: 40 33% 96%;
-    --foreground: 220 40% 13%;
+    /* Luxury Foundation - Deep Navy, Metallic Gold & Silk Cream */
 
-    /* Warm cream cards */
-    --card: 40 40% 98%;
-    --card-foreground: 220 40% 13%;
+    /* Cream/Off-white backgrounds - Lighter, more crisp */
+    --background: 40 20% 99%;
+    --foreground: 222 47% 11%;
+    /* Deep Navy Text */
 
-    --popover: 40 40% 98%;
-    --popover-foreground: 220 40% 13%;
+    /* Cards - Subtle warmth */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    /* Deep Navy primary */
-    --primary: 220 40% 13%;
-    --primary-foreground: 40 33% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Soft cream secondary */
-    --secondary: 40 25% 92%;
-    --secondary-foreground: 220 40% 13%;
+    /* Primary - Rich Deep Navy */
+    --primary: 222 47% 11%;
+    --primary-foreground: 40 33% 98%;
 
-    /* Muted tones */
-    --muted: 40 20% 90%;
-    --muted-foreground: 220 15% 45%;
+    /* Secondary - Soft Beige/Gold tint */
+    --secondary: 40 30% 94%;
+    --secondary-foreground: 222 47% 11%;
 
-    /* Gold accent */
-    --accent: 43 74% 49%;
-    --accent-foreground: 220 40% 13%;
+    /* Muted - Elegant Greys */
+    --muted: 220 10% 94%;
+    --muted-foreground: 220 10% 40%;
+
+    /* Accent - Metallic Gold */
+    /* Base gold is less yellow, more metallic */
+    --accent: 38 64% 56%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 40 33% 96%;
+    --destructive-foreground: 40 33% 98%;
 
-    --border: 40 20% 85%;
-    --input: 40 20% 85%;
-    --ring: 43 74% 49%;
+    --border: 40 20% 90%;
+    --input: 40 20% 90%;
+    --ring: 38 64% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
+    /* Sharper corners for luxury feel */
 
-    /* Gold color for direct use */
-    --gold: 43 74% 49%;
-    --gold-light: 43 70% 65%;
-    --navy: 220 40% 13%;
-    --navy-light: 220 35% 25%;
-    --cream: 40 33% 96%;
+    /* Custom Luxury Palette */
+    --gold: 38 64% 56%;
+    --gold-light: 42 70% 75%;
+    --gold-dark: 35 60% 45%;
 
-    --sidebar-background: 220 40% 13%;
-    --sidebar-foreground: 40 33% 96%;
-    --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 220 40% 13%;
-    --sidebar-accent: 220 35% 20%;
-    --sidebar-accent-foreground: 40 33% 96%;
-    --sidebar-border: 220 30% 25%;
-    --sidebar-ring: 43 74% 49%;
-    
-    /* Enhanced admin colors */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    
+    --navy: 222 47% 11%;
+    --navy-light: 222 35% 25%;
+    --navy-deep: 222 50% 8%;
+
+    --cream: 40 33% 98%;
+
+    /* Sidebar specific */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 40 33% 98%;
+    --sidebar-primary: 38 64% 56%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 222 40% 20%;
+    --sidebar-accent-foreground: 40 33% 98%;
+    --sidebar-border: 222 40% 20%;
+    --sidebar-ring: 38 64% 56%;
+
+    /* Admin/Charts */
+    --chart-1: 222 47% 11%;
+    --chart-2: 38 64% 56%;
+    --chart-3: 160 30% 45%;
+    --chart-4: 280 20% 60%;
+    --chart-5: 340 30% 55%;
+
     /* Glass effect */
-    --glass: 0 0% 100% / 0.7;
-    --glass-border: 0 0% 100% / 0.2;
+    --glass: 0 0% 100% / 0.8;
+    --glass-border: 0 0% 100% / 0.3;
   }
 
   .dark {
-    /* Dark mode - Navy dominant */
-    --background: 220 40% 8%;
-    --foreground: 40 33% 96%;
+    /* Dark mode - Cinematic Midnight */
+    --background: 222 47% 8%;
+    --foreground: 40 30% 96%;
 
-    --card: 220 38% 12%;
-    --card-foreground: 40 33% 96%;
+    --card: 222 45% 10%;
+    --card-foreground: 40 30% 96%;
 
-    --popover: 220 38% 12%;
-    --popover-foreground: 40 33% 96%;
+    --popover: 222 45% 10%;
+    --popover-foreground: 40 30% 96%;
 
-    --primary: 43 74% 49%;
-    --primary-foreground: 220 40% 8%;
+    --primary: 38 64% 56%;
+    /* Gold is primary in dark mode */
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 220 35% 18%;
-    --secondary-foreground: 40 33% 96%;
+    --secondary: 222 40% 15%;
+    --secondary-foreground: 40 30% 96%;
 
-    --muted: 220 30% 20%;
-    --muted-foreground: 40 20% 70%;
+    --muted: 222 30% 15%;
+    --muted-foreground: 220 20% 65%;
 
-    --accent: 43 74% 49%;
-    --accent-foreground: 220 40% 8%;
+    --accent: 38 64% 56%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 62% 30%;
-    --destructive-foreground: 40 33% 96%;
+    --destructive-foreground: 40 30% 96%;
 
-    --border: 220 30% 22%;
-    --input: 220 30% 22%;
-    --ring: 43 74% 49%;
+    --border: 222 40% 18%;
+    --input: 222 40% 18%;
+    --ring: 38 64% 56%;
 
-    --sidebar-background: 220 40% 6%;
-    --sidebar-foreground: 40 33% 96%;
-    --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 220 40% 8%;
-    --sidebar-accent: 220 35% 15%;
-    --sidebar-accent-foreground: 40 33% 96%;
-    --sidebar-border: 220 30% 18%;
-    --sidebar-ring: 43 74% 49%;
-    
-    /* Enhanced admin colors */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    
-    /* Glass effect */
-    --glass: 220 40% 15% / 0.8;
-    --glass-border: 220 40% 30% / 0.3;
+    --sidebar-background: 222 50% 6%;
+    --sidebar-foreground: 40 30% 96%;
+    --sidebar-primary: 38 64% 56%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 222 40% 15%;
+    --sidebar-accent-foreground: 40 30% 96%;
+    --sidebar-border: 222 40% 15%;
+    --sidebar-ring: 38 64% 56%;
+
+    /* Glass effect dark */
+    --glass: 222 47% 8% / 0.7;
+    --glass-border: 222 47% 20% / 0.3;
   }
 }
 
@@ -132,10 +136,23 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Playfair Display', serif;
+    @apply tracking-tight;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
@@ -148,24 +165,34 @@
     font-family: 'DM Sans', sans-serif;
   }
 
-  /* Gold gradient for special elements */
-  .gold-gradient {
-    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-light)) 100%);
+  /* Luxury Gold Gradient - Metallic & Rich */
+  .text-gold-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--gold-dark))] via-[hsl(var(--gold))] to-[hsl(var(--gold-light))];
   }
 
-  /* Navy gradient */
-  .navy-gradient {
-    background: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--navy-light)) 100%);
+  .bg-gold-gradient {
+    @apply bg-gradient-to-r from-[hsl(var(--gold-dark))] via-[hsl(var(--gold))] to-[hsl(var(--gold-light))];
   }
 
-  /* Elegant hover effect */
+  /* Deep Navy Gradient - Cinematic */
+  .bg-navy-gradient {
+    @apply bg-gradient-to-b from-[hsl(var(--navy))] to-[hsl(var(--navy-deep))];
+  }
+
+  /* Elegant Hover Lift - Slower & Smoother */
   .hover-lift {
-    @apply transition-all duration-300 ease-out;
+    @apply transition-all duration-500 ease-out;
+    will-change: transform, box-shadow;
   }
 
   .hover-lift:hover {
     @apply -translate-y-1;
-    box-shadow: 0 20px 40px -15px hsl(var(--navy) / 0.2);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Text Reveal Effect */
+  .hover-text-reveal {
+    @apply relative overflow-hidden;
   }
 
   /* Gold underline animation */
@@ -185,6 +212,7 @@
 }
 
 @layer utilities {
+
   /* Fade in animation */
   .animate-fade-in {
     animation: fade-in 0.6s ease-out forwards;
@@ -210,67 +238,95 @@
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
+
   /* Shimmer effect */
   @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
   }
-  
+
   .animate-shimmer {
     animation: shimmer 3s linear infinite;
     background-size: 200% 100%;
   }
-  
+
   /* Pulse glow */
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px hsl(var(--accent) / 0.3); }
-    50% { box-shadow: 0 0 40px hsl(var(--accent) / 0.5); }
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px hsl(var(--accent) / 0.3);
+    }
+
+    50% {
+      box-shadow: 0 0 40px hsl(var(--accent) / 0.5);
+    }
   }
-  
+
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
   }
-  
+
   /* Float animation */
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-5px);
+    }
   }
-  
+
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
-  
+
   /* Gradient shift */
   @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
   }
-  
+
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient-shift 8s ease infinite;
   }
-  
+
   /* Glass card */
   .glass-card {
     background: hsl(var(--glass));
     backdrop-filter: blur(12px);
     border: 1px solid hsl(var(--glass-border));
   }
-  
+
   /* Stat card gradient borders */
   .gradient-border {
     position: relative;
   }
-  
+
   .gradient-border::before {
     content: '';
     position: absolute;
@@ -287,12 +343,15 @@
 
   /* Hide scrollbar */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    /* Firefox */
   }
 
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Safari and Chrome */
+    display: none;
+    /* Safari and Chrome */
   }
 
   /* Paystack popup z-index override - ensure it appears above ALL dialogs */
@@ -308,8 +367,8 @@
   }
 
   /* Paystack overlay/backdrop */
-  body > div[style*="position: fixed"][style*="inset: 0"],
-  body > div[style*="position: fixed"][style*="top: 0"][style*="left: 0"] {
+  body>div[style*="position: fixed"][style*="inset: 0"],
+  body>div[style*="position: fixed"][style*="top: 0"][style*="left: 0"] {
     z-index: 2147483646 !important;
   }
 }

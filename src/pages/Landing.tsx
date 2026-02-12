@@ -6,9 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IconContainer } from '@/components/ui/IconContainer';
-import { 
+import {
   MapPin,
-  Wifi,
+  WifiHigh,
   Calendar as CalendarIcon,
   Shield,
   Headphones,
@@ -94,20 +94,20 @@ const Landing = () => {
     setCheckOutOpen(false);
   };
   const trustBadges = [
-    { 
-      icon: Shield, 
+    {
+      icon: Shield,
       label: 'Verified Properties',
-      variant: 'emerald' as const 
+      variant: 'emerald' as const
     },
-    { 
-      icon: Lock, 
+    {
+      icon: Lock,
       label: 'Secure Payments',
-      variant: 'blue' as const 
+      variant: 'blue' as const
     },
-    { 
-      icon: Headphones, 
+    {
+      icon: Headphones,
       label: '24/7 Support',
-      variant: 'violet' as const 
+      variant: 'violet' as const
     },
   ];
 
@@ -182,7 +182,7 @@ const Landing = () => {
       variant: 'blue' as const,
     },
     {
-      icon: Wifi,
+      icon: WifiHigh,
       title: 'Modern Amenities',
       description: 'High-speed WiFi, AC, fully equipped kitchens, and more',
       variant: 'emerald' as const,
@@ -233,155 +233,195 @@ const Landing = () => {
       {/* Navigation */}
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center pt-20">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+      {/* Hero Section - Cinematic Luxury */}
+      <section className="relative h-screen min-h-[800px] flex flex-col justify-end pb-20 overflow-hidden">
+        {/* Background Image with Cinematic Zoom Effect */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-scale-slow"
           style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1920&q=80)',
+            backgroundImage: 'url(https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=3270&auto=format&fit=crop)',
           }}
         >
-          <div className="absolute inset-0 bg-primary/75" />
+          {/* Multi-layer Gradient Overlay for Text Readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-90" />
         </div>
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center text-primary-foreground">
-            <Link to="#properties">
-              <Button variant="outline" className="mb-8 bg-transparent border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/20">
-                Check Availability
-              </Button>
-            </Link>
-            
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              Brooklyn Hills Apartment
-              <span className="block text-accent">Luxury Meets Comfort</span>
+          <div className="max-w-5xl">
+            {/* Elegant Tagline */}
+            <div className="flex items-center gap-3 mb-6 animate-fade-in">
+              <div className="h-[1px] w-12 bg-[#D4AF37]" />
+              <span className="text-[#D4AF37] tracking-[0.2em] font-body text-sm uppercase font-medium">
+                The Art of Living
+              </span>
+            </div>
+
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.1] mb-8 text-white animate-fade-in-delay-1">
+              Brooklyn Hills <br />
+              <span className="italic text-white/90 font-light">Residences.</span>
             </h1>
 
-            <p className="font-body text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-10">
-              Experience the perfect blend of luxury and comfort with our premium shortlet apartments in the heart of Uyo. Perfect for business trips, vacations, and extended stays.
+            <p className="font-body text-lg md:text-xl text-white/80 max-w-xl mb-12 font-light leading-relaxed animate-fade-in-delay-2">
+              Experience the pinnacle of luxury hospitality in Uyo.
+              Exquisite apartments designed for the discerning traveler.
             </p>
-            
-            {/* Booking Form */}
-            <Card className="max-w-3xl mx-auto bg-background/95 backdrop-blur-md shadow-xl">
-              <CardContent className="p-6">
-                <div className="grid md:grid-cols-3 gap-4 items-end">
-                  <div className="space-y-2">
-                    <label className="font-body text-sm text-muted-foreground">Check-in</label>
-                    <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal bg-background',
-                            !checkIn && 'text-muted-foreground'
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {checkIn ? format(checkIn, 'MMM d, yyyy') : 'Select date'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={checkIn}
-                          onSelect={handleCheckInSelect}
-                          disabled={(date) => date < today}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="font-body text-sm text-muted-foreground">Check-out</label>
-                    <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal bg-background',
-                            !checkOut && 'text-muted-foreground'
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {checkOut ? format(checkOut, 'MMM d, yyyy') : 'Select date'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={checkOut}
-                          onSelect={handleCheckOutSelect}
-                          disabled={(date) => date <= (checkIn || today)}
-                          month={checkOutMonth}
-                          onMonthChange={setCheckOutMonth}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <Button 
-                    className="bg-accent text-accent-foreground hover:bg-accent/90 h-10"
+
+            {/* Horizontal Booking Bar - Floating Glass */}
+            <div className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-full animate-fade-in-delay-3 hidden md:block">
+              <div className="grid grid-cols-3 gap-0 h-16 items-center">
+
+                {/* Check In */}
+                <div className="relative border-r border-white/10 h-full flex items-center px-6 transition-colors hover:bg-white/5 cursor-pointer rounded-l-full group">
+                  <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
+                    <PopoverTrigger asChild>
+                      <div className="w-full text-left">
+                        <label className="block text-xs uppercase tracking-wider text-white/60 mb-1 font-medium group-hover:text-[#D4AF37] transition-colors">
+                          Check In
+                        </label>
+                        <div className="flex items-center gap-3 text-white font-display text-lg">
+                          <CalendarIcon className="h-5 w-5 text-[#D4AF37]" weight="thin" />
+                          <span className={!checkIn ? "text-white/50" : ""}>
+                            {checkIn ? format(checkIn, 'MMM d, yyyy') : 'Add Dates'}
+                          </span>
+                        </div>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkIn}
+                        onSelect={handleCheckInSelect}
+                        disabled={(date) => date < today}
+                        initialFocus
+                        className="rounded-md border border-border"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Check Out */}
+                <div className="relative border-r border-white/10 h-full flex items-center px-6 transition-colors hover:bg-white/5 cursor-pointer group">
+                  <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
+                    <PopoverTrigger asChild>
+                      <div className="w-full text-left">
+                        <label className="block text-xs uppercase tracking-wider text-white/60 mb-1 font-medium group-hover:text-[#D4AF37] transition-colors">
+                          Check Out
+                        </label>
+                        <div className="flex items-center gap-3 text-white font-display text-lg">
+                          <CalendarIcon className="h-5 w-5 text-[#D4AF37]" weight="thin" />
+                          <span className={!checkOut ? "text-white/50" : ""}>
+                            {checkOut ? format(checkOut, 'MMM d, yyyy') : 'Add Dates'}
+                          </span>
+                        </div>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkOut}
+                        onSelect={handleCheckOutSelect}
+                        disabled={(date) => date <= (checkIn || today)}
+                        month={checkOutMonth}
+                        onMonthChange={setCheckOutMonth}
+                        initialFocus
+                        className="rounded-md border border-border"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Search Button */}
+                <div className="pl-2 pr-1 h-full flex items-center">
+                  <Button
+                    className="w-full h-12 rounded-full bg-[#D4AF37] text-black hover:bg-[#c5a028] font-body uppercase tracking-widest text-sm font-bold shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transition-all transform hover:scale-[1.02]"
                     onClick={handleCheckAvailability}
                     disabled={!checkIn || !checkOut}
                   >
-                    <MagnifyingGlass className="h-4 w-4 mr-2" />
-                    Check Availability
+                    <span className="mr-2">Check Availability</span>
+                    <ArrowRight className="h-4 w-4" weight="bold" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Rating Badge */}
-            <div className="inline-flex items-center gap-2 mt-8 px-4 py-2 rounded-full bg-primary/80 backdrop-blur-sm">
-              <span className="font-display font-bold">4.8/5</span>
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} weight="fill" className="h-4 w-4 text-accent" />
-                ))}
               </div>
-              <span className="font-body text-sm text-primary-foreground/80">from 150+ guests</span>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Features Bar */}
-      <section className="py-8 border-b border-border bg-background">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <div key={feature.title} className="flex items-center gap-4">
-                <IconContainer variant={feature.variant} size="sm">
-                  <feature.icon weight="fill" className="h-5 w-5" />
-                </IconContainer>
-                <div>
-                  <h3 className="font-display font-semibold text-foreground">{feature.title}</h3>
-                  <p className="font-body text-sm text-muted-foreground">{feature.description}</p>
+            {/* Mobile Booking Trigger (Visible only on small screens) */}
+            <div className="md:hidden mt-8 w-full">
+              <Button
+                className="w-full h-14 rounded-full bg-[#D4AF37] text-black hover:bg-[#c5a028] font-body uppercase tracking-widest text-sm font-bold shadow-lg"
+                onClick={() => document.getElementById('properties')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Book Your Stay
+              </Button>
+            </div>
+
+            {/* Rating Badge - Minimalist */}
+            <div className="inline-flex items-center gap-3 mt-12 animate-fade-in-delay-3 px-6 py-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10">
+              <div className="flex -space-x-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-black/50 bg-gray-300"
+                    style={{ backgroundImage: `url(https://randomuser.me/api/portraits/thumb/men/${i + 20}.jpg)`, backgroundSize: 'cover' }} />
+                ))}
+                <div className="w-8 h-8 rounded-full border-2 border-black/50 bg-[#D4AF37] flex items-center justify-center text-[10px] font-bold text-black">
+                  4.9
                 </div>
               </div>
-            ))}
+              <div className="flex flex-col">
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} weight="fill" className="h-3 w-3 text-[#D4AF37]" />
+                  ))}
+                </div>
+                <span className="text-xs text-white/80 font-light mt-0.5">Trusted by 500+ guests</span>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* Trust Badges */}
-      <section className="py-6 bg-secondary/50">
+      {/* Service Strip - Unified & Elegant */}
+      <section className="py-10 bg-[#020408] border-b border-white/5 text-white">
         <div className="container mx-auto px-6">
-          <div className="flex flex-wrap items-center justify-center gap-8">
-            {trustBadges.map((badge) => (
-              <div key={badge.label} className="flex items-center gap-3">
-                <IconContainer variant={badge.variant} size="sm">
-                  <badge.icon weight="fill" className="h-5 w-5" />
-                </IconContainer>
-                <span className="font-body text-sm text-muted-foreground">{badge.label}</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="flex items-center justify-center gap-4 group">
+              <div className="p-3 rounded-full bg-white/5 group-hover:bg-[#D4AF37]/20 transition-colors">
+                <Shield className="h-6 w-6 text-[#D4AF37]" weight="light" />
               </div>
-            ))}
-            <div className="flex items-center gap-2 text-accent">
-              <Flame weight="fill" className="h-5 w-5" />
-              <span className="font-body text-sm font-medium">12 properties booked today</span>
+              <div className="text-left">
+                <h3 className="font-display text-lg text-white">Verified</h3>
+                <p className="font-body text-xs text-white/50 uppercase tracking-widest">Properties</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 group">
+              <div className="p-3 rounded-full bg-white/5 group-hover:bg-[#D4AF37]/20 transition-colors">
+                <Lock className="h-6 w-6 text-[#D4AF37]" weight="light" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-display text-lg text-white">Secure</h3>
+                <p className="font-body text-xs text-white/50 uppercase tracking-widest">Payments</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 group">
+              <div className="p-3 rounded-full bg-white/5 group-hover:bg-[#D4AF37]/20 transition-colors">
+                <Headphones className="h-6 w-6 text-[#D4AF37]" weight="light" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-display text-lg text-white">24/7</h3>
+                <p className="font-body text-xs text-white/50 uppercase tracking-widest">Support</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 group">
+              <div className="p-3 rounded-full bg-white/5 group-hover:bg-[#D4AF37]/20 transition-colors">
+                <Lightning className="h-6 w-6 text-[#D4AF37]" weight="light" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-display text-lg text-white">Instant</h3>
+                <p className="font-body text-xs text-white/50 uppercase tracking-widest">Booking</p>
+              </div>
             </div>
           </div>
         </div>
@@ -389,10 +429,10 @@ const Landing = () => {
 
       {/* Availability Results - shows when user searches */}
       {hasSearched && checkIn && checkOut && (
-        <AvailabilityResults 
+        <AvailabilityResults
           ref={resultsRef}
-          checkIn={format(checkIn, 'yyyy-MM-dd')} 
-          checkOut={format(checkOut, 'yyyy-MM-dd')} 
+          checkIn={format(checkIn, 'yyyy-MM-dd')}
+          checkOut={format(checkOut, 'yyyy-MM-dd')}
           onClear={handleClearSearch}
         />
       )}
@@ -400,151 +440,161 @@ const Landing = () => {
       {/* Featured Apartments - Now uses real database data */}
       <FeaturedApartments />
 
-      {/* How It Works */}
-      <section className="py-20 lg:py-32 bg-secondary/50">
+      {/* How It Works - Elegant Steps */}
+      <section className="py-24 bg-secondary/30">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              How It Works
-            </h2>
-            <p className="font-body text-muted-foreground text-lg">
-              Book your perfect apartment in three simple steps
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {steps.map((step, index) => (
-              <div key={step.number} className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/20 text-accent font-display text-2xl font-bold mb-6">
-                  {step.number}
+          <div className="flex flex-col md:flex-row gap-12 items-center">
+            <div className="md:w-1/3">
+              <span className="text-[#D4AF37] font-body text-sm uppercase tracking-[0.2em] mb-4 block">Process</span>
+              <h2 className="font-display text-4xl md:text-5xl text-foreground mb-6">
+                Seamless <span className="italic text-muted-foreground">Arrival</span>
+              </h2>
+              <p className="font-body text-muted-foreground leading-relaxed">
+                From discovery to check-in, we've refined every step to ensure your journey is as exceptional as your stay.
+              </p>
+              <Button variant="outline" className="mt-8 border-foreground/20 hover:bg-foreground hover:text-background transition-colors rounded-none px-8">
+                Start Booking
+              </Button>
+            </div>
+
+            <div className="md:w-2/3 grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { num: "01", title: "Select", desc: "Choose from our curated collection of premium residences." },
+                { num: "02", title: "Reserve", desc: "Instant, secure booking with immediate confirmation." },
+                { num: "03", title: "Arrive", desc: "Digital check-in and 24/7 concierge support upon arrival." }
+              ].map((step) => (
+                <div key={step.num} className="group p-6 border-l border-border/50 hover:border-[#D4AF37] transition-colors relative">
+                  <span className="text-6xl font-display text-muted-foreground/10 group-hover:text-[#D4AF37]/20 absolute top-4 right-4 transition-colors">
+                    {step.num}
+                  </span>
+                  <h3 className="font-display text-xl text-foreground mb-3 mt-8 group-hover:text-[#D4AF37] transition-colors">{step.title}</h3>
+                  <p className="font-body text-sm text-muted-foreground">{step.desc}</p>
                 </div>
-                <h3 className="font-display text-xl font-semibold text-foreground mb-3">
-                  {step.title}
-                </h3>
-                <p className="font-body text-muted-foreground">
-                  {step.description}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <p className="font-body text-muted-foreground mb-6">Simple, fast, and secure — start your booking now</p>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-              View Properties
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 lg:py-32">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              What Our Guests Say
-            </h2>
-            <p className="font-body text-muted-foreground text-lg max-w-2xl mx-auto">
-              Don't just take our word for it. Here's what our guests have to say about their experiences at Brooklyn Hills Apartments.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={testimonial.name} className="bg-card border-border/70">
-                <CardContent className="p-6">
-                  <div className="flex mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} weight="fill" className="h-4 w-4 text-accent" />
-                    ))}
-                  </div>
-                  <p className="font-body text-foreground mb-6 leading-relaxed">
-                    "{testimonial.quote}"
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src={testimonial.image} 
-                      alt={testimonial.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div>
-                      <h4 className="font-display font-semibold text-foreground">{testimonial.name}</h4>
-                      <p className="font-body text-sm text-muted-foreground">{testimonial.location}</p>
-                      <p className="font-body text-xs text-muted-foreground">{testimonial.date}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Us */}
-      <section id="about" className="py-20 lg:py-32 bg-secondary/50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Why Choose Brooklyn Hills?
-            </h2>
-            <p className="font-body text-muted-foreground text-lg">
-              Experience premium living with our carefully curated apartments and exceptional service
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {whyChoose.map((item, index) => (
-              <div 
-                key={item.title} 
-                className="group p-6 rounded-2xl bg-white border border-border/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center"
-              >
-                <div className="flex justify-center">
-                  <IconContainer variant={item.variant}>
-                    <item.icon weight="fill" className="w-7 h-7" />
-                  </IconContainer>
-                </div>
-                <h3 className="font-display text-lg font-semibold text-foreground mt-5 mb-2">
-                  {item.title}
-                </h3>
-                <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-20 lg:py-32">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="font-body text-muted-foreground text-lg">
-              Find answers to common questions about booking, payments, and our services.
-            </p>
-          </div>
-          
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible className="space-y-4">
-              {faqs.map((faq, index) => (
-                <AccordionItem 
-                  key={index} 
-                  value={`item-${index}`}
-                  className="bg-card border border-border rounded-lg px-6"
-                >
-                  <AccordionTrigger className="font-display font-semibold text-foreground hover:no-underline">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="font-body text-muted-foreground">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
               ))}
-            </Accordion>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* Testimonials - Editorial Style */}
+      <section className="py-24 bg-background">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-20 animate-fade-in">
+            <span className="text-[#D4AF37] font-body text-sm uppercase tracking-[0.2em] mb-4 block">Reviews</span>
+            <h2 className="font-display text-4xl md:text-5xl text-foreground">
+              Guest <span className="italic text-muted-foreground">Stories</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-x-8 gap-y-12">
+            {[
+              {
+                name: 'Chioma Adeyemi',
+                quote: 'Absolutely stunning apartment! The attention to detail was impeccable. The bar access was a fantastic touch, and the staff were incredibly welcoming.',
+                role: 'Business Traveler'
+              },
+              {
+                name: 'David Okonkwo',
+                quote: 'Perfect for my business trip to Uyo! The apartment was spotless, WiFi was excellent, and the location couldn\'t be better. Brooklyn Hills exceeded expectations.',
+                role: 'CEO, TechNext'
+              },
+              {
+                name: 'Sarah Eze',
+                quote: 'My family and I had an amazing week here! The kids loved the pool, and we appreciated how well-equipped the kitchen was. True luxury at a reasonable price.',
+                role: 'Family Vacation'
+              },
+            ].map((testimonial, index) => (
+              <div key={index} className="flex flex-col items-center text-center group">
+                <div className="mb-6 text-[#D4AF37]">
+                  <Star weight="fill" className="h-4 w-4 inline-block" />
+                  <Star weight="fill" className="h-4 w-4 inline-block" />
+                  <Star weight="fill" className="h-4 w-4 inline-block" />
+                  <Star weight="fill" className="h-4 w-4 inline-block" />
+                  <Star weight="fill" className="h-4 w-4 inline-block" />
+                </div>
+                <p className="font-display text-xl md:text-2xl text-foreground leading-relaxed mb-8 italic">
+                  "{testimonial.quote}"
+                </p>
+                <div className="mt-auto">
+                  <h4 className="font-body font-bold text-sm uppercase tracking-widest text-foreground">{testimonial.name}</h4>
+                  <span className="text-xs text-muted-foreground mt-1 block">{testimonial.role}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* The Brooklyn Standard (Why Choose Us) - Grid Layout */}
+      <section className="py-24 bg-foreground text-background">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <span className="text-[#D4AF37] font-body text-sm uppercase tracking-[0.2em] mb-4 block">The Standard</span>
+              <h2 className="font-display text-4xl md:text-6xl text-background mb-8 leading-tight">
+                Elevated <br />
+                <span className="italic text-muted-foreground">Living.</span>
+              </h2>
+              <p className="font-body text-white/60 text-lg leading-relaxed max-w-md mb-8">
+                We don't just offer beds; we curate experiences. Every detail at Brooklyn Hills is chosen to enhance your stay, from the thread count to the concierge service.
+              </p>
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <h4 className="font-display text-xl text-[#D4AF37] mb-2">Prime Locations</h4>
+                  <p className="font-body text-sm text-white/50">Situated in the most desirable districts of Uyo.</p>
+                </div>
+                <div>
+                  <h4 className="font-display text-xl text-[#D4AF37] mb-2">Concierge</h4>
+                  <p className="font-body text-sm text-white/50">Personalized service to assist with your every need.</p>
+                </div>
+                <div>
+                  <h4 className="font-display text-xl text-[#D4AF37] mb-2">Smart Living</h4>
+                  <p className="font-body text-sm text-white/50">High-speed entertainment and automated systems.</p>
+                </div>
+                <div>
+                  <h4 className="font-display text-xl text-[#D4AF37] mb-2">Security</h4>
+                  <p className="font-body text-sm text-white/50">24/7 guarded premises for your peace of mind.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Visual Element / Image Grid */}
+            <div className="relative">
+              <div className="aspect-[3/4] bg-muted overflow-hidden relative z-10">
+                <img src="https://images.unsplash.com/photo-1600607686527-6fb886090705?w=800&q=80" className="object-cover w-full h-full opacity-80" alt="Interior" />
+                <div className="absolute inset-0 border border-[#D4AF37]/30 m-4" />
+              </div>
+              <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-[#D4AF37] z-0 hidden md:block" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section - Clean & Minimal */}
+      <section className="py-24 bg-background">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <div className="text-center mb-16">
+            <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground mb-4">
+              Common Questions
+            </h2>
+          </div>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqs.map((faq, index) => (
+              <AccordionItem
+                key={index}
+                value={`item-${index}`}
+                className="bg-transparent border-b border-border px-0"
+              >
+                <AccordionTrigger className="font-display text-lg text-foreground hover:text-[#D4AF37] hover:no-underline py-6">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="font-body text-muted-foreground leading-relaxed pb-6 text-base">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
 
@@ -558,8 +608,8 @@ const Landing = () => {
             <p className="font-body text-primary-foreground/80 text-lg mb-10">
               Explore our available properties and book instantly with secure payment
             </p>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="font-body bg-accent text-accent-foreground hover:bg-accent/90 px-10 py-6 text-base"
               onClick={() => navigate('/properties')}
             >

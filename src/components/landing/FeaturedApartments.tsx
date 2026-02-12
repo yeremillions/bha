@@ -26,17 +26,17 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
   // Update current slide when carousel changes
   useEffect(() => {
     if (!carouselApi) return;
-    
+
     const onSelect = () => {
       setCurrentSlide(carouselApi.selectedScrollSnap());
     };
-    
+
     carouselApi.on('select', onSelect);
     return () => {
       carouselApi.off('select', onSelect);
     };
   }, [carouselApi]);
-  
+
   // Format price
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -47,131 +47,100 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
     }).format(price);
   };
 
-  // Get badge based on property
-  const getBadge = () => {
-    if (property.featured) return { label: 'Featured', className: 'bg-accent text-accent-foreground' };
-    if (property.rating && property.rating >= 4.5) return { label: 'Top Rated', className: 'bg-primary text-primary-foreground' };
-    return null;
-  };
-
-  const badge = getBadge();
   const rating = property.rating || 4.5;
-  const reviewCount = property.review_count || 0;
 
   return (
-    <Card className="overflow-hidden group hover:shadow-xl transition-shadow">
-      <div className="relative h-56 overflow-hidden">
+    <div className="group cursor-pointer" onClick={() => onBookNow(property)}>
+      {/* Editorial Image Container */}
+      <div className="relative aspect-[4/3] overflow-hidden mb-4 bg-muted">
         {hasMultipleImages ? (
           <Carousel setApi={setCarouselApi} className="w-full h-full">
             <CarouselContent className="-ml-0 h-full">
               {images.map((image, index) => (
-                <CarouselItem key={index} className="pl-0 h-56">
-                  <img 
-                    src={image} 
+                <CarouselItem key={index} className="pl-0 h-full">
+                  <img
+                    src={image}
                     alt={`${property.name} - Image ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            
-            {/* Navigation Arrows */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                carouselApi?.scrollPrev();
-              }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 hover:bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
-              aria-label="Previous image"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                carouselApi?.scrollNext();
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 hover:bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
-              aria-label="Next image"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            
-            {/* Dot Indicators */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              {images.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    carouselApi?.scrollTo(index);
-                  }}
-                  className={`h-2 w-2 rounded-full transition-colors ${
-                    index === currentSlide 
-                      ? 'bg-background' 
-                      : 'bg-background/50 hover:bg-background/75'
-                  }`}
-                  aria-label={`Go to image ${index + 1}`}
-                />
-              ))}
+
+            {/* Minimalist Navigation */}
+            <div className="absolute inset-0 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  carouselApi?.scrollPrev();
+                }}
+                className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 flex items-center justify-center text-white transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  carouselApi?.scrollNext();
+                }}
+                className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 flex items-center justify-center text-white transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </Carousel>
         ) : (
-          <img 
-            src={images[0]} 
+          <img
+            src={images[0]}
             alt={property.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         )}
-        {badge && (
-          <div className={`absolute top-4 left-4 px-3 py-1 text-xs font-semibold rounded-full ${badge.className} z-10`}>
-            {badge.label}
+
+        {/* Floating badge for Featured/Price if needed, or keep clean */}
+        {property.featured && (
+          <div className="absolute top-4 left-0 bg-[#D4AF37] text-white px-3 py-1 text-xs uppercase tracking-widest font-medium">
+            Featured
           </div>
         )}
       </div>
-      <CardContent className="p-6">
-        <div className="flex items-center gap-1 mb-2">
-          {[...Array(5)].map((_, i) => (
-            <Star 
-              key={i} 
-              className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-accent fill-accent' : 'text-muted-foreground'}`} 
-            />
-          ))}
-          <span className="text-sm text-muted-foreground ml-1">({reviewCount} reviews)</span>
+
+      {/* Editorial Content */}
+      <div className="space-y-3">
+        <div className="flex justify-between items-start">
+          <h3 className="font-display text-2xl font-medium text-foreground group-hover:text-[#D4AF37] transition-colors">
+            {property.name}
+          </h3>
+          <div className="flex items-center gap-1">
+            <Star className="h-3 w-3 fill-[#D4AF37] text-[#D4AF37]" />
+            <span className="text-sm font-medium">{rating}</span>
+          </div>
         </div>
-        <h3 className="font-display text-xl font-semibold text-foreground mb-2">{property.name}</h3>
-        <p className="font-body text-muted-foreground text-sm mb-4 flex items-center gap-1">
-          <MapPin className="h-4 w-4" /> {property.location}
-        </p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {property.amenities?.slice(0, 4).map((amenity) => (
-            <span key={amenity} className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">
-              {amenity}
-            </span>
-          ))}
-          {property.bedrooms && (
-            <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">
-              {property.bedrooms} {property.bedrooms === 1 ? 'Bed' : 'Beds'}
-            </span>
-          )}
+
+        <div className="flex items-center gap-4 text-sm text-muted-foreground font-body">
+          <span className="flex items-center gap-1">
+            <MapPin className="h-3 w-3" /> {property.location}
+          </span>
+          <span className="w-1 h-1 bg-muted-foreground/30 rounded-full" />
+          <span>{property.bedrooms} {property.bedrooms === 1 ? 'Bed' : 'Beds'}</span>
         </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="font-display text-2xl font-bold text-foreground">
+
+        <div className="pt-2 flex items-center justify-between border-t border-border/50 mt-2">
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">Starting from</span>
+            <span className="font-display text-xl text-[#D4AF37]">
               {formatPrice(property.base_price_per_night)}
             </span>
-            <span className="text-muted-foreground text-sm"> / night</span>
           </div>
-          <Button 
-            size="sm" 
-            className="bg-accent text-accent-foreground hover:bg-accent/90"
-            onClick={() => onBookNow(property)}
+          <Button
+            variant="link"
+            className="p-0 h-auto text-foreground hover:text-[#D4AF37] hover:no-underline group/btn"
           >
-            Book Now
+            View Details <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
@@ -207,9 +176,9 @@ export const FeaturedApartments = () => {
   // Get featured properties first, then fill with available properties (up to 3)
   const featuredProperties = properties
     ? [
-        ...properties.filter(p => p.featured), // Featured first
-        ...properties.filter(p => !p.featured) // Then non-featured
-      ].slice(0, 3)
+      ...properties.filter(p => p.featured), // Featured first
+      ...properties.filter(p => !p.featured) // Then non-featured
+    ].slice(0, 3)
     : [];
 
   const handleBookNow = (property: Property) => {
@@ -228,7 +197,7 @@ export const FeaturedApartments = () => {
             Discover our handpicked selection of premium apartments, each offering luxury, comfort, and modern amenities for your perfect stay.
           </p>
         </div>
-        
+
         <div className="grid md:grid-cols-3 gap-8">
           {isLoading ? (
             <>
@@ -246,9 +215,9 @@ export const FeaturedApartments = () => {
             </div>
           ) : (
             featuredProperties.map((property) => (
-              <PropertyCard 
-                key={property.id} 
-                property={property} 
+              <PropertyCard
+                key={property.id}
+                property={property}
                 onBookNow={handleBookNow}
               />
             ))
@@ -256,7 +225,7 @@ export const FeaturedApartments = () => {
         </div>
 
         <div className="text-center mt-10">
-          <Button 
+          <Button
             className="bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => navigate('/properties')}
           >
