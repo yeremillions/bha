@@ -263,11 +263,11 @@ Once count is 0, you can safely enable the overlapping bookings trigger.
 
 STEP 5: Enable the trigger (after confirming no overlaps)
 ----------------------------------------------------------
-Uncomment and run the trigger creation from the concurrency protection migration:
+Run this to enable the overlapping bookings trigger:
 
 CREATE TRIGGER prevent_overlapping_bookings_trigger
   BEFORE INSERT OR UPDATE ON bookings
   FOR EACH ROW
-  EXECUTE FUNCTION check_booking_overlap();
+  EXECUTE FUNCTION prevent_overlapping_bookings();
 
 */
