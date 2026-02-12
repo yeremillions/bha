@@ -43,6 +43,10 @@ import sarahEzeHeadshot from '@/assets/sarah-eze-headshot.jpg';
 import heroBg from '@/assets/hero-bg.jpg';
 import standardFeature from '@/assets/standard-feature.jpg';
 
+// Fallback Images (Unsplash)
+const HERO_FALLBACK = 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=3270&auto=format&fit=crop';
+const STANDARD_FALLBACK = 'https://images.unsplash.com/photo-1600607686527-6fb886090705?w=800&q=80';
+
 const Landing = () => {
   const navigate = useNavigate();
   const [checkIn, setCheckIn] = useState<Date | undefined>();
@@ -52,6 +56,20 @@ const Landing = () => {
   const [checkOutMonth, setCheckOutMonth] = useState<Date>(new Date());
   const [hasSearched, setHasSearched] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
+
+  // Image State with Fallbacks
+  const [currentHeroBg, setCurrentHeroBg] = useState(heroBg);
+  const [currentStandardFeature, setCurrentStandardFeature] = useState(standardFeature);
+
+  // Validate Hero Image Load
+  useEffect(() => {
+    const img = new Image();
+    img.src = heroBg;
+    img.onerror = () => {
+      console.warn('Local hero image failed to load, switching to fallback.');
+      setCurrentHeroBg(HERO_FALLBACK);
+    };
+  }, []);
 
   // Get today at midnight for comparison
   const today = new Date();
@@ -241,7 +259,7 @@ const Landing = () => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-scale-slow"
           style={{
-            backgroundImage: `url(${heroBg})`,
+            backgroundImage: `url(${currentHeroBg})`,
           }}
         >
           {/* Multi-layer Gradient Overlay for Text Readability */}
@@ -563,7 +581,18 @@ const Landing = () => {
             {/* Visual Element / Image Grid */}
             <div className="relative">
               <div className="aspect-[3/4] bg-muted overflow-hidden relative z-10">
-                <img src={standardFeature} className="object-cover w-full h-full opacity-80" alt="Interior" />
+                <img
+                  src={currentStandardFeature}
+                  className="object-cover w-full h-full opacity-80"
+                  alt="Interior"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    // Prevent infinite loop if fallback also fails
+                    if (target.src === STANDARD_FALLBACK) return;
+                    console.warn('Local feature image failed to load, switching to fallback.');
+                    setCurrentStandardFeature(STANDARD_FALLBACK);
+                  }}
+                />
                 <div className="absolute inset-0 border border-[#D4AF37]/30 m-4" />
               </div>
               <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-[#D4AF37] z-0 hidden md:block" />
