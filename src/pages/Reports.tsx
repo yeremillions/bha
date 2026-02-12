@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Calendar, TrendingUp, Download, Search, Loader2, DollarSign, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Calendar, TrendingUp, Download, Search, Loader2, DollarSign, BarChart3, RefreshCw, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,6 +17,7 @@ import {
   useFinancialSummaryReport,
   type ReportDateRange,
 } from '@/hooks/useReports';
+import { useMaterializedViewStatus, useRefreshMaterializedViews, useShouldRefreshRevenueSummary } from '@/hooks/useMaterializedViews';
 import { toast } from 'sonner';
 
 const Reports = () => {
@@ -40,7 +41,19 @@ const Reports = () => {
   const { data: bookingReport, isLoading: bookingLoading } = useBookingSummaryReport(dateRange);
   const { data: financialReport, isLoading: financialLoading } = useFinancialSummaryReport(dateRange);
 
-  const isLoading = revenueLoading || occupancyLoading || bookingLoading || financialLoading;
+  // Materialized view status and refresh
+  const { data: viewStatus, isLoading: statusLoading } = useMaterializedViewStatus();
+  const { mutate: refreshViews, isPending: isRefreshing } = useRefreshMaterializedViews();
+  const { data: shouldRefresh } = useShouldRefreshRevenueSummary();
+
+  // Auto-refresh on page load if needed
+  useEffect(() => {
+    if (shouldRefresh && !isRefreshing) {
+      refreshViews(['mv_revenue_summary']);
+    }
+  }, [shouldRefresh, isRefreshing, refreshViews]);
+
+  const isLoading = revenueLoading || occupancyLoading || bookingLoading || financialLoading || statusLoading;
   const hasData = revenueReport || occupancyReport || bookingReport || financialReport;
 
   const formatCurrency = (amount: number) => {
@@ -123,13 +136,37 @@ const Reports = () => {
           </Button>
 
           {/* Page header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-              Custom Reports
-            </h1>
-            <p className="text-muted-foreground">
-              Select a custom date range to generate detailed performance reports
-            </p>
+          <div className="mb-8 flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+                Custom Reports
+              </h1>
+              <p className="text-muted-foreground">
+                Select a custom date range to generate detailed performance reports
+              </p>
+            </div>
+            
+            {/* Materialized View Refresh Controls */}
+            <div className="flex items-center gap-3">
+              {viewStatus && viewStatus[0] && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-lg">
+                  <Database className="h-4 w-4" />
+                  <span>{viewStatus[0].row_count.toLocaleString()} records</span>
+                  <span className="text-muted-foreground/50">|</span>
+                  <span>{viewStatus[0].size}</span>
+                </div>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshViews(['mv_revenue_summary'])}
+                disabled={isRefreshing}
+                className="gap-2"
+              >
+                <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+              </Button>
+            </div>
           </div>
 
           {/* Date range selector card */}
