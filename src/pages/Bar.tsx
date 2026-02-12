@@ -59,7 +59,7 @@ import {
   useLowStockItems,
 } from "@/hooks/useBarItems";
 import {
-  useBarTabs,
+  useBarTabsPaginated,
   useBarRevenueToday,
   useItemsSoldToday,
 } from "@/hooks/useBarTabs";
@@ -73,9 +73,20 @@ export default function Bar() {
   const [tabFilter, setTabFilter] = useState<"all" | "open" | "closed">("all");
   const [inventoryFilter, setInventoryFilter] = useState("all");
 
-  // Fetch data from hooks
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+
+  // Fetch data from hooks with server-side pagination
   const statusFilter = tabFilter === "all" ? undefined : tabFilter;
-  const { data: allTabs = [], isLoading: tabsLoading } = useBarTabs(statusFilter);
+  const { data: paginatedTabs, isLoading: tabsLoading } = useBarTabsPaginated(
+    statusFilter,
+    { page: currentPage, pageSize: itemsPerPage }
+  );
+
+  const allTabs = paginatedTabs?.data || [];
+  const totalPages = paginatedTabs?.totalPages || 1;
+  const totalCount = paginatedTabs?.totalCount || 0;
   const { data: barItems = [], isLoading: itemsLoading } = useBarItems();
   const { data: lowStockItems = [], isLoading: lowStockLoading } = useLowStockItems();
   const { data: todayRevenue = 0, isLoading: revenueLoading } = useBarRevenueToday();

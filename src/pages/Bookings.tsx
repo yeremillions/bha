@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useBookings, useUpdateBookingStatus, useCancelBooking, type BookingStatus } from '@/hooks/useBookings';
+import { useBookingsPaginated, useUpdateBookingStatus, useCancelBooking, type BookingStatus, type BookingFilters } from '@/hooks/useBookings';
 import { cn } from '@/lib/utils';
 import {
   Search,
@@ -113,19 +113,30 @@ const Bookings = () => {
   const [showCancelled, setShowCancelled] = useState(false); // Hide cancelled by default
 
   // Pagination state
-  const [mobileDisplayCount, setMobileDisplayCount] = useState(20);
-  const [desktopCurrentPage, setDesktopCurrentPage] = useState(1);
-  const [desktopItemsPerPage, setDesktopItemsPerPage] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
 
   // Dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
   const [addBookingDialogOpen, setAddBookingDialogOpen] = useState(false);
 
-  // Fetch bookings from database (hide cancelled by default)
-  const { data: allBookings = [], isLoading: bookingsLoading, error } = useBookings({
+  // Fetch bookings from database with server-side pagination
+  const filters: BookingFilters = {
     hideCancelled: !showCancelled,
-  });
+    search: searchQuery || undefined,
+    status: (statusFilter !== 'all' ? statusFilter as BookingStatus : undefined),
+    paymentStatus: (paymentFilter !== 'all' ? paymentFilter as any : undefined),
+  };
+
+  const { data: paginatedBookings, isLoading: bookingsLoading, error } = useBookingsPaginated(
+    filters,
+    { page: currentPage, pageSize: itemsPerPage }
+  );
+
+  const allBookings = paginatedBookings?.data || [];
+  const totalPages = paginatedBookings?.totalPages || 1;
+  const totalCount = paginatedBookings?.totalCount || 0;
   const updateBookingStatus = useUpdateBookingStatus();
   const cancelBooking = useCancelBooking();
 
@@ -144,52 +155,21 @@ const Bookings = () => {
   }, [user, authLoading, navigate]);
 
 
-  // Client-side filtering
-  const filteredBookings = useMemo(() => {
-    return allBookings.filter(booking => {
-      // Search filter
-      const matchesSearch = !searchQuery ||
-        booking.booking_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.customer?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.customer?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.property?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.special_requests?.toLowerCase().includes(searchQuery.toLowerCase());
-
-      // Status filter
-      const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
-
-      // Payment filter
-      const matchesPayment = paymentFilter === 'all' || booking.payment_status === paymentFilter;
-
-      return matchesSearch && matchesStatus && matchesPayment;
-    });
-  }, [allBookings, searchQuery, statusFilter, paymentFilter]);
+  // Note: Filtering is now handled server-side via the useBookingsPaginated hook
+  // Client-side filtering removed for better performance with large datasets
+  const filteredBookings = allBookings;
 
   // Reset pagination when filters change
   useEffect(() => {
-    setMobileDisplayCount(20);
-    setDesktopCurrentPage(1);
-  }, [searchQuery, statusFilter, paymentFilter]);
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, paymentFilter, showCancelled]);
 
-  // Paginated data for mobile (Load More pattern)
-  const mobileBookings = useMemo(() => {
-    return filteredBookings.slice(0, mobileDisplayCount);
-  }, [filteredBookings, mobileDisplayCount]);
+  // Server-side pagination is now used - data is already paginated
+  const displayBookings = filteredBookings;
 
-  // Paginated data for desktop (Page-based)
-  const desktopBookings = useMemo(() => {
-    const startIndex = (desktopCurrentPage - 1) * desktopItemsPerPage;
-    const endIndex = startIndex + desktopItemsPerPage;
-    return filteredBookings.slice(startIndex, endIndex);
-  }, [filteredBookings, desktopCurrentPage, desktopItemsPerPage]);
-
-  const totalDesktopPages = Math.ceil(filteredBookings.length / desktopItemsPerPage);
-
-  // Count cancelled bookings (only when hidden)
-  const cancelledCount = useMemo(() => {
-    if (showCancelled) return 0;
-    return allBookings.filter(b => b.status === 'cancelled').length;
-  }, [allBookings, showCancelled]);
+  // Note: Cancelled count would require a separate query or be included in metadata
+  // For now, we hide this feature or fetch separately if needed
+  const cancelledCount = 0; // Placeholder - implement separate query if needed
 
   // Calculate total revenue
   const totalRevenue = useMemo(() => {
@@ -562,8 +542,8 @@ const Bookings = () => {
 
           {/* Bookings List - Mobile Card View */}
           <div className="md:hidden space-y-4 animate-fade-in">
-            {mobileBookings.length > 0 ? (
-              mobileBookings.map((booking, index) => (
+            {displayBookings.length > 0 ? (
+              displayBookings.map((booking, index) => (
                 <div
                   key={booking.id}
                   onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
@@ -723,16 +703,9 @@ const Bookings = () => {
               </div>
             )}
 
-            {/* Load More Button */}
-            <LoadMoreButton
-              onClick={() => setMobileDisplayCount(prev => prev + 20)}
-              hasMore={mobileDisplayCount < filteredBookings.length}
-              currentCount={mobileBookings.length}
-              totalCount={filteredBookings.length}
-            />
-
+            {/* Pagination Info */}
             <div className="p-4 text-sm text-muted-foreground text-center">
-              Showing {mobileBookings.length} of {filteredBookings.length} bookings
+              Showing {displayBookings.length} of {totalCount} bookings (Page {currentPage} of {totalPages})
             </div>
           </div>
 
@@ -756,8 +729,8 @@ const Bookings = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {desktopBookings.length > 0 ? (
-                    desktopBookings.map((booking, index) => (
+                  {displayBookings.length > 0 ? (
+                    displayBookings.map((booking, index) => (
                       <TableRow
                         key={booking.id}
                         onClick={() => navigate(`/dashboard/bookings/${booking.id}`)}
@@ -893,14 +866,14 @@ const Bookings = () => {
 
             {/* Desktop Pagination */}
             <Pagination
-              currentPage={desktopCurrentPage}
-              totalPages={totalDesktopPages}
-              onPageChange={setDesktopCurrentPage}
-              itemsPerPage={desktopItemsPerPage}
-              totalItems={filteredBookings.length}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalCount}
               onItemsPerPageChange={(newItemsPerPage) => {
-                setDesktopItemsPerPage(newItemsPerPage);
-                setDesktopCurrentPage(1);
+                setItemsPerPage(newItemsPerPage);
+                setCurrentPage(1);
               }}
             />
           </div>
