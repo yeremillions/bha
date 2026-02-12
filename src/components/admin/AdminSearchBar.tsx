@@ -4,7 +4,7 @@ import { Search, Building2, Calendar, User, MapPin, Hash, Mail, Phone, X } from 
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useProperties } from '@/hooks/useProperties';
-import { useBookings } from '@/hooks/useBookings';
+import { useBookingsPaginated } from '@/hooks/useBookings';
 import { useCustomers } from '@/hooks/useCustomers';
 
 interface SearchResult {
@@ -25,10 +25,18 @@ export const AdminSearchBar = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  // Fetch data with search query
-  const { data: properties = [], isLoading: propertiesLoading } = useProperties({ search: query });
-  const { data: bookings = [], isLoading: bookingsLoading } = useBookings({ search: query });
-  const { data: customers = [], isLoading: customersLoading } = useCustomers({ search: query });
+  // Fetch data with search query using pagination
+  // Using small page sizes since we only show top 5 results per category
+  const { data: propertiesData, isLoading: propertiesLoading } = useProperties({ search: query });
+  const { data: bookingsData, isLoading: bookingsLoading } = useBookingsPaginated(
+    { search: query },
+    { page: 1, pageSize: 20 } // Small page size for search
+  );
+  const { data: customersData, isLoading: customersLoading } = useCustomers({ search: query });
+  
+  const properties = propertiesData || [];
+  const bookings = bookingsData?.data || [];
+  const customers = customersData || [];
 
   const isLoading = propertiesLoading || bookingsLoading || customersLoading;
 

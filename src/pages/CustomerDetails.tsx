@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomer, useUpdateCustomer } from '@/hooks/useCustomers';
-import { useBookings } from '@/hooks/useBookings';
+import { useBookingsPaginated } from '@/hooks/useBookings';
 import { cn } from '@/lib/utils';
 import {
   ArrowLeft,
@@ -79,9 +79,13 @@ const CustomerDetails = () => {
   const [cancelEditDialogOpen, setCancelEditDialogOpen] = useState(false);
   const [leavePageDialogOpen, setLeavePageDialogOpen] = useState(false);
 
-  // Fetch customer and their bookings
+  // Fetch customer and their bookings with pagination
   const { data: customer, isLoading: customerLoading, error } = useCustomer(id);
-  const { data: allBookings = [] } = useBookings({ customerId: id });
+  const { data: paginatedBookings } = useBookingsPaginated(
+    { customerId: id },
+    { page: 1, pageSize: 100 } // Reasonable page size for customer bookings
+  );
+  const allBookings = paginatedBookings?.data || [];
   const updateCustomer = useUpdateCustomer();
 
   // Edit form state

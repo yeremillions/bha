@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useBookings } from '@/hooks/useBookings';
+import { useBookingsPaginated } from '@/hooks/useBookings';
 import { useProperties } from '@/hooks/useProperties';
 import { cn } from '@/lib/utils';
 import { 
@@ -48,8 +48,17 @@ const Calendar = () => {
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Fetch real data
-  const { data: allBookings = [], isLoading: bookingsLoading } = useBookings();
+  // Fetch bookings with large page size for calendar view
+  // Using server-side pagination with large page size to prevent memory issues
+  const [bookingPage] = useState(1);
+  const [bookingPageSize] = useState(500); // Large page size for calendar
+  
+  const { data: paginatedBookings, isLoading: bookingsLoading } = useBookingsPaginated(
+    { hideCancelled: true },
+    { page: bookingPage, pageSize: bookingPageSize }
+  );
+  
+  const allBookings = paginatedBookings?.data || [];
   const { data: allProperties = [], isLoading: propertiesLoading } = useProperties();
 
   // Build properties dropdown list - MUST be before any early returns

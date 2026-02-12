@@ -206,6 +206,10 @@ export const useBookingsPaginated = (filters?: BookingFilters, pagination?: Pagi
         query = query.lte('check_out_date', filters.endDate);
       }
 
+      // Note: For more advanced search (customer name, property name), 
+      // consider creating a database view or function that joins these tables
+      // and performs full-text search.
+
       const { data, error, count } = await query;
 
       if (error) {

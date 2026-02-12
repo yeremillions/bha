@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTransactions, useFinancialSummary } from '@/hooks/useFinancial';
-import { useBookings } from '@/hooks/useBookings';
+import { useBookingsPaginated } from '@/hooks/useBookings';
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format as formatDate } from 'date-fns';
 
 const formatCurrency = (amount: number) => {
@@ -112,10 +112,14 @@ const Financial = () => {
     };
   }, [period]);
 
-  // Fetch financial data
+  // Fetch financial data with pagination for bookings
   const { data: transactions = [], isLoading: transactionsLoading } = useTransactions();
   const { data: financialSummary, isLoading: summaryLoading } = useFinancialSummary(startDate, endDate);
-  const { data: allBookings = [] } = useBookings();
+  const { data: paginatedBookings } = useBookingsPaginated(
+    {},
+    { page: 1, pageSize: 100 } // Page size for financial overview
+  );
+  const allBookings = paginatedBookings?.data || [];
 
   const isLoading = transactionsLoading || summaryLoading;
 
