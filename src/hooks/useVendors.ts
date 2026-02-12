@@ -100,9 +100,23 @@ export interface UpdateVendorJobInput extends Partial<CreateVendorJobInput> {
   feedback?: string;
 }
 
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+}
+
+export interface PaginatedVendors {
+  data: Vendor[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+}
+
 // ===== VENDOR QUERIES =====
 
-// Fetch all vendors
+// Fetch all vendors (legacy - fetches all records)
+/** @deprecated Use useVendorsPaginated for better performance */
 export const useVendors = (activeOnly = false) => {
   return useQuery({
     queryKey: ['vendors', activeOnly],
@@ -124,6 +138,44 @@ export const useVendors = (activeOnly = false) => {
       }
 
       return data as Vendor[];
+    },
+  });
+};
+
+// Fetch vendors with pagination - recommended for production use
+export const useVendorsPaginated = (activeOnly = false, pagination?: PaginationParams) => {
+  return useQuery({
+    queryKey: ['vendors', 'paginated', activeOnly, pagination],
+    queryFn: async (): Promise<PaginatedVendors> => {
+      const page = pagination?.page || 1;
+      const pageSize = pagination?.pageSize || 50;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
+        .from('vendors')
+        .select('*', { count: 'exact' })
+        .order('rating', { ascending: false })
+        .range(from, to);
+
+      if (activeOnly) {
+        query = query.eq('active', true);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching vendors:', error);
+        throw error;
+      }
+
+      return {
+        data: (data || []) as Vendor[],
+        totalCount: count || 0,
+        totalPages: Math.ceil((count || 0) / pageSize),
+        currentPage: page,
+        pageSize,
+      };
     },
   });
 };

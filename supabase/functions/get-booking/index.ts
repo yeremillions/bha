@@ -1,15 +1,20 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 interface GetBookingRequest {
   bookingNumber: string;
-  email?: string; // Optional - if provided, verifies email matches
+  email: string; // Required for security
 }
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
+
+  // Rate limit: 10 requests per minute per IP
+  const rateLimited = checkRateLimit(req, getCorsHeaders(req), { maxRequests: 10, windowSeconds: 60 });
+  if (rateLimited) return rateLimited;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -18,10 +23,29 @@ Deno.serve(async (req) => {
 
     const { bookingNumber, email }: GetBookingRequest = await req.json();
 
-    if (!bookingNumber) {
+    // Validate required fields
+    if (!bookingNumber || !email) {
       return new Response(
-        JSON.stringify({ success: false, error: "Missing required field: bookingNumber" }),
-        { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "Missing required fields: bookingNumber and email" }),
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid email format" }),
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate booking number format (BK followed by digits)
+    const bookingNumberRegex = /^BK\d+$/;
+    if (!bookingNumberRegex.test(bookingNumber)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid booking number format" }),
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -60,22 +84,21 @@ Deno.serve(async (req) => {
       .single();
 
     if (bookingError || !booking) {
-      console.error("Booking not found");
+      // Return generic error to prevent enumeration attacks
       return new Response(
-        JSON.stringify({ success: false, error: "Booking not found" }),
-        { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "Booking not found. Please check your booking number and email." }),
+        { status: 404, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
-    // If email is provided, verify it matches
-    if (email) {
-      const customerEmail = (booking.customer as any)?.email;
-      if (!customerEmail || customerEmail.toLowerCase() !== email.toLowerCase()) {
-        return new Response(
-          JSON.stringify({ success: false, error: "Booking not found. Please check your booking number and email." }),
-          { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
-        );
-      }
+    // Email is required - verify it matches (case-insensitive)
+    const customerEmail = (booking.customer as any)?.email;
+    if (!customerEmail || customerEmail.toLowerCase() !== email.toLowerCase()) {
+      // Return same generic error to prevent email enumeration
+      return new Response(
+        JSON.stringify({ success: false, error: "Booking not found. Please check your booking number and email." }),
+        { status: 404, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(

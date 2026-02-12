@@ -30,6 +30,19 @@ export interface BookingFilters {
   hideCancelled?: boolean; // Hide cancelled bookings by default
 }
 
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+}
+
+export interface PaginatedBookings {
+  data: BookingWithDetails[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+}
+
 export interface NewBooking {
   property_id: string;
   customer_id: string;
@@ -89,8 +102,8 @@ export interface PriceCalculation {
 // ============================================================================
 
 /**
- * Fetch all bookings with optional filters
- * Includes property and customer details
+ * Fetch all bookings with optional filters (legacy - fetches all records)
+ * @deprecated Use useBookingsPaginated for better performance
  */
 export const useBookings = (filters?: BookingFilters) => {
   return useQuery({
@@ -140,6 +153,73 @@ export const useBookings = (filters?: BookingFilters) => {
       }
 
       return data as BookingWithDetails[];
+    },
+  });
+};
+
+/**
+ * Fetch bookings with pagination - recommended for production use
+ * Includes property and customer details
+ */
+export const useBookingsPaginated = (filters?: BookingFilters, pagination?: PaginationParams) => {
+  return useQuery({
+    queryKey: ['bookings', 'paginated', filters, pagination],
+    queryFn: async (): Promise<PaginatedBookings> => {
+      const page = pagination?.page || 1;
+      const pageSize = pagination?.pageSize || 50;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
+        .from('bookings')
+        .select(`
+          *,
+          property:properties(*),
+          customer:customers(*)
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      // Apply filters
+      if (filters?.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+      if (filters?.paymentStatus && filters.paymentStatus !== 'all') {
+        query = query.eq('payment_status', filters.paymentStatus);
+      }
+      if (filters?.hideCancelled !== false) {
+        query = query.neq('status', 'cancelled');
+      }
+      if (filters?.propertyId) {
+        query = query.eq('property_id', filters.propertyId);
+      }
+      if (filters?.customerId) {
+        query = query.eq('customer_id', filters.customerId);
+      }
+      if (filters?.search) {
+        query = query.or(`booking_number.ilike.%${filters.search}%,special_requests.ilike.%${filters.search}%`);
+      }
+      if (filters?.startDate) {
+        query = query.gte('check_in_date', filters.startDate);
+      }
+      if (filters?.endDate) {
+        query = query.lte('check_out_date', filters.endDate);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching bookings:', error);
+        throw new Error(`Failed to fetch bookings: ${error.message}`);
+      }
+
+      return {
+        data: (data || []) as BookingWithDetails[],
+        totalCount: count || 0,
+        totalPages: Math.ceil((count || 0) / pageSize),
+        currentPage: page,
+        pageSize,
+      };
     },
   });
 };

@@ -64,7 +64,21 @@ export interface CloseTabInput {
   discount_amount?: number;
 }
 
-// Fetch all tabs with filters
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+}
+
+export interface PaginatedBarTabs {
+  data: BarTab[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+}
+
+// Fetch all tabs with filters (legacy - fetches all records)
+/** @deprecated Use useBarTabsPaginated for better performance */
 export const useBarTabs = (status?: 'open' | 'closed') => {
   return useQuery({
     queryKey: ['bar-tabs', status],
@@ -86,6 +100,44 @@ export const useBarTabs = (status?: 'open' | 'closed') => {
       }
 
       return data as BarTab[];
+    },
+  });
+};
+
+// Fetch tabs with pagination - recommended for production use
+export const useBarTabsPaginated = (status?: 'open' | 'closed', pagination?: PaginationParams) => {
+  return useQuery({
+    queryKey: ['bar-tabs', 'paginated', status, pagination],
+    queryFn: async (): Promise<PaginatedBarTabs> => {
+      const page = pagination?.page || 1;
+      const pageSize = pagination?.pageSize || 50;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
+        .from('bar_tabs')
+        .select('*', { count: 'exact' })
+        .order('opened_at', { ascending: false })
+        .range(from, to);
+
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching bar tabs:', error);
+        throw error;
+      }
+
+      return {
+        data: (data || []) as BarTab[],
+        totalCount: count || 0,
+        totalPages: Math.ceil((count || 0) / pageSize),
+        currentPage: page,
+        pageSize,
+      };
     },
   });
 };
