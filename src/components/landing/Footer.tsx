@@ -58,15 +58,15 @@ export const Footer = () => {
             <ul className="space-y-5">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-[#D4AF37] mt-0.5 shrink-0" strokeWidth={1.5} />
-                <span className="font-body text-sm text-white/60 leading-relaxed">Brooklyn Hills Estate,<br />Uyo, Akwa Ibom, Nigeria</span>
+                <span className="font-body text-sm text-white/60 leading-relaxed">33 Chief Udo Eno Street,<br />Akpasak Estate, Besides Customs Office,<br />Oron Road Uyo, Akwa Ibom State.</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-[#D4AF37] shrink-0" strokeWidth={1.5} />
-                <a href="mailto:concierge@brooklynhills.com" className="font-body text-sm text-white/60 hover:text-white transition-colors">concierge@brooklynhills.com</a>
+                <a href="mailto:bookings@brooklynhillsapartment.com" className="font-body text-sm text-white/60 hover:text-white transition-colors">bookings@brooklynhillsapartment.com</a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-[#D4AF37] shrink-0" strokeWidth={1.5} />
-                <a href="tel:+2348012345678" className="font-body text-sm text-white/60 hover:text-white transition-colors">+234 801 234 5678</a>
+                <a href="tel:+2349135057221" className="font-body text-sm text-white/60 hover:text-white transition-colors">+234 913 505 7221</a>
               </li>
             </ul>
           </div>
