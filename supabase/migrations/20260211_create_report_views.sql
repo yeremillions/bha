@@ -10,19 +10,22 @@
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_revenue_summary AS
 SELECT
-  DATE_TRUNC('day', transaction_date) as date,
+  DATE_TRUNC('day', created_at) as date,
   transaction_type,
   category,
   SUM(amount) as total_amount,
   COUNT(*) as transaction_count
 FROM transactions
 WHERE status = 'completed'
-GROUP BY DATE_TRUNC('day', transaction_date), transaction_type, category;
+GROUP BY DATE_TRUNC('day', created_at), transaction_type, category;
 
 -- Create indexes for faster queries on materialized view
 CREATE INDEX IF NOT EXISTS idx_mv_revenue_summary_date ON mv_revenue_summary(date);
 CREATE INDEX IF NOT EXISTS idx_mv_revenue_summary_category ON mv_revenue_summary(category);
 CREATE INDEX IF NOT EXISTS idx_mv_revenue_summary_type ON mv_revenue_summary(transaction_type);
+
+-- Note: Using created_at instead of transaction_date as the transactions table
+-- uses created_at for the timestamp field
 
 -- Function to refresh materialized view (call this periodically)
 CREATE OR REPLACE FUNCTION refresh_revenue_summary()
@@ -112,17 +115,16 @@ GROUP BY c.id, c.full_name, c.email;
 
 CREATE OR REPLACE VIEW vw_financial_summary AS
 SELECT
-  DATE_TRUNC('month', transaction_date) as month,
+  DATE_TRUNC('month', created_at) as month,
   transaction_type,
   category,
   SUM(amount) as total_amount,
   COUNT(*) as transaction_count
 FROM transactions
 WHERE status = 'completed'
-GROUP BY DATE_TRUNC('month', transaction_date), transaction_type, category;
+GROUP BY DATE_TRUNC('month', created_at), transaction_type, category;
 
 -- Create indexes on the underlying tables for better view performance
-CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(transaction_date);
 CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
 CREATE INDEX IF NOT EXISTS idx_bookings_created_at ON bookings(created_at);
 CREATE INDEX IF NOT EXISTS idx_bar_tabs_closed_at ON bar_tabs(closed_at);
