@@ -5,25 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { IconContainer } from '@/components/ui/IconContainer';
 import { 
-  Building2, 
-  Calendar as CalendarIcon, 
-  RefreshCw, 
-  Zap, 
-  Percent, 
-  Shield, 
-  Headphones,
-  Star,
   MapPin,
   Wifi,
+  Calendar as CalendarIcon,
+  Shield,
+  Headphones,
+  CheckCircle,
+  ArrowRight,
+  Star,
   Clock,
   Lock,
-  ChevronDown,
-  ArrowRight,
+  Lightning,
+  Percent,
+  ArrowsClockwise,
+  Building,
   Flame,
-  Search,
-  Mail
-} from 'lucide-react';
+  MagnifyingGlass,
+  EnvelopeSimple,
+  ChevronDown
+} from '@phosphor-icons/react';
 import {
   Accordion,
   AccordionContent,
@@ -92,26 +94,41 @@ const Landing = () => {
     setCheckOutOpen(false);
   };
   const trustBadges = [
-    { icon: Shield, label: 'Verified Properties' },
-    { icon: Lock, label: 'Secure Payments' },
-    { icon: Headphones, label: '24/7 Support' },
+    { 
+      icon: Shield, 
+      label: 'Verified Properties',
+      variant: 'emerald' as const 
+    },
+    { 
+      icon: Lock, 
+      label: 'Secure Payments',
+      variant: 'blue' as const 
+    },
+    { 
+      icon: Headphones, 
+      label: '24/7 Support',
+      variant: 'violet' as const 
+    },
   ];
 
   const features = [
     {
-      icon: RefreshCw,
+      icon: ArrowsClockwise,
       title: 'Flexible Cancellation',
       description: 'Cancel anytime',
+      variant: 'blue' as const,
     },
     {
-      icon: Zap,
+      icon: Lightning,
       title: 'Same-Day Booking',
       description: 'Book today, check-in today',
+      variant: 'amber' as const,
     },
     {
       icon: Percent,
       title: 'Corporate Discounts',
       description: 'Special business rates',
+      variant: 'emerald' as const,
     },
   ];
 
@@ -162,21 +179,25 @@ const Landing = () => {
       icon: MapPin,
       title: 'Premium Locations',
       description: 'Strategically located properties in prime areas across Nigeria',
+      variant: 'blue' as const,
     },
     {
       icon: Wifi,
       title: 'Modern Amenities',
       description: 'High-speed WiFi, AC, fully equipped kitchens, and more',
+      variant: 'emerald' as const,
     },
     {
-      icon: Clock,
+      icon: CalendarIcon,
       title: 'Flexible Booking',
       description: 'Book for a night, week, or month with competitive rates',
+      variant: 'violet' as const,
     },
     {
       icon: Shield,
       title: 'Secure & Safe',
       description: '24/7 security, verified properties, and trusted host',
+      variant: 'amber' as const,
     },
   ];
 
@@ -306,7 +327,7 @@ const Landing = () => {
                     onClick={handleCheckAvailability}
                     disabled={!checkIn || !checkOut}
                   >
-                    <Search className="h-4 w-4 mr-2" />
+                    <MagnifyingGlass className="h-4 w-4 mr-2" />
                     Check Availability
                   </Button>
                 </div>
@@ -318,7 +339,7 @@ const Landing = () => {
               <span className="font-display font-bold">4.8/5</span>
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 text-accent fill-accent" />
+                  <Star key={i} weight="fill" className="h-4 w-4 text-accent" />
                 ))}
               </div>
               <span className="font-body text-sm text-primary-foreground/80">from 150+ guests</span>
@@ -333,9 +354,9 @@ const Landing = () => {
           <div className="grid md:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <div key={feature.title} className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-                  <feature.icon className="h-5 w-5 text-accent" />
-                </div>
+                <IconContainer variant={feature.variant} size="sm">
+                  <feature.icon weight="fill" className="h-5 w-5" />
+                </IconContainer>
                 <div>
                   <h3 className="font-display font-semibold text-foreground">{feature.title}</h3>
                   <p className="font-body text-sm text-muted-foreground">{feature.description}</p>
@@ -351,13 +372,15 @@ const Landing = () => {
         <div className="container mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-8">
             {trustBadges.map((badge) => (
-              <div key={badge.label} className="flex items-center gap-2 text-muted-foreground">
-                <badge.icon className="h-5 w-5" />
-                <span className="font-body text-sm">{badge.label}</span>
+              <div key={badge.label} className="flex items-center gap-3">
+                <IconContainer variant={badge.variant} size="sm">
+                  <badge.icon weight="fill" className="h-5 w-5" />
+                </IconContainer>
+                <span className="font-body text-sm text-muted-foreground">{badge.label}</span>
               </div>
             ))}
             <div className="flex items-center gap-2 text-accent">
-              <Flame className="h-5 w-5" />
+              <Flame weight="fill" className="h-5 w-5" />
               <span className="font-body text-sm font-medium">12 properties booked today</span>
             </div>
           </div>
@@ -432,7 +455,7 @@ const Landing = () => {
                 <CardContent className="p-6">
                   <div className="flex mb-4">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-accent fill-accent" />
+                      <Star key={i} weight="fill" className="h-4 w-4 text-accent" />
                     ))}
                   </div>
                   <p className="font-body text-foreground mb-6 leading-relaxed">
@@ -471,19 +494,22 @@ const Landing = () => {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {whyChoose.map((item, index) => (
-              <Card key={item.title} className="bg-card border-border/70 text-center">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 rounded-lg bg-accent/20 flex items-center justify-center mx-auto mb-4">
-                    <item.icon className="h-6 w-6 text-accent" />
-                  </div>
-                  <h3 className="font-display text-lg font-semibold text-foreground mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="font-body text-sm text-muted-foreground">
-                    {item.description}
-                  </p>
-                </CardContent>
-              </Card>
+              <div 
+                key={item.title} 
+                className="group p-6 rounded-2xl bg-white border border-border/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center"
+              >
+                <div className="flex justify-center">
+                  <IconContainer variant={item.variant}>
+                    <item.icon weight="fill" className="w-7 h-7" />
+                  </IconContainer>
+                </div>
+                <h3 className="font-display text-lg font-semibold text-foreground mt-5 mb-2">
+                  {item.title}
+                </h3>
+                <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
             ))}
           </div>
         </div>
