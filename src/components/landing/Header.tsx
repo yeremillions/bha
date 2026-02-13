@@ -45,7 +45,7 @@ export const Header = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-10">
           {[
-            { name: 'Residences', path: '/properties' },
+            { name: 'Apartments', path: '/#properties' },
             { name: 'Experience', path: '/#about' },
             { name: 'Concierge', path: '/#contact' }
           ].map((item) => (
