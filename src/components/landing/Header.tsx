@@ -68,8 +68,10 @@ export const Header = () => {
             <Button
               variant="ghost"
               className={cn(
-                "font-body uppercase tracking-wider text-xs font-bold hover:bg-white/10",
-                isTransparent ? "text-white hover:text-[#D4AF37]" : "text-foreground"
+                "font-body uppercase tracking-wider text-xs font-bold transition-colors",
+                isTransparent
+                  ? "text-white hover:bg-white/10 hover:text-[#D4AF37]"
+                  : "text-foreground hover:bg-black hover:text-white"
               )}
             >
               Login
