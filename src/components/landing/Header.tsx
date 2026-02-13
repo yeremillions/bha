@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { X, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ContactModal } from './ContactModal';
 import logo from '@/assets/logo.png';
 
 export const Header = () => {
@@ -47,7 +48,6 @@ export const Header = () => {
           {[
             { name: 'Apartments', path: '/#properties' },
             { name: 'The Standard', path: '/#the-standard' },
-            { name: 'Contact', path: '/#contact' }
           ].map((item) => (
             <Link
               key={item.name}
@@ -60,6 +60,17 @@ export const Header = () => {
               {item.name}
             </Link>
           ))}
+
+          <ContactModal>
+            <button
+              className={cn(
+                "font-body text-sm font-medium transition-colors uppercase tracking-widest hover:text-[#D4AF37]",
+                isTransparent ? "text-white/80" : "text-muted-foreground"
+              )}
+            >
+              Contact
+            </button>
+          </ContactModal>
         </div>
 
         {/* Auth Buttons */}

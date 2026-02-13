@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Mail, Phone, Instagram, Facebook, Twitter } from 'lucide-react';
+import { ContactModal } from './ContactModal';
 import logo from '@/assets/logo.png';
 
 export const Footer = () => {
@@ -38,6 +39,11 @@ export const Footer = () => {
             <ul className="space-y-4">
               <li><Link to="/properties" className="font-body text-sm text-white/60 hover:text-white transition-colors">Our Apartments</Link></li>
               <li><Link to="/#the-standard" className="font-body text-sm text-white/60 hover:text-white transition-colors">The Standard</Link></li>
+              <li>
+                <ContactModal>
+                  <button className="font-body text-sm text-white/60 hover:text-white transition-colors text-left">Contact</button>
+                </ContactModal>
+              </li>
               <li><Link to="/auth" className="font-body text-sm text-white/60 hover:text-white transition-colors">Guest Portal</Link></li>
             </ul>
           </div>
