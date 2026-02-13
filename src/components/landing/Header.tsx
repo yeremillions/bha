@@ -33,14 +33,11 @@ export const Header = () => {
     >
       <div className="container mx-auto flex items-center justify-between px-6">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className={cn(
-            "relative transition-all duration-300 rounded-lg p-1",
-            isTransparent ? "bg-white/90 backdrop-blur-md shadow-lg" : "bg-transparent"
-          )}>
+          <div className="relative transition-all duration-300">
             <img
               src={logo}
               alt="Brooklyn Hills"
-              className="h-10 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </div>
         </Link>
