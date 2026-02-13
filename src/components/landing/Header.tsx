@@ -46,7 +46,7 @@ export const Header = () => {
         <div className="hidden md:flex items-center gap-10">
           {[
             { name: 'Apartments', path: '/#properties' },
-            { name: 'Experience', path: '/#about' },
+            { name: 'Experience', path: '/#experience' },
             { name: 'Concierge', path: '/#contact' }
           ].map((item) => (
             <a

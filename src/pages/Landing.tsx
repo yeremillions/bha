@@ -547,7 +547,8 @@ const Landing = () => {
       </section>
 
       {/* The Brooklyn Standard (Why Choose Us) - Grid Layout */}
-      <section className="py-24 bg-foreground text-background">
+      {/* The Brooklyn Standard (Why Choose Us) - Grid Layout */}
+      <section id="experience" className="py-24 bg-foreground text-background">
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>

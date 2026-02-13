@@ -37,7 +37,7 @@ export const Footer = () => {
             <h4 className="font-display text-lg text-[#D4AF37] mb-8">Explore</h4>
             <ul className="space-y-4">
               <li><Link to="/properties" className="font-body text-sm text-white/60 hover:text-white transition-colors">Our Residences</Link></li>
-              <li><a href="/#about" className="font-body text-sm text-white/60 hover:text-white transition-colors">The Standard</a></li>
+              <li><a href="/#experience" className="font-body text-sm text-white/60 hover:text-white transition-colors">The Standard</a></li>
               <li><a href="/#contact" className="font-body text-sm text-white/60 hover:text-white transition-colors">Concierge</a></li>
               <li><Link to="/auth" className="font-body text-sm text-white/60 hover:text-white transition-colors">Guest Portal</Link></li>
             </ul>
