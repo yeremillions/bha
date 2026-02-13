@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Building2 } from 'lucide-react';
+import { X, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import logo from '@/assets/logo.png';
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -33,24 +34,14 @@ export const Header = () => {
       <div className="container mx-auto flex items-center justify-between px-6">
         <Link to="/" className="flex items-center gap-3 group">
           <div className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-none transition-colors",
-            isTransparent ? "bg-white/20 group-hover:bg-[#D4AF37]" : "bg-[#D4AF37]"
+            "relative transition-all duration-300 rounded-lg p-1",
+            isTransparent ? "bg-white/90 backdrop-blur-md shadow-lg" : "bg-transparent"
           )}>
-            <Building2 className={cn("h-5 w-5 transition-colors", isTransparent ? "text-white" : "text-black")} />
-          </div>
-          <div className="flex flex-col">
-            <span className={cn(
-              "font-display text-2xl font-medium tracking-tight leading-none transition-colors",
-              isTransparent ? "text-white" : "text-foreground"
-            )}>
-              Brooklyn Hills
-            </span>
-            <span className={cn(
-              "text-[10px] uppercase tracking-[0.2em] font-medium mt-1 transition-colors",
-              isTransparent ? "text-white/60" : "text-muted-foreground"
-            )}>
-              Residences
-            </span>
+            <img
+              src={logo}
+              alt="Brooklyn Hills"
+              className="h-10 w-auto object-contain"
+            />
           </div>
         </Link>
 
