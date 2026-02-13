@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Building2, MapPin, Mail, Phone, Instagram, Facebook, Twitter } from 'lucide-react';
+import { MapPin, Mail, Phone, Instagram, Facebook, Twitter } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 export const Footer = () => {
   return (
@@ -8,11 +9,12 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-16">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-none bg-[#D4AF37]">
-                <Building2 className="h-5 w-5 text-black" />
-              </div>
-              <span className="font-display text-2xl font-medium tracking-tight text-white">Brooklyn Hills</span>
+            <div className="mb-8">
+              <img
+                src={logo}
+                alt="Brooklyn Hills"
+                className="h-24 w-auto object-contain opacity-90"
+              />
             </div>
             <p className="font-body text-white/60 mb-8 leading-relaxed text-sm">
               Experience the pinnacle of luxury living in Uyo. Our curated residences offer unmatched comfort, security, and style for the discerning traveler.
