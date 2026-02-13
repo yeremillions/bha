@@ -4,7 +4,7 @@ import logo from '@/assets/logo.png';
 
 export const Footer = () => {
   return (
-    <footer className="py-20 bg-[#020408] text-white border-t border-white/5">
+    <footer id="contact" className="py-20 bg-[#020408] text-white border-t border-white/5">
       <div className="container mx-auto px-6 md:px-12 lg:px-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-16">
           {/* Brand */}
@@ -38,7 +38,7 @@ export const Footer = () => {
             <ul className="space-y-4">
               <li><Link to="/properties" className="font-body text-sm text-white/60 hover:text-white transition-colors">Our Residences</Link></li>
               <li><a href="/#the-standard" className="font-body text-sm text-white/60 hover:text-white transition-colors">The Standard</a></li>
-              <li><a href="/#contact" className="font-body text-sm text-white/60 hover:text-white transition-colors">Concierge</a></li>
+              <li><a href="/#contact" className="font-body text-sm text-white/60 hover:text-white transition-colors">Contact</a></li>
               <li><Link to="/auth" className="font-body text-sm text-white/60 hover:text-white transition-colors">Guest Portal</Link></li>
             </ul>
           </div>

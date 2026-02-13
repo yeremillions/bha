@@ -47,7 +47,7 @@ export const Header = () => {
           {[
             { name: 'Apartments', path: '/#properties' },
             { name: 'The Standard', path: '/#the-standard' },
-            { name: 'Concierge', path: '/#contact' }
+            { name: 'Contact', path: '/#contact' }
           ].map((item) => (
             <a
               key={item.name}
