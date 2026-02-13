@@ -4,8 +4,8 @@ import { Building2, MapPin, Mail, Phone, Instagram, Facebook, Twitter } from 'lu
 export const Footer = () => {
   return (
     <footer className="py-20 bg-[#020408] text-white border-t border-white/5">
-      <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+      <div className="container mx-auto px-6 md:px-12 lg:px-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-16">
           {/* Brand */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-8">
