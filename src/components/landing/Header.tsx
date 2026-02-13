@@ -75,7 +75,7 @@ export const Header = () => {
               Login
             </Button>
           </Link>
-          <Link to="/auth">
+          <a href="/#booking-widget">
             <Button className={cn(
               "font-body uppercase tracking-wider text-xs font-bold rounded-none px-6 transition-all hover:scale-105",
               isTransparent
@@ -84,7 +84,7 @@ export const Header = () => {
             )}>
               Book Now
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </nav>

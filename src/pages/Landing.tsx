@@ -289,7 +289,7 @@ const Landing = () => {
             </p>
 
             {/* Horizontal Booking Bar - Floating Glass */}
-            <div className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-full animate-fade-in-delay-3 hidden md:block">
+            <div id="booking-widget" className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-full animate-fade-in-delay-3 hidden md:block">
               <div className="grid grid-cols-3 gap-0 h-16 items-center">
 
                 {/* Check In */}
