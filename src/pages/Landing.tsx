@@ -278,7 +278,7 @@ const Landing = () => {
               </span>
             </div>
 
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.1] mb-8 text-white animate-fade-in-delay-1">
+            <h1 id="hero-heading" className="font-display text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.1] mb-8 text-white animate-fade-in-delay-1">
               Brooklyn Hills <br />
               <span className="italic text-white/90 font-light">Residences.</span>
             </h1>
