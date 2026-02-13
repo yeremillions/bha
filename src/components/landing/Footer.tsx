@@ -37,7 +37,7 @@ export const Footer = () => {
             <h4 className="font-display text-lg text-[#D4AF37] mb-8">Explore</h4>
             <ul className="space-y-4">
               <li><Link to="/properties" className="font-body text-sm text-white/60 hover:text-white transition-colors">Our Apartments</Link></li>
-              <li><a href="/#the-standard" className="font-body text-sm text-white/60 hover:text-white transition-colors">The Standard</a></li>
+              <li><Link to="/#the-standard" className="font-body text-sm text-white/60 hover:text-white transition-colors">The Standard</Link></li>
               <li><Link to="/auth" className="font-body text-sm text-white/60 hover:text-white transition-colors">Guest Portal</Link></li>
             </ul>
           </div>
@@ -46,8 +46,8 @@ export const Footer = () => {
           <div>
             <h4 className="font-display text-lg text-[#D4AF37] mb-8">Support</h4>
             <ul className="space-y-4">
-              <li><a href="/#common-questions" className="font-body text-sm text-white/60 hover:text-white transition-colors">Common Questions</a></li>
-              <li><a href="#" className="font-body text-sm text-white/60 hover:text-white transition-colors">Booking Policy</a></li>
+              <li><Link to="/#common-questions" className="font-body text-sm text-white/60 hover:text-white transition-colors">Common Questions</Link></li>
+              <li><Link to="#" className="font-body text-sm text-white/60 hover:text-white transition-colors">Booking Policy</Link></li>
             </ul>
           </div>
 

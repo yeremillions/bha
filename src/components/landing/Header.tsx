@@ -49,16 +49,16 @@ export const Header = () => {
             { name: 'The Standard', path: '/#the-standard' },
             { name: 'Contact', path: '/#contact' }
           ].map((item) => (
-            <a
+            <Link
               key={item.name}
-              href={item.path}
+              to={item.path}
               className={cn(
                 "font-body text-sm font-medium transition-colors uppercase tracking-widest hover:text-[#D4AF37]",
                 isTransparent ? "text-white/80" : "text-muted-foreground"
               )}
             >
               {item.name}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -89,6 +89,6 @@ export const Header = () => {
           </a>
         </div>
       </div>
-    </nav>
+    </nav >
   );
 };
