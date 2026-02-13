@@ -24,7 +24,6 @@ import {
   Flame,
   MagnifyingGlass,
   EnvelopeSimple,
-  ChevronDown
 } from '@phosphor-icons/react';
 import {
   Accordion,
@@ -604,7 +603,7 @@ const Landing = () => {
       </section>
 
       {/* FAQ Section - Clean & Minimal */}
-      <section className="py-24 bg-background">
+      <section id="common-questions" className="py-24 bg-background">
         <div className="container mx-auto px-6 max-w-3xl">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground mb-4">

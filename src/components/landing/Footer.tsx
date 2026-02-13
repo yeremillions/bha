@@ -47,7 +47,7 @@ export const Footer = () => {
           <div>
             <h4 className="font-display text-lg text-[#D4AF37] mb-8">Support</h4>
             <ul className="space-y-4">
-              <li><a href="#" className="font-body text-sm text-white/60 hover:text-white transition-colors">FAQs</a></li>
+              <li><a href="/#common-questions" className="font-body text-sm text-white/60 hover:text-white transition-colors">Common Questions</a></li>
               <li><a href="#" className="font-body text-sm text-white/60 hover:text-white transition-colors">Booking Policy</a></li>
             </ul>
           </div>
