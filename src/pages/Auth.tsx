@@ -211,15 +211,18 @@ const Auth = () => {
   // Forgot Password View
   if (view === 'forgot-password') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
-        <Card className="w-full max-w-md shadow-2xl border-border/50">
+      <div className="flex min-h-screen items-center justify-center bg-[#020408] p-4 relative overflow-hidden">
+        {/* Background Decor */}
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/10 via-[#020408] to-[#020408] pointer-events-none" />
+
+        <Card className="w-full max-w-md shadow-2xl border-white/10 bg-white/5 backdrop-blur-sm relative z-10">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-              <Mail className="h-8 w-8 text-primary" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+              <Mail className="h-8 w-8 text-[#D4AF37]" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-              <CardDescription className="mt-2">
+              <CardTitle className="text-2xl font-display text-white">Reset Password</CardTitle>
+              <CardDescription className="mt-2 text-white/60 font-body">
                 Enter your email and we'll send you a reset link
               </CardDescription>
             </div>
@@ -227,26 +230,26 @@ const Auth = () => {
           <CardContent>
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
+                <Label htmlFor="reset-email" className="text-white/80">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                   <Input
                     id="reset-email"
                     type="email"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#D4AF37]/50"
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-[#D4AF37] text-black hover:bg-[#B5952F]" disabled={isLoading}>
                 {isLoading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </form>
             <Button
               variant="ghost"
-              className="w-full mt-4"
+              className="w-full mt-4 text-white/60 hover:text-white hover:bg-white/5"
               onClick={() => setView('signin')}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -261,15 +264,18 @@ const Auth = () => {
   // Reset Password View (after clicking email link)
   if (view === 'reset-password') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
-        <Card className="w-full max-w-md shadow-2xl border-border/50">
+      <div className="flex min-h-screen items-center justify-center bg-[#020408] p-4 relative overflow-hidden">
+        {/* Background Decor */}
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/10 via-[#020408] to-[#020408] pointer-events-none" />
+
+        <Card className="w-full max-w-md shadow-2xl border-white/10 bg-white/5 backdrop-blur-sm relative z-10">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-              <Lock className="h-8 w-8 text-primary" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+              <Lock className="h-8 w-8 text-[#D4AF37]" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold">Set New Password</CardTitle>
-              <CardDescription className="mt-2">
+              <CardTitle className="text-2xl font-display text-white">Set New Password</CardTitle>
+              <CardDescription className="mt-2 text-white/60 font-body">
                 Enter your new password below
               </CardDescription>
             </div>
@@ -277,34 +283,34 @@ const Auth = () => {
           <CardContent>
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
+                <Label htmlFor="new-password" className="text-white/80">New Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                   <Input
                     id="new-password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#D4AF37]/50"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Label htmlFor="confirm-password" className="text-white/80">Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                   <Input
                     id="confirm-password"
                     type="password"
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#D4AF37]/50"
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-[#D4AF37] text-black hover:bg-[#B5952F]" disabled={isLoading}>
                 {isLoading ? 'Updating...' : 'Update Password'}
               </Button>
             </form>
@@ -315,48 +321,51 @@ const Auth = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-border/50">
+    <div className="flex min-h-screen items-center justify-center bg-[#020408] p-4 relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/10 via-[#020408] to-[#020408] pointer-events-none" />
+
+      <Card className="w-full max-w-md shadow-2xl border-white/10 bg-white/5 backdrop-blur-sm relative z-10">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <Building2 className="h-8 w-8 text-primary" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+            <Building2 className="h-8 w-8 text-[#D4AF37]" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">Welcome to BHA</CardTitle>
-            <CardDescription className="mt-2">
-              Property Management System
+            <CardTitle className="text-2xl font-display text-white">Sign in to</CardTitle>
+            <CardDescription className="mt-2 text-white/60 font-body">
+              Brooklyn Hills Apartment Booking Centre
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/5 border border-white/10">
+              <TabsTrigger value="signin" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-white/60">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-white/60">Sign Up</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+                  <Label htmlFor="signin-email" className="text-white/80">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                     <Input
                       id="signin-email"
                       type="email"
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#D4AF37]/50"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password" className="text-white/80">Password</Label>
                     <Button
                       variant="link"
-                      className="px-0 h-auto font-normal text-xs text-muted-foreground hover:text-primary"
+                      className="px-0 h-auto font-normal text-xs text-[#D4AF37] hover:text-[#D4AF37]/80"
                       type="button"
                       onClick={() => setView('forgot-password')}
                     >
@@ -364,18 +373,18 @@ const Auth = () => {
                     </Button>
                   </div>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                     <Input
                       id="signin-password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#D4AF37]/50"
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-[#D4AF37] text-black hover:bg-[#B5952F]" disabled={isLoading}>
                   {isLoading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
@@ -384,48 +393,48 @@ const Auth = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Label htmlFor="signup-name" className="text-white/80">Full Name</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                     <Input
                       id="signup-name"
                       type="text"
                       placeholder="John Doe"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#D4AF37]/50"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-white/80">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                     <Input
                       id="signup-email"
                       type="email"
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#D4AF37]/50"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password" className="text-white/80">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                     <Input
                       id="signup-password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#D4AF37]/50"
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-[#D4AF37] text-black hover:bg-[#B5952F]" disabled={isLoading}>
                   {isLoading ? 'Creating account...' : 'Create Account'}
                 </Button>
               </form>
@@ -434,16 +443,16 @@ const Auth = () => {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+              <span className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-[#020408] px-2 text-white/40">Or continue with</span>
             </div>
           </div>
 
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
           >
