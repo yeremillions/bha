@@ -283,7 +283,7 @@ const Landing = () => {
               <span className="italic text-white/90 font-light">Residences.</span>
             </h1>
 
-            <p className="font-body text-lg md:text-xl text-white/80 max-w-xl mb-12 font-light leading-relaxed animate-fade-in-delay-2">
+            <p id="booking-intro" className="font-body text-lg md:text-xl text-white/80 max-w-xl mb-12 font-light leading-relaxed animate-fade-in-delay-2">
               Experience the pinnacle of luxury hospitality in Uyo.
               Exquisite apartments designed for the discerning traveler.
             </p>
