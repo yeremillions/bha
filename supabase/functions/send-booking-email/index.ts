@@ -1,6 +1,56 @@
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
-import { escapeHtml } from "../_shared/sanitize.ts";
+
+/**
+ * SHARED CORS LOGIC
+ */
+const ALLOWED_ORIGINS = [
+  "https://brooklynhillsapartment.com",
+  "https://www.brooklynhillsapartment.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin');
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    };
+  }
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}
+
+function handleCorsPreflightRequest(req: Request): Response | null {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: getCorsHeaders(req) });
+  }
+  return null;
+}
+
+/**
+ * SHARED SANITIZE LOGIC
+ */
+function escapeHtml(unsafe: string | null | undefined): string {
+  if (!unsafe) return "";
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
+ * MAIN FUNCTION LOGIC
+ */
 
 type EmailType = "confirmation" | "cancellation" | "payment_receipt" | "check_in_reminder";
 
@@ -369,9 +419,9 @@ function generateCancellationEmail(data: any): string {
             <strong>Refund Information</strong>
             <p style="margin: 8px 0 0 0;">
               ${hasRefund
-                ? `You will receive a refund of <strong>${data.refundAmount}</strong> (${data.refundPercent}% of your payment). This will be processed within 5-7 business days to your original payment method.`
-                : `${data.refundMessage || 'Unfortunately, this cancellation does not qualify for a refund based on our cancellation policy.'}`
-              }
+      ? `You will receive a refund of <strong>${data.refundAmount}</strong> (${data.refundPercent}% of your payment). This will be processed within 5-7 business days to your original payment method.`
+      : `${data.refundMessage || 'Unfortunately, this cancellation does not qualify for a refund based on our cancellation policy.'}`
+    }
             </p>
           </div>
 
