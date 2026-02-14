@@ -1,8 +1,31 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+
+const ALLOWED_ORIGINS = [
+    "https://brooklynhillsapartment.com",
+    "https://www.brooklynhillsapartment.com",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+];
+
+function getCorsHeaders(req: Request) {
+    const origin = req.headers.get('Origin');
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        return {
+            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        };
+    }
+    return {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    };
+}
 
 interface ContactEmailRequest {
     name: string;
@@ -13,17 +36,11 @@ interface ContactEmailRequest {
 
 serve(async (req) => {
     // Handle CORS preflight
-    const corsResponse = handleCorsPreflightRequest(req);
-    if (corsResponse) return corsResponse;
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: getCorsHeaders(req) });
+    }
 
     try {
-        if (req.method !== 'POST') {
-            return new Response(
-                JSON.stringify({ error: 'Method not allowed' }),
-                { status: 405, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
-            );
-        }
-
         const { name, email, phone, message }: ContactEmailRequest = await req.json();
 
         if (!name || !email || !message) {
