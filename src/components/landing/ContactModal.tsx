@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContactModalProps {
     children: React.ReactNode;
@@ -27,16 +28,38 @@ export function ContactModal({ children }: ContactModalProps) {
         e.preventDefault();
         setLoading(true);
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+            const formData = new FormData(e.target as HTMLFormElement);
+            const data = {
+                name: formData.get('name') as string,
+                email: formData.get('email') as string,
+                phone: formData.get('phone') as string,
+                message: formData.get('message') as string,
+            };
 
-        setLoading(false);
-        setOpen(false);
-        toast({
-            title: "Message Sent",
-            description: "Our concierge team will contact you shortly.",
-            className: "bg-[#020408] text-white border-white/10",
-        });
+            const { error } = await supabase.functions.invoke('send-contact-email', {
+                body: data,
+            });
+
+            if (error) throw error;
+
+            toast({
+                title: "Message Sent",
+                description: "Our concierge team will contact you shortly.",
+                className: "bg-[#020408] text-white border-white/10",
+            });
+            setOpen(false);
+            (e.target as HTMLFormElement).reset();
+        } catch (error) {
+            console.error('Error sending message:', error);
+            toast({
+                title: "Failed to send",
+                description: "Please try again later or contact us directly.",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -54,19 +77,19 @@ export function ContactModal({ children }: ContactModalProps) {
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
                     <div className="grid gap-2">
                         <Label htmlFor="name" className="text-white/80">Name</Label>
-                        <Input id="name" required className="bg-white/5 border-white/10 text-white focus:border-[#D4AF37]/50" />
+                        <Input id="name" name="name" required className="bg-white/5 border-white/10 text-white focus:border-[#D4AF37]/50" />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="email" className="text-white/80">Email</Label>
-                        <Input id="email" type="email" required className="bg-white/5 border-white/10 text-white focus:border-[#D4AF37]/50" />
+                        <Input id="email" name="email" type="email" required className="bg-white/5 border-white/10 text-white focus:border-[#D4AF37]/50" />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="phone" className="text-white/80">Phone</Label>
-                        <Input id="phone" type="tel" className="bg-white/5 border-white/10 text-white focus:border-[#D4AF37]/50" />
+                        <Input id="phone" name="phone" type="tel" className="bg-white/5 border-white/10 text-white focus:border-[#D4AF37]/50" />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="message" className="text-white/80">Message</Label>
-                        <Textarea id="message" required className="bg-white/5 border-white/10 text-white focus:border-[#D4AF37]/50 min-h-[100px]" />
+                        <Textarea id="message" name="message" required className="bg-white/5 border-white/10 text-white focus:border-[#D4AF37]/50 min-h-[100px]" />
                     </div>
                     <div className="flex justify-end pt-2">
                         <Button type="submit" disabled={loading} className="bg-[#D4AF37] text-black hover:bg-[#B5952F] font-medium">
