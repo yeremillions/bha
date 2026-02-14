@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, User, Building2, ArrowLeft } from 'lucide-react';
 import { validatePassword } from '@/lib/passwordValidation';
+import logo from '@/assets/logo.png';
 
 type AuthView = 'signin' | 'signup' | 'forgot-password' | 'reset-password';
 
@@ -217,8 +218,8 @@ const Auth = () => {
 
         <Card className="w-full max-w-md shadow-2xl border-white/10 bg-white/5 backdrop-blur-sm relative z-10">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-              <Mail className="h-8 w-8 text-[#D4AF37]" />
+            <div className="mx-auto flex items-center justify-center">
+              <img src={logo} alt="Brooklyn Hills" className="h-20 w-auto object-contain" />
             </div>
             <div>
               <CardTitle className="text-2xl font-display text-white">Reset Password</CardTitle>
@@ -270,8 +271,8 @@ const Auth = () => {
 
         <Card className="w-full max-w-md shadow-2xl border-white/10 bg-white/5 backdrop-blur-sm relative z-10">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-              <Lock className="h-8 w-8 text-[#D4AF37]" />
+            <div className="mx-auto flex items-center justify-center">
+              <img src={logo} alt="Brooklyn Hills" className="h-20 w-auto object-contain" />
             </div>
             <div>
               <CardTitle className="text-2xl font-display text-white">Set New Password</CardTitle>
@@ -327,8 +328,8 @@ const Auth = () => {
 
       <Card className="w-full max-w-md shadow-2xl border-white/10 bg-white/5 backdrop-blur-sm relative z-10">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-            <Building2 className="h-8 w-8 text-[#D4AF37]" />
+          <div className="mx-auto flex items-center justify-center">
+            <img src={logo} alt="Brooklyn Hills" className="h-20 w-auto object-contain" />
           </div>
           <div>
             <CardTitle className="text-2xl font-display text-white">Sign in to</CardTitle>
