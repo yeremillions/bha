@@ -1,7 +1,141 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
-import { checkRateLimit } from "../_shared/rate-limit.ts";
-import { writeAuditLog } from "../_shared/audit.ts";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+/**
+ * SHARED CORS LOGIC
+ */
+const ALLOWED_ORIGINS = [
+  "https://brooklynhillsapartment.com",
+  "https://www.brooklynhillsapartment.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin');
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    };
+  }
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}
+
+function handleCorsPreflightRequest(req: Request): Response | null {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: getCorsHeaders(req) });
+  }
+  return null;
+}
+
+/**
+ * SHARED RATE LIMIT LOGIC
+ */
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
+const store = new Map<string, RateLimitEntry>();
+
+// Clean up expired entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of store) {
+    if (now > entry.resetAt) {
+      store.delete(key);
+    }
+  }
+}, 60_000);
+
+interface RateLimitConfig {
+  maxRequests: number;
+  windowSeconds: number;
+}
+
+const DEFAULT_CONFIG: RateLimitConfig = {
+  maxRequests: 10,
+  windowSeconds: 60,
+};
+
+function checkRateLimit(
+  req: Request,
+  corsHeaders: Record<string, string>,
+  config: RateLimitConfig = DEFAULT_CONFIG
+): Response | null {
+  const clientIp =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+
+  const url = new URL(req.url);
+  const key = `${clientIp}:${url.pathname}`;
+
+  const now = Date.now();
+  const entry = store.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    store.set(key, {
+      count: 1,
+      resetAt: now + config.windowSeconds * 1000,
+    });
+    return null;
+  }
+
+  entry.count++;
+
+  if (entry.count > config.maxRequests) {
+    const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please try again later." }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Retry-After": String(retryAfter),
+        },
+      }
+    );
+  }
+
+  return null;
+}
+
+/**
+ * SHARED AUDIT LOG LOGIC
+ */
+async function writeAuditLog(
+  supabaseAdmin: SupabaseClient,
+  entry: {
+    action: string;
+    userId?: string;
+    userEmail?: string;
+    details?: string;
+  }
+): Promise<void> {
+  try {
+    await supabaseAdmin.from("audit_logs").insert({
+      action: entry.action,
+      user_id: entry.userId || null,
+      user_email: entry.userEmail || null,
+      details: entry.details || null,
+    });
+  } catch (err) {
+    console.error("Failed to write audit log", err);
+  }
+}
+
+/**
+ * MAIN FUNCTION LOGIC
+ */
 
 interface PaymentVerifyRequest {
   reference: string;
@@ -30,7 +164,7 @@ interface PaystackVerifyResponse {
   };
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
@@ -190,9 +324,9 @@ Deno.serve(async (req) => {
     if (updateError) {
       console.error("Error updating booking payment status");
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: "Payment verified but failed to update booking",
-          paymentVerified: true 
+          paymentVerified: true
         }),
         { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
@@ -256,7 +390,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error processing payment");
+    console.error("Error processing payment", error);
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
