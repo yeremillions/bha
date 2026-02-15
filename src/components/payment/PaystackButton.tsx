@@ -61,9 +61,10 @@ export const PaystackButton = forwardRef<HTMLButtonElement, PaystackButtonProps>
     // Handle payment button click
     const handlePaymentClick = () => {
       // Validate public key
+      console.log('Paystack Public Key:', publicKey); // Debug log
       if (!publicKey) {
-        toast.error('Payment system not configured. Please contact support.');
-        console.error('Paystack public key not configured');
+        toast.error(`Payment system not configured. Key is: ${publicKey}. Please contact support.`);
+        console.error('Paystack public key not configured. Key value:', publicKey);
         return;
       }
 
