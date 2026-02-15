@@ -228,6 +228,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bar_tabs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "vw_customer_stats"
+            referencedColumns: ["customer_id"]
+          },
         ]
       }
       bookings: {
@@ -318,11 +325,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "vw_customer_stats"
+            referencedColumns: ["customer_id"]
+          },
+          {
             foreignKeyName: "bookings_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "vw_occupancy_stats"
+            referencedColumns: ["property_id"]
           },
         ]
       }
@@ -547,6 +568,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "housekeeping_tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "vw_occupancy_stats"
+            referencedColumns: ["property_id"]
           },
         ]
       }
@@ -968,6 +996,30 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      mv_refresh_queue: {
+        Row: {
+          id: number
+          processed: boolean | null
+          processed_at: string | null
+          requested_at: string | null
+          view_name: string
+        }
+        Insert: {
+          id?: number
+          processed?: boolean | null
+          processed_at?: string | null
+          requested_at?: string | null
+          view_name: string
+        }
+        Update: {
+          id?: number
+          processed?: boolean | null
+          processed_at?: string | null
+          requested_at?: string | null
+          view_name?: string
         }
         Relationships: []
       }
@@ -1628,6 +1680,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "vw_customer_stats"
+            referencedColumns: ["customer_id"]
+          },
         ]
       }
       user_departments: {
@@ -1821,6 +1880,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "vendor_jobs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "vw_occupancy_stats"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "vendor_jobs_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
@@ -1894,16 +1960,125 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_revenue_summary: {
+        Row: {
+          category: string | null
+          date: string | null
+          total_amount: number | null
+          transaction_count: number | null
+          transaction_type: string | null
+        }
+        Relationships: []
+      }
+      vw_bar_sales_stats: {
+        Row: {
+          average_tab_value: number | null
+          date: string | null
+          total_revenue: number | null
+          total_subtotal: number | null
+          total_tabs: number | null
+          total_tax: number | null
+        }
+        Relationships: []
+      }
+      vw_booking_stats: {
+        Row: {
+          average_booking_value: number | null
+          cancelled_bookings: number | null
+          checked_in_bookings: number | null
+          confirmed_bookings: number | null
+          date: string | null
+          pending_bookings: number | null
+          total_bookings: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
+      vw_customer_stats: {
+        Row: {
+          average_booking_value: number | null
+          customer_id: string | null
+          email: string | null
+          full_name: string | null
+          last_booking_date: string | null
+          total_bookings: number | null
+          total_spent: number | null
+        }
+        Relationships: []
+      }
+      vw_financial_summary: {
+        Row: {
+          category: string | null
+          month: string | null
+          total_amount: number | null
+          transaction_count: number | null
+          transaction_type: string | null
+        }
+        Relationships: []
+      }
+      vw_occupancy_stats: {
+        Row: {
+          active_bookings: number | null
+          active_revenue: number | null
+          cancelled_bookings: number | null
+          completed_bookings: number | null
+          property_id: string | null
+          property_name: string | null
+          property_status: string | null
+          total_bookings: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       auto_assign_housekeeping_task: {
         Args: { task_id: string }
         Returns: string
       }
+      check_overlapping_bookings: {
+        Args: never
+        Returns: {
+          booking_1_check_in: string
+          booking_1_check_out: string
+          booking_1_number: string
+          booking_1_status: string
+          booking_2_check_in: string
+          booking_2_check_out: string
+          booking_2_number: string
+          booking_2_status: string
+          property_name: string
+        }[]
+      }
       check_property_availability: {
         Args: { p_check_in: string; p_check_out: string; p_property_id: string }
         Returns: boolean
+      }
+      check_property_availability_safe: {
+        Args: { p_check_in: string; p_check_out: string; p_property_id: string }
+        Returns: boolean
+      }
+      count_overlapping_bookings: { Args: never; Returns: number }
+      create_booking_atomic: {
+        Args: {
+          p_base_amount: number
+          p_check_in: string
+          p_check_out: string
+          p_cleaning_fee: number
+          p_customer_id: string
+          p_discount_amount: number
+          p_num_guests: number
+          p_property_id: string
+          p_special_requests?: string
+          p_tax_amount: number
+          p_total_amount: number
+        }
+        Returns: {
+          booking_id: string
+          booking_number: string
+          error_message: string
+          success: boolean
+        }[]
       }
       generate_booking_number: { Args: never; Returns: string }
       generate_employee_id: { Args: never; Returns: string }
@@ -1923,6 +2098,15 @@ export type Database = {
           stock_quantity: number
         }[]
       }
+      get_materialized_view_status: {
+        Args: never
+        Returns: {
+          last_refresh: string
+          name: string
+          row_count: number
+          size: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1930,6 +2114,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      process_mv_refresh_queue: { Args: never; Returns: undefined }
+      queue_mv_refresh: { Args: { p_view_name: string }; Returns: undefined }
+      refresh_materialized_view: {
+        Args: { view_name: string }
+        Returns: undefined
+      }
+      refresh_revenue_summary: { Args: never; Returns: undefined }
+      release_all_booking_locks: { Args: never; Returns: undefined }
+      should_refresh_revenue_summary: { Args: never; Returns: boolean }
       transfer_ownership: { Args: { new_owner_id: string }; Returns: boolean }
     }
     Enums: {
