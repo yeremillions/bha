@@ -227,9 +227,11 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: CreateBookingRequest = await req.json();
+    console.log('Received booking request body:', JSON.stringify(body, null, 2));
     const { propertyId, checkInDate, checkOutDate, numGuests, guestInfo, pricing } = body;
 
     if (!propertyId || typeof propertyId !== 'string') {
+      console.error("Invalid property ID:", propertyId);
       return new Response(
         JSON.stringify({ error: "Invalid property ID" }),
         { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
@@ -237,6 +239,7 @@ serve(async (req) => {
     }
 
     if (!checkInDate || !isValidDate(checkInDate)) {
+      console.error("Invalid check-in date:", checkInDate);
       return new Response(
         JSON.stringify({ error: "Invalid check-in date" }),
         { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
@@ -244,6 +247,7 @@ serve(async (req) => {
     }
 
     if (!checkOutDate || !isValidDate(checkOutDate)) {
+      console.error("Invalid check-out date:", checkOutDate);
       return new Response(
         JSON.stringify({ error: "Invalid check-out date" }),
         { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
@@ -251,6 +255,7 @@ serve(async (req) => {
     }
 
     if (!guestInfo?.email || !isValidEmail(guestInfo.email)) {
+      console.error("Invalid email:", guestInfo?.email);
       return new Response(
         JSON.stringify({ error: "Valid email is required" }),
         { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
@@ -258,6 +263,7 @@ serve(async (req) => {
     }
 
     if (!guestInfo?.fullName || guestInfo.fullName.trim().length < 2) {
+      console.error("Invalid full name:", guestInfo?.fullName);
       return new Response(
         JSON.stringify({ error: "Full name is required" }),
         { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
@@ -265,6 +271,7 @@ serve(async (req) => {
     }
 
     if (!numGuests || numGuests < 1 || numGuests > 50) {
+      console.error("Invalid number of guests:", numGuests);
       return new Response(
         JSON.stringify({ error: "Invalid number of guests" }),
         { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
@@ -315,17 +322,17 @@ serve(async (req) => {
         p_check_out: checkOutDate,
       });
 
-    console.log('Availability check result:', availability ? 'available' : 'unavailable');
+    console.log('Availability check result:', availability);
 
     if (availabilityError) {
-      console.error("Error checking availability");
+      console.error("Error checking availability:", availabilityError);
       return new Response(
         JSON.stringify({ error: "Failed to check property availability", details: availabilityError.message }),
         { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
-    if (!availability) {
+    if (availability === false) {
       console.log("Property not available for selected dates");
       return new Response(
         JSON.stringify({ error: "Property is not available for the selected dates" }),
@@ -346,6 +353,7 @@ serve(async (req) => {
         pricing?.discountAmount || 0
       );
     } catch (pricingError: any) {
+      console.error("Error during expected pricing calculation:", pricingError);
       return new Response(
         JSON.stringify({ error: pricingError.message }),
         { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
@@ -353,6 +361,7 @@ serve(async (req) => {
     }
 
     if (!expectedPricing) {
+      console.error("Expected pricing returned null for property:", propertyId);
       return new Response(
         JSON.stringify({ error: "Failed to calculate pricing" }),
         { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
@@ -360,13 +369,19 @@ serve(async (req) => {
     }
 
     const tolerance = 1;
+    console.log("Pricing Comparison:", {
+      received: pricing,
+      expected: expectedPricing,
+      tolerance
+    });
+
     if (
       Math.abs(pricing.baseAmount - expectedPricing.baseAmount) > tolerance ||
       Math.abs(pricing.cleaningFee - expectedPricing.cleaningFee) > tolerance ||
       Math.abs(pricing.taxAmount - expectedPricing.taxAmount) > tolerance ||
       Math.abs(pricing.totalAmount - expectedPricing.totalAmount) > tolerance
     ) {
-      console.error("Price manipulation detected", {
+      console.error("Price manipulation detected / mismatch", {
         client: pricing,
         server: expectedPricing,
       });
