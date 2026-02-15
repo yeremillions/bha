@@ -404,8 +404,8 @@ export const calculateBookingPrice = async ({
     const cleaningFee = property.cleaning_fee || 0;
     const subtotal = baseAmount + cleaningFee - discountAmount;
 
-    // Tax calculation (assuming 6% tax rate - this should come from settings)
-    const taxAmount = Math.round(subtotal * 0.06);
+    // Tax calculation (7.5% VAT)
+    const taxAmount = Math.round(subtotal * 0.075);
     const totalAmount = subtotal + taxAmount;
 
     return {
