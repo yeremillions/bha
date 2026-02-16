@@ -8,8 +8,8 @@
  * Docs: https://paystack.com/docs/
  */
 
-// Paystack public key - safe to expose on client
-const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '';
+// Paystack public key - safe to expose on client (publishable key)
+const PAYSTACK_PUBLIC_KEY = 'pk_test_49d2fbea0521318224eff17cd9c284569e4ebcb1';
 
 /**
  * Generate a unique payment reference
