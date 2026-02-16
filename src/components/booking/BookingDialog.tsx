@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { checkAvailability, calculateBookingPrice } from '@/hooks/useBookings';
+import { useDateSelection } from '@/hooks/useDateSelection';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -49,9 +50,25 @@ interface PriceBreakdown {
 
 export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, initialCheckOut }: BookingDialogProps) => {
   const navigate = useNavigate();
+  const {
+    checkIn,
+    setCheckIn,
+    checkOut,
+    setCheckOut,
+    checkInOpen,
+    setCheckInOpen,
+    checkOutOpen,
+    setCheckOutOpen,
+    checkOutMonth,
+    setCheckOutMonth,
+    handleCheckInSelect,
+    handleCheckOutSelect,
+  } = useDateSelection(
+    initialCheckIn ? new Date(initialCheckIn) : undefined,
+    initialCheckOut ? new Date(initialCheckOut) : undefined
+  );
+
   const [step, setStep] = useState<BookingStep>('dates');
-  const [checkIn, setCheckIn] = useState<Date | undefined>(initialCheckIn ? new Date(initialCheckIn) : undefined);
-  const [checkOut, setCheckOut] = useState<Date | undefined>(initialCheckOut ? new Date(initialCheckOut) : undefined);
   const [numGuests, setNumGuests] = useState(1);
   const [guestInfo, setGuestInfo] = useState<GuestInfo>({
     fullName: '',
@@ -61,9 +78,6 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
   });
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
-  const [checkInOpen, setCheckInOpen] = useState(false);
-  const [checkOutOpen, setCheckOutOpen] = useState(false);
-  const [checkOutMonth, setCheckOutMonth] = useState<Date>(() => checkOut || (checkIn ? addDays(checkIn, 1) : new Date()));
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
   const [bookingNumber, setBookingNumber] = useState<string | null>(null);
@@ -89,10 +103,11 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
       }, 300);
     } else {
       // Set initial dates when dialog opens
+      // The hook handles initialization, but if props change while mounted:
       if (initialCheckIn) setCheckIn(new Date(initialCheckIn));
       if (initialCheckOut) setCheckOut(new Date(initialCheckOut));
     }
-  }, [open, initialCheckIn, initialCheckOut]);
+  }, [open, initialCheckIn, initialCheckOut, setCheckIn, setCheckOut]);
 
   // Check availability and calculate price when dates change
   useEffect(() => {
@@ -134,27 +149,6 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
 
     checkAndCalculate();
   }, [checkIn, checkOut, property.id, numGuests]);
-
-  const handleDateSelect = (date: Date | undefined, type: 'checkIn' | 'checkOut') => {
-    if (type === 'checkIn') {
-      setCheckIn(date);
-      // Auto-set checkout to next day if not set or if it's before new checkin
-      const newCheckOut = date && (!checkOut || checkOut <= date) ? addDays(date, 1) : checkOut;
-      if (newCheckOut && newCheckOut !== checkOut) {
-        setCheckOut(newCheckOut);
-      }
-      // Set the month the checkout calendar should show BEFORE opening it
-      const targetMonth = newCheckOut || (date ? addDays(date, 1) : new Date());
-      setCheckOutMonth(targetMonth);
-      // Close check-in popover and open check-out popover after state flush
-      setCheckInOpen(false);
-      setTimeout(() => setCheckOutOpen(true), 200);
-    } else {
-      setCheckOut(date);
-      if (date) setCheckOutMonth(date);
-      setCheckOutOpen(false);
-    }
-  };
 
   // Get today at midnight for comparison
   const today = new Date();
@@ -348,114 +342,258 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl">
-            {step === 'dates' && 'Select Your Dates'}
-            {step === 'guest-info' && 'Guest Information'}
-            {step === 'review' && 'Review Your Booking'}
-            {step === 'payment' && 'Complete Payment'}
-            {step === 'success' && 'Booking Confirmed!'}
-          </DialogTitle>
-          <DialogDescription>
-            {step !== 'success' && step !== 'payment' && property.name}
-            {step === 'payment' && `Booking ${bookingNumber}`}
-          </DialogDescription>
-        </DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">
+              {step === 'dates' && 'Select Your Dates'}
+              {step === 'guest-info' && 'Guest Information'}
+              {step === 'review' && 'Review Your Booking'}
+              {step === 'payment' && 'Complete Payment'}
+              {step === 'success' && 'Booking Confirmed!'}
+            </DialogTitle>
+            <DialogDescription>
+              {step !== 'success' && step !== 'payment' && property.name}
+              {step === 'payment' && `Booking ${bookingNumber}`}
+            </DialogDescription>
+          </DialogHeader>
 
-        {/* Step: Dates */}
-        {step === 'dates' && (
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Check-in Date</Label>
-                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !checkIn && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {checkIn ? format(checkIn, 'MMM d, yyyy') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="top" sideOffset={4}>
-                    <Calendar
-                      mode="single"
-                      selected={checkIn}
-                      onSelect={(date) => handleDateSelect(date, 'checkIn')}
-                      disabled={(date) => date < today}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
+          {/* Step: Dates */}
+          {step === 'dates' && (
+            <div className="space-y-6 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Check-in Date</Label>
+                  <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !checkIn && 'text-muted-foreground'
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {checkIn ? format(checkIn, 'MMM d, yyyy') : 'Select date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="top" sideOffset={4}>
+                      <Calendar
+                        mode="single"
+                        selected={checkIn}
+                        onSelect={(date) => handleDateSelect(date, 'checkIn')}
+                        disabled={(date) => date < today}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Check-out Date</Label>
+                  <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !checkOut && 'text-muted-foreground'
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {checkOut ? format(checkOut, 'MMM d, yyyy') : 'Select date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="top" sideOffset={4}>
+                      <Calendar
+                        mode="single"
+                        selected={checkOut}
+                        onSelect={(date) => handleDateSelect(date, 'checkOut')}
+                        disabled={(date) => date <= (checkIn || today)}
+                        month={checkOutMonth}
+                        onMonthChange={setCheckOutMonth}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Check-out Date</Label>
-                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !checkOut && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {checkOut ? format(checkOut, 'MMM d, yyyy') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="top" sideOffset={4}>
-                    <Calendar
-                      mode="single"
-                      selected={checkOut}
-                      onSelect={(date) => handleDateSelect(date, 'checkOut')}
-                      disabled={(date) => date <= (checkIn || today)}
-                      month={checkOutMonth}
-                      onMonthChange={setCheckOutMonth}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Label>Number of Guests</Label>
+                <Select value={String(numGuests)} onValueChange={(v) => setNumGuests(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: property.max_guests }, (_, i) => i + 1).map((num) => (
+                      <SelectItem key={num} value={String(num)}>
+                        {num} {num === 1 ? 'Guest' : 'Guests'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {availabilityError && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  {availabilityError}
+                </div>
+              )}
+
+              {isCheckingAvailability && (
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking availability...
+                </div>
+              )}
+
+              {priceBreakdown && !availabilityError && (
+                <div className="rounded-lg border p-4 space-y-2 bg-muted/30">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {formatCurrency(property.base_price_per_night)} × {priceBreakdown.nights} nights
+                    </span>
+                    <span>{formatCurrency(priceBreakdown.baseAmount)}</span>
+                  </div>
+                  {priceBreakdown.cleaningFee > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Cleaning fee</span>
+                      <span>{formatCurrency(priceBreakdown.cleaningFee)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Taxes</span>
+                    <span>{formatCurrency(priceBreakdown.taxAmount)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold pt-2 border-t">
+                    <span>Total</span>
+                    <span>{formatCurrency(priceBreakdown.totalAmount)}</span>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                className="w-full"
+                onClick={handleNextStep}
+                disabled={!canProceedFromDates}
+              >
+                Continue
+              </Button>
+            </div>
+          )}
+
+          {/* Step: Guest Info */}
+          {step === 'guest-info' && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name *</Label>
+                <Input
+                  id="fullName"
+                  value={guestInfo.fullName}
+                  onChange={(e) => setGuestInfo({ ...guestInfo, fullName: e.target.value })}
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={guestInfo.email}
+                  onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
+                  placeholder="john@example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={guestInfo.phone}
+                  onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
+                  placeholder="+234 800 000 0000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="specialRequests">Special Requests (Optional)</Label>
+                <Textarea
+                  id="specialRequests"
+                  value={guestInfo.specialRequests}
+                  onChange={(e) => setGuestInfo({ ...guestInfo, specialRequests: e.target.value })}
+                  placeholder="Any special requests or notes for your stay..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={handlePreviousStep} className="flex-1">
+                  Back
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleNextStep}
+                  disabled={!canProceedFromGuestInfo}
+                >
+                  Review Booking
+                </Button>
               </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label>Number of Guests</Label>
-              <Select value={String(numGuests)} onValueChange={(v) => setNumGuests(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: property.max_guests }, (_, i) => i + 1).map((num) => (
-                    <SelectItem key={num} value={String(num)}>
-                      {num} {num === 1 ? 'Guest' : 'Guests'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Step: Review */}
+          {step === 'review' && priceBreakdown && checkIn && checkOut && (
+            <div className="space-y-6 py-4">
+              <div className="rounded-lg border p-4 space-y-4">
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">
+                    Property
+                  </h4>
+                  <p className="font-medium">{property.name}</p>
+                  <p className="text-sm text-muted-foreground">{property.location}</p>
+                </div>
 
-            {availabilityError && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                {availabilityError}
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                  <div>
+                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-1">
+                      Check-in
+                    </h4>
+                    <p className="font-medium">{format(checkIn, 'EEE, MMM d, yyyy')}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-1">
+                      Check-out
+                    </h4>
+                    <p className="font-medium">{format(checkOut, 'EEE, MMM d, yyyy')}</p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-1">
+                    Guests
+                  </h4>
+                  <p className="font-medium">{numGuests} {numGuests === 1 ? 'Guest' : 'Guests'}</p>
+                </div>
               </div>
-            )}
 
-            {isCheckingAvailability && (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Checking availability...
+              <div className="rounded-lg border p-4 space-y-2">
+                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">
+                  Guest Details
+                </h4>
+                <p className="font-medium">{guestInfo.fullName}</p>
+                <p className="text-sm text-muted-foreground">{guestInfo.email}</p>
+                <p className="text-sm text-muted-foreground">{guestInfo.phone}</p>
+                {guestInfo.specialRequests && (
+                  <p className="text-sm text-muted-foreground mt-2 pt-2 border-t">
+                    <span className="font-medium">Notes:</span> {guestInfo.specialRequests}
+                  </p>
+                )}
               </div>
-            )}
 
-            {priceBreakdown && !availabilityError && (
               <div className="rounded-lg border p-4 space-y-2 bg-muted/30">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
@@ -473,258 +611,114 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
                   <span className="text-muted-foreground">Taxes</span>
                   <span>{formatCurrency(priceBreakdown.taxAmount)}</span>
                 </div>
-                <div className="flex justify-between font-semibold pt-2 border-t">
+                <div className="flex justify-between font-semibold pt-2 border-t text-lg">
                   <span>Total</span>
                   <span>{formatCurrency(priceBreakdown.totalAmount)}</span>
                 </div>
               </div>
-            )}
 
-            <Button
-              className="w-full"
-              onClick={handleNextStep}
-              disabled={!canProceedFromDates}
-            >
-              Continue
-            </Button>
-          </div>
-        )}
-
-        {/* Step: Guest Info */}
-        {step === 'guest-info' && (
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name *</Label>
-              <Input
-                id="fullName"
-                value={guestInfo.fullName}
-                onChange={(e) => setGuestInfo({ ...guestInfo, fullName: e.target.value })}
-                placeholder="John Doe"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={guestInfo.email}
-                onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
-                placeholder="john@example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number *</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={guestInfo.phone}
-                onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
-                placeholder="+234 800 000 0000"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="specialRequests">Special Requests (Optional)</Label>
-              <Textarea
-                id="specialRequests"
-                value={guestInfo.specialRequests}
-                onChange={(e) => setGuestInfo({ ...guestInfo, specialRequests: e.target.value })}
-                placeholder="Any special requests or notes for your stay..."
-                rows={3}
-              />
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={handlePreviousStep} className="flex-1">
-                Back
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={handleNextStep}
-                disabled={!canProceedFromGuestInfo}
-              >
-                Review Booking
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Step: Review */}
-        {step === 'review' && priceBreakdown && checkIn && checkOut && (
-          <div className="space-y-6 py-4">
-            <div className="rounded-lg border p-4 space-y-4">
-              <div>
-                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">
-                  Property
-                </h4>
-                <p className="font-medium">{property.name}</p>
-                <p className="text-sm text-muted-foreground">{property.location}</p>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handlePreviousStep} className="flex-1">
+                  Back
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleConfirmBooking}
+                  disabled={isCreatingBooking}
+                >
+                  {isCreatingBooking ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Confirm Booking'
+                  )}
+                </Button>
               </div>
+            </div>
+          )}
 
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                <div>
-                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-1">
-                    Check-in
-                  </h4>
-                  <p className="font-medium">{format(checkIn, 'EEE, MMM d, yyyy')}</p>
+          {/* Step: Payment */}
+          {step === 'payment' && priceBreakdown && createdBookingId && (
+            <div className="py-8 space-y-6">
+              <div className="text-center">
+                <div className="mx-auto w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mb-4">
+                  <CreditCard className="h-8 w-8 text-accent" />
                 </div>
-                <div>
-                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-1">
-                    Check-out
-                  </h4>
-                  <p className="font-medium">{format(checkOut, 'EEE, MMM d, yyyy')}</p>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t">
-                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-1">
-                  Guests
-                </h4>
-                <p className="font-medium">{numGuests} {numGuests === 1 ? 'Guest' : 'Guests'}</p>
-              </div>
-            </div>
-
-            <div className="rounded-lg border p-4 space-y-2">
-              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">
-                Guest Details
-              </h4>
-              <p className="font-medium">{guestInfo.fullName}</p>
-              <p className="text-sm text-muted-foreground">{guestInfo.email}</p>
-              <p className="text-sm text-muted-foreground">{guestInfo.phone}</p>
-              {guestInfo.specialRequests && (
-                <p className="text-sm text-muted-foreground mt-2 pt-2 border-t">
-                  <span className="font-medium">Notes:</span> {guestInfo.specialRequests}
+                <h3 className="text-lg font-semibold mb-2">Secure Payment</h3>
+                <p className="text-muted-foreground text-sm">
+                  Complete your booking by paying securely with Paystack
                 </p>
-              )}
-            </div>
-
-            <div className="rounded-lg border p-4 space-y-2 bg-muted/30">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {formatCurrency(property.base_price_per_night)} × {priceBreakdown.nights} nights
-                </span>
-                <span>{formatCurrency(priceBreakdown.baseAmount)}</span>
               </div>
-              {priceBreakdown.cleaningFee > 0 && (
+
+              <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Cleaning fee</span>
-                  <span>{formatCurrency(priceBreakdown.cleaningFee)}</span>
+                  <span className="text-muted-foreground">Property</span>
+                  <span className="font-medium">{property.name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Dates</span>
+                  <span className="font-medium">
+                    {checkIn && format(checkIn, 'MMM d')} - {checkOut && format(checkOut, 'MMM d, yyyy')}
+                  </span>
+                </div>
+                <div className="flex justify-between font-semibold pt-2 border-t text-lg">
+                  <span>Total</span>
+                  <span>{formatCurrency(priceBreakdown.totalAmount)}</span>
+                </div>
+              </div>
+
+              <PaystackButton
+                bookingId={createdBookingId}
+                propertyId={property.id}
+                customerEmail={guestInfo.email}
+                customerName={guestInfo.fullName}
+                amount={priceBreakdown.totalAmount}
+                bookingNumber={bookingNumber || ''}
+                onSuccess={handlePaymentSuccess}
+                onClose={handlePaymentClose}
+                onPaymentStart={handlePaymentStart}
+                className="w-full"
+              />
+
+              <p className="text-xs text-center text-muted-foreground">
+                Your booking will be confirmed once payment is complete.
+              </p>
+            </div>
+          )}
+
+          {/* Step: Success */}
+          {step === 'success' && (
+            <div className="py-8 text-center space-y-6">
+              <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                <Check className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Payment Successful!</h3>
+                <p className="text-muted-foreground">
+                  Your booking has been confirmed and payment received.
+                </p>
+              </div>
+
+              {bookingNumber && (
+                <div className="rounded-lg border p-4 bg-muted/30">
+                  <p className="text-sm text-muted-foreground mb-1">Booking Reference</p>
+                  <p className="text-2xl font-bold font-mono">{bookingNumber}</p>
                 </div>
               )}
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Taxes</span>
-                <span>{formatCurrency(priceBreakdown.taxAmount)}</span>
-              </div>
-              <div className="flex justify-between font-semibold pt-2 border-t text-lg">
-                <span>Total</span>
-                <span>{formatCurrency(priceBreakdown.totalAmount)}</span>
-              </div>
-            </div>
 
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handlePreviousStep} className="flex-1">
-                Back
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={handleConfirmBooking}
-                disabled={isCreatingBooking}
-              >
-                {isCreatingBooking ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Confirm Booking'
-                )}
+              <p className="text-sm text-muted-foreground">
+                A confirmation email has been sent to <strong>{guestInfo.email}</strong>
+              </p>
+
+              <Button className="w-full" onClick={() => onOpenChange(false)}>
+                Done
               </Button>
             </div>
-          </div>
-        )}
-
-        {/* Step: Payment */}
-        {step === 'payment' && priceBreakdown && createdBookingId && (
-          <div className="py-8 space-y-6">
-            <div className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mb-4">
-                <CreditCard className="h-8 w-8 text-accent" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Secure Payment</h3>
-              <p className="text-muted-foreground text-sm">
-                Complete your booking by paying securely with Paystack
-              </p>
-            </div>
-
-            <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Property</span>
-                <span className="font-medium">{property.name}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Dates</span>
-                <span className="font-medium">
-                  {checkIn && format(checkIn, 'MMM d')} - {checkOut && format(checkOut, 'MMM d, yyyy')}
-                </span>
-              </div>
-              <div className="flex justify-between font-semibold pt-2 border-t text-lg">
-                <span>Total</span>
-                <span>{formatCurrency(priceBreakdown.totalAmount)}</span>
-              </div>
-            </div>
-
-            <PaystackButton
-              bookingId={createdBookingId}
-              propertyId={property.id}
-              customerEmail={guestInfo.email}
-              customerName={guestInfo.fullName}
-              amount={priceBreakdown.totalAmount}
-              bookingNumber={bookingNumber || ''}
-              onSuccess={handlePaymentSuccess}
-              onClose={handlePaymentClose}
-              onPaymentStart={handlePaymentStart}
-              className="w-full"
-            />
-
-            <p className="text-xs text-center text-muted-foreground">
-              Your booking will be confirmed once payment is complete.
-            </p>
-          </div>
-        )}
-
-        {/* Step: Success */}
-        {step === 'success' && (
-          <div className="py-8 text-center space-y-6">
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <Check className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Payment Successful!</h3>
-              <p className="text-muted-foreground">
-                Your booking has been confirmed and payment received.
-              </p>
-            </div>
-
-            {bookingNumber && (
-              <div className="rounded-lg border p-4 bg-muted/30">
-                <p className="text-sm text-muted-foreground mb-1">Booking Reference</p>
-                <p className="text-2xl font-bold font-mono">{bookingNumber}</p>
-              </div>
-            )}
-
-            <p className="text-sm text-muted-foreground">
-              A confirmation email has been sent to <strong>{guestInfo.email}</strong>
-            </p>
-
-            <Button className="w-full" onClick={() => onOpenChange(false)}>
-              Done
-            </Button>
-          </div>
-        )}
-      </DialogPrimitive.Content>
+          )}
+        </DialogPrimitive.Content>
       </DialogPortal>
     </Dialog>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Star, MapPin, ChevronLeft, ChevronRight, Search, SlidersHorizontal, CalendarDays, X } from 'lucide-react';
+import { Star, MapPin, ChevronLeft, ChevronRight, Search, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import {
 import { useAvailableProperties } from '@/hooks/useAvailableProperties';
 import { useProperties } from '@/hooks/useProperties';
 import { BookingDialog } from '@/components/booking/BookingDialog';
+import { AvailabilitySearch } from '@/components/booking/AvailabilitySearch';
 import { NewsletterSection } from '@/components/landing/NewsletterSection';
 import { Footer } from '@/components/landing/Footer';
 import { Header } from '@/components/landing/Header';
@@ -38,17 +39,17 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
 
   useEffect(() => {
     if (!carouselApi) return;
-    
+
     const onSelect = () => {
       setCurrentSlide(carouselApi.selectedScrollSnap());
     };
-    
+
     carouselApi.on('select', onSelect);
     return () => {
       carouselApi.off('select', onSelect);
     };
   }, [carouselApi]);
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -76,15 +77,15 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
             <CarouselContent className="-ml-0 h-full">
               {images.map((image, index) => (
                 <CarouselItem key={index} className="pl-0 h-56">
-                  <img 
-                    src={image} 
+                  <img
+                    src={image}
                     alt={`${property.name} - Image ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -105,7 +106,7 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-            
+
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
               {images.map((_, index) => (
                 <button
@@ -114,19 +115,18 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
                     e.stopPropagation();
                     carouselApi?.scrollTo(index);
                   }}
-                  className={`h-2 w-2 rounded-full transition-colors ${
-                    index === currentSlide 
-                      ? 'bg-background' 
-                      : 'bg-background/50 hover:bg-background/75'
-                  }`}
+                  className={`h-2 w-2 rounded-full transition-colors ${index === currentSlide
+                    ? 'bg-background'
+                    : 'bg-background/50 hover:bg-background/75'
+                    }`}
                   aria-label={`Go to image ${index + 1}`}
                 />
               ))}
             </div>
           </Carousel>
         ) : (
-          <img 
-            src={images[0]} 
+          <img
+            src={images[0]}
             alt={property.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -140,9 +140,9 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
       <CardContent className="p-6">
         <div className="flex items-center gap-1 mb-2">
           {[...Array(5)].map((_, i) => (
-            <Star 
-              key={i} 
-              className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-accent fill-accent' : 'text-muted-foreground'}`} 
+            <Star
+              key={i}
+              className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-accent fill-accent' : 'text-muted-foreground'}`}
             />
           ))}
           <span className="text-sm text-muted-foreground ml-1">({reviewCount} reviews)</span>
@@ -170,8 +170,8 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
             </span>
             <span className="text-muted-foreground text-sm"> / night</span>
           </div>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             className="bg-accent text-accent-foreground hover:bg-accent/90"
             onClick={() => onBookNow(property)}
           >
@@ -232,33 +232,33 @@ const PublicProperties = () => {
 
   const isLoading = hasDateFilter ? isLoadingFiltered : isLoadingAll;
   const error = hasDateFilter ? filteredError : allError;
-  
+
   // Get properties based on whether date filter is active
   const properties = hasDateFilter ? filteredProperties : allProperties;
 
   // Apply client-side filters only when using allProperties (no date filter)
-  const displayedProperties = hasDateFilter 
+  const displayedProperties = hasDateFilter
     ? (properties || [])
     : (properties || [])
-        .filter(property => {
-          const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            property.location.toLowerCase().includes(searchQuery.toLowerCase());
-          const matchesType = propertyType === 'all' || property.type === propertyType;
-          return matchesSearch && matchesType;
-        })
-        .sort((a, b) => {
-          switch (sortBy) {
-            case 'price-low':
-              return a.base_price_per_night - b.base_price_per_night;
-            case 'price-high':
-              return b.base_price_per_night - a.base_price_per_night;
-            case 'rating':
-              return (b.rating || 0) - (a.rating || 0);
-            case 'featured':
-            default:
-              return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-          }
-        });
+      .filter(property => {
+        const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          property.location.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesType = propertyType === 'all' || property.type === propertyType;
+        return matchesSearch && matchesType;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'price-low':
+            return a.base_price_per_night - b.base_price_per_night;
+          case 'price-high':
+            return b.base_price_per_night - a.base_price_per_night;
+          case 'rating':
+            return (b.rating || 0) - (a.rating || 0);
+          case 'featured':
+          default:
+            return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+        }
+      });
 
   const handleBookNow = (property: Property) => {
     setSelectedProperty(property);
@@ -290,32 +290,15 @@ const PublicProperties = () => {
             Browse our collection of premium apartments and book your ideal accommodation in Uyo.
           </p>
 
-          {/* Date Filter Banner */}
-          {hasDateFilter && (
-            <div className="max-w-4xl mx-auto mb-6">
-              <div className="bg-accent/10 border border-accent/20 rounded-lg px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <CalendarDays className="h-5 w-5 text-accent" />
-                  <span className="text-sm font-medium text-foreground">
-                    Showing properties available from{' '}
-                    <span className="text-accent">{format(parseISO(checkIn), 'MMM d, yyyy')}</span>
-                    {' '}to{' '}
-                    <span className="text-accent">{format(parseISO(checkOut), 'MMM d, yyyy')}</span>
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearDateFilter}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Clear dates
-                </Button>
-              </div>
-            </div>
-          )}
-          
+          {/* Unified Search Section */}
+          <div className="max-w-4xl mx-auto mb-8">
+            <AvailabilitySearch
+              initialCheckIn={checkIn ? parseISO(checkIn) : undefined}
+              initialCheckOut={checkOut ? parseISO(checkOut) : undefined}
+              compact
+            />
+          </div>
+
           {/* Search and Filter Bar */}
           <div className="max-w-4xl mx-auto bg-background rounded-xl shadow-lg p-4 md:p-6">
             <div className="flex flex-col md:flex-row gap-4">
@@ -372,15 +355,15 @@ const PublicProperties = () => {
           ) : displayedProperties.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
-                {hasDateFilter 
-                  ? 'No properties available for the selected dates.' 
-                  : searchQuery || propertyType !== 'all' 
-                    ? 'No properties match your search criteria.' 
+                {hasDateFilter
+                  ? 'No properties available for the selected dates.'
+                  : searchQuery || propertyType !== 'all'
+                    ? 'No properties match your search criteria.'
                     : 'No properties available at the moment.'}
               </p>
               {(searchQuery || propertyType !== 'all' || hasDateFilter) && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="mt-4"
                   onClick={() => {
                     setSearchQuery('');
@@ -394,15 +377,27 @@ const PublicProperties = () => {
             </div>
           ) : (
             <>
-              <p className="text-muted-foreground mb-6">
-                Showing {displayedProperties.length} {displayedProperties.length === 1 ? 'property' : 'properties'}
-                {hasDateFilter && ' available for your dates'}
-              </p>
+              <div className="flex justify-between items-center mb-6">
+                <p className="text-muted-foreground">
+                  Showing {displayedProperties.length} {displayedProperties.length === 1 ? 'property' : 'properties'}
+                  {hasDateFilter && ' available for your selected dates'}
+                </p>
+                {hasDateFilter && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearDateFilter}
+                    className="text-muted-foreground hover:text-foreground h-8"
+                  >
+                    Clear Dates
+                  </Button>
+                )}
+              </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {displayedProperties.map((property) => (
-                  <PropertyCard 
-                    key={property.id} 
-                    property={property} 
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
                     onBookNow={handleBookNow}
                   />
                 ))}

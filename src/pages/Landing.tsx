@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { AvailabilitySearch } from '@/components/booking/AvailabilitySearch';
 import { IconContainer } from '@/components/ui/IconContainer';
 import {
   MapPin,
@@ -50,9 +50,6 @@ const Landing = () => {
   const navigate = useNavigate();
   const [checkIn, setCheckIn] = useState<Date | undefined>();
   const [checkOut, setCheckOut] = useState<Date | undefined>();
-  const [checkInOpen, setCheckInOpen] = useState(false);
-  const [checkOutOpen, setCheckOutOpen] = useState(false);
-  const [checkOutMonth, setCheckOutMonth] = useState<Date>(new Date());
   const [hasSearched, setHasSearched] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
 
@@ -74,43 +71,10 @@ const Landing = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const handleCheckAvailability = () => {
-    if (checkIn && checkOut) {
-      const params = new URLSearchParams();
-      params.set('checkIn', format(checkIn, 'yyyy-MM-dd'));
-      params.set('checkOut', format(checkOut, 'yyyy-MM-dd'));
-      navigate(`/properties?${params.toString()}`);
-    }
-  };
-
   const handleClearSearch = () => {
     setHasSearched(false);
     setCheckIn(undefined);
     setCheckOut(undefined);
-  };
-
-  const handleCheckInSelect = (date: Date | undefined) => {
-    setCheckIn(date);
-    if (date && (!checkOut || checkOut <= date)) {
-      const nextDay = new Date(date);
-      nextDay.setDate(nextDay.getDate() + 1);
-      setCheckOut(nextDay);
-      setCheckOutMonth(nextDay);
-    } else if (date && checkOut) {
-      setCheckOutMonth(checkOut);
-    } else if (date) {
-      const nextDay = new Date(date);
-      nextDay.setDate(nextDay.getDate() + 1);
-      setCheckOutMonth(nextDay);
-    }
-    setCheckInOpen(false);
-    setTimeout(() => setCheckOutOpen(true), 200);
-  };
-
-  const handleCheckOutSelect = (date: Date | undefined) => {
-    setCheckOut(date);
-    if (date) setCheckOutMonth(date);
-    setCheckOutOpen(false);
   };
   const trustBadges = [
     {
@@ -289,81 +253,8 @@ const Landing = () => {
             </p>
 
             {/* Horizontal Booking Bar - Floating Glass */}
-            <div id="booking-widget" className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-full animate-fade-in-delay-3 hidden md:block">
-              <div className="grid grid-cols-3 gap-0 h-16 items-center">
-
-                {/* Check In */}
-                <div className="relative border-r border-white/10 h-full flex items-center px-6 transition-colors hover:bg-white/5 cursor-pointer rounded-l-full group">
-                  <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
-                    <PopoverTrigger asChild>
-                      <div className="w-full text-left">
-                        <label className="block text-xs uppercase tracking-wider text-white/60 mb-1 font-medium group-hover:text-[#D4AF37] transition-colors">
-                          Check In
-                        </label>
-                        <div className="flex items-center gap-3 text-white font-display text-lg">
-                          <CalendarIcon className="h-5 w-5 text-[#D4AF37]" weight="thin" />
-                          <span className={!checkIn ? "text-white/50" : ""}>
-                            {checkIn ? format(checkIn, 'MMM d, yyyy') : 'Add Dates'}
-                          </span>
-                        </div>
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={checkIn}
-                        onSelect={handleCheckInSelect}
-                        disabled={(date) => date < today}
-                        initialFocus
-                        className="rounded-md border border-border"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Check Out */}
-                <div className="relative border-r border-white/10 h-full flex items-center px-6 transition-colors hover:bg-white/5 cursor-pointer group">
-                  <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
-                    <PopoverTrigger asChild>
-                      <div className="w-full text-left">
-                        <label className="block text-xs uppercase tracking-wider text-white/60 mb-1 font-medium group-hover:text-[#D4AF37] transition-colors">
-                          Check Out
-                        </label>
-                        <div className="flex items-center gap-3 text-white font-display text-lg">
-                          <CalendarIcon className="h-5 w-5 text-[#D4AF37]" weight="thin" />
-                          <span className={!checkOut ? "text-white/50" : ""}>
-                            {checkOut ? format(checkOut, 'MMM d, yyyy') : 'Add Dates'}
-                          </span>
-                        </div>
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={checkOut}
-                        onSelect={handleCheckOutSelect}
-                        disabled={(date) => date <= (checkIn || today)}
-                        month={checkOutMonth}
-                        onMonthChange={setCheckOutMonth}
-                        initialFocus
-                        className="rounded-md border border-border"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Search Button */}
-                <div className="pl-2 pr-1 h-full flex items-center">
-                  <Button
-                    className="w-full h-12 rounded-full bg-[#D4AF37] text-black hover:bg-[#c5a028] font-body uppercase tracking-widest text-sm font-bold shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transition-all transform hover:scale-[1.02]"
-                    onClick={handleCheckAvailability}
-                    disabled={!checkIn || !checkOut}
-                  >
-                    <span className="mr-2">Check Availability</span>
-                    <ArrowRight className="h-4 w-4" weight="bold" />
-                  </Button>
-                </div>
-              </div>
+            <div id="booking-widget" className="w-full animate-fade-in-delay-3 hidden md:block">
+              <AvailabilitySearch />
             </div>
 
             {/* Mobile Booking Trigger (Visible only on small screens) */}
