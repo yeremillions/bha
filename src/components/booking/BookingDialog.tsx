@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { checkAvailability, calculateBookingPrice } from '@/hooks/useBookings';
+import { checkAvailability } from '@/hooks/useBookings';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -60,7 +60,7 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
     specialRequests: '',
   });
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
-  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+  // isCalculatingPrice removed — price is now calculated locally without DB call
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [checkOutMonth, setCheckOutMonth] = useState<Date>(() => checkOut || (checkIn ? addDays(checkIn, 1) : new Date()));
@@ -94,45 +94,52 @@ export const BookingDialog = ({ open, onOpenChange, property, initialCheckIn, in
     }
   }, [open, initialCheckIn, initialCheckOut]);
 
-  // Check availability and calculate price when dates change
+  // Calculate price locally from property data (no DB call needed)
+  const calculatePriceLocally = (checkInDate: Date, checkOutDate: Date, guests: number) => {
+    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (nights <= 0) return null;
+    if (guests > property.max_guests) return null;
+
+    const baseAmount = property.base_price_per_night * nights;
+    const cleaningFee = property.cleaning_fee || 0;
+    const discountAmount = 0;
+    const subtotal = baseAmount + cleaningFee - discountAmount;
+    const taxAmount = Math.round(subtotal * 0.075);
+    const totalAmount = subtotal + taxAmount;
+
+    return { baseAmount, cleaningFee, taxAmount, discountAmount, totalAmount, nights };
+  };
+
+  // Check availability when dates change; calculate price instantly
   useEffect(() => {
-    const checkAndCalculate = async () => {
-      if (!checkIn || !checkOut || !property.id) return;
+    if (!checkIn || !checkOut || !property.id) return;
 
-      setIsCheckingAvailability(true);
-      setAvailabilityError(null);
+    // Calculate price instantly (no network call)
+    const price = calculatePriceLocally(checkIn, checkOut, numGuests);
+    setPriceBreakdown(price);
 
-      try {
-        const availability = await checkAvailability({
-          propertyId: property.id,
-          checkInDate: format(checkIn, 'yyyy-MM-dd'),
-          checkOutDate: format(checkOut, 'yyyy-MM-dd'),
-        });
+    // Check availability asynchronously
+    setIsCheckingAvailability(true);
+    setAvailabilityError(null);
 
+    checkAvailability({
+      propertyId: property.id,
+      checkInDate: format(checkIn, 'yyyy-MM-dd'),
+      checkOutDate: format(checkOut, 'yyyy-MM-dd'),
+    })
+      .then((availability) => {
         if (!availability.available) {
           setAvailabilityError('This property is not available for the selected dates. Please choose different dates.');
           setPriceBreakdown(null);
-          return;
         }
-
-        setIsCalculatingPrice(true);
-        const price = await calculateBookingPrice({
-          propertyId: property.id,
-          checkInDate: format(checkIn, 'yyyy-MM-dd'),
-          checkOutDate: format(checkOut, 'yyyy-MM-dd'),
-          numGuests,
-        });
-        setPriceBreakdown(price);
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error('Error checking availability:', error);
         setAvailabilityError('Unable to check availability. Please try again.');
-      } finally {
+      })
+      .finally(() => {
         setIsCheckingAvailability(false);
-        setIsCalculatingPrice(false);
-      }
-    };
-
-    checkAndCalculate();
+      });
   }, [checkIn, checkOut, property.id, numGuests]);
 
   const handleDateSelect = (date: Date | undefined, type: 'checkIn' | 'checkOut') => {
