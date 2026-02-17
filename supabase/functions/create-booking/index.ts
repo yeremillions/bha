@@ -280,48 +280,57 @@ serve(async (req) => {
 
     console.log('Creating booking for property', propertyId);
 
-    const { data: existingCustomer } = await supabase
-      .from("customers")
-      .select("id")
-      .eq("email", guestInfo.email)
-      .maybeSingle();
+    // Run customer lookup and availability check in PARALLEL for speed
+    const [customerResult, availabilityResult] = await Promise.all([
+      // Customer lookup/creation
+      (async () => {
+        const { data: existingCustomer } = await supabase
+          .from("customers")
+          .select("id")
+          .eq("email", guestInfo.email)
+          .maybeSingle();
 
-    let customerId: string;
+        if (existingCustomer) {
+          console.log('Found existing customer');
+          return { id: existingCustomer.id, error: null };
+        }
 
-    if (existingCustomer) {
-      customerId = existingCustomer.id;
-      console.log('Found existing customer');
-    } else {
-      const { data: newCustomer, error: customerError } = await supabase
-        .from("customers")
-        .insert({
-          full_name: guestInfo.fullName,
-          email: guestInfo.email,
-          phone: guestInfo.phone,
-        })
-        .select("id")
-        .single();
+        const { data: newCustomer, error: customerError } = await supabase
+          .from("customers")
+          .insert({
+            full_name: guestInfo.fullName,
+            email: guestInfo.email,
+            phone: guestInfo.phone,
+          })
+          .select("id")
+          .single();
 
-      if (customerError || !newCustomer) {
-        console.error("Error creating customer record");
-        return new Response(
-          JSON.stringify({ error: "Failed to create customer record", details: customerError?.message }),
-          { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
-        );
-      }
-      customerId = newCustomer.id;
-      console.log('Created new customer');
-    }
-
-    console.log(`Checking availability for property ${propertyId} from ${checkInDate} to ${checkOutDate}`);
-
-    const { data: availability, error: availabilityError } = await supabase
-      .rpc("check_property_availability", {
+        if (customerError || !newCustomer) {
+          console.error("Error creating customer record");
+          return { id: null, error: customerError };
+        }
+        console.log('Created new customer');
+        return { id: newCustomer.id, error: null };
+      })(),
+      // Availability check
+      supabase.rpc("check_property_availability", {
         p_property_id: propertyId,
         p_check_in: checkInDate,
         p_check_out: checkOutDate,
-      });
+      }),
+    ]);
 
+    // Handle customer result
+    if (!customerResult.id) {
+      return new Response(
+        JSON.stringify({ error: "Failed to create customer record", details: customerResult.error?.message }),
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+      );
+    }
+    const customerId = customerResult.id;
+
+    // Handle availability result
+    const { data: availability, error: availabilityError } = availabilityResult;
     console.log('Availability check result:', availability);
 
     if (availabilityError) {

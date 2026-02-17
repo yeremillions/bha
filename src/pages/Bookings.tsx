@@ -169,7 +169,7 @@ const Bookings = () => {
 
   // Note: Cancelled count would require a separate query or be included in metadata
   // For now, we hide this feature or fetch separately if needed
-  const cancelledCount = 0; // Placeholder - implement separate query if needed
+  const cancelledCount: number = 0; // Placeholder - implement separate query if needed
 
   // Calculate total revenue
   const totalRevenue = useMemo(() => {
