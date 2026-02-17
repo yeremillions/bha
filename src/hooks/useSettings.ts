@@ -580,3 +580,38 @@ export function useSettings() {
     refetch: fetchSettings,
   };
 }
+
+export const useResetSystemData = () => {
+  const { toast } = useToast();
+  const [resetting, setResetting] = useState(false);
+
+  const resetData = async () => {
+    try {
+      setResetting(true);
+      const { data, error } = await supabase.functions.invoke('reset-system-data');
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Reset failed');
+
+      toast({
+        title: 'System Reset Complete',
+        description: 'All operational data has been cleared.',
+      });
+
+      // Reload window to clear any cached state
+      window.location.reload();
+
+    } catch (error: any) {
+      console.error('Error resetting system:', error);
+      toast({
+        title: 'Reset Failed',
+        description: error.message || 'Could not reset system data.',
+        variant: 'destructive',
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  return { resetData, resetting };
+};
