@@ -56,10 +56,10 @@ export const useCustomers = (filters?: CustomerFilters) => {
     queryFn: async () => {
       let query = supabase
         .from('customers')
-        .select('*')
+        .select('*, bookings(id, total_amount, status, payment_status, created_at)')
         .order('created_at', { ascending: false });
 
-      // Apply filters
+      // Apply filters (same as before)
       if (filters?.search) {
         query = query.or(
           `full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`
@@ -76,7 +76,40 @@ export const useCustomers = (filters?: CustomerFilters) => {
         throw new Error(`Failed to fetch customers: ${error.message}`);
       }
 
-      return data as Customer[];
+      // Calculate stats from bookings
+      const customersWithStats = data.map((customer: any) => {
+        const bookings = customer.bookings || [];
+
+        // Calculate total bookings (excluding cancelled)
+        const validBookings = bookings.filter((b: any) => b.status !== 'cancelled');
+        const totalBookings = validBookings.length;
+
+        // Calculate total spent (only paid/completed or confirmed bookings)
+        // Adjust logic based on business rules: usually 'confirmed' or 'checked_in' or 'completed'
+        // For revenue, we ideally check payment_status === 'paid'
+        const totalSpent = bookings.reduce((sum: number, b: any) => {
+          if (b.status !== 'cancelled' && (b.payment_status === 'paid' || b.status === 'completed' || b.status === 'checked_in')) {
+            return sum + (b.total_amount || 0);
+          }
+          return sum;
+        }, 0);
+
+        // Calculate average rating (mock for now if not in DB, but customer table has it)
+        // If we had reviews table, we'd fetch that too. 
+        // For now, keep existing average_rating or 0.
+
+        return {
+          ...customer,
+          total_bookings: totalBookings,
+          total_spent: totalSpent,
+          // We can also calculate last_booking_date if needed
+          last_booking_date: bookings.length > 0
+            ? bookings.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
+            : null
+        };
+      });
+
+      return customersWithStats as Customer[];
     },
   });
 };
@@ -92,7 +125,7 @@ export const useCustomer = (id: string | undefined) => {
 
       const { data, error } = await supabase
         .from('customers')
-        .select('*')
+        .select('*, bookings(id, total_amount, status, payment_status, created_at)')
         .eq('id', id)
         .single();
 
@@ -101,7 +134,28 @@ export const useCustomer = (id: string | undefined) => {
         throw new Error(`Failed to fetch customer: ${error.message}`);
       }
 
-      return data as Customer;
+      // Calculate stats from bookings
+      const bookings = (data as any).bookings || [];
+      const validBookings = bookings.filter((b: any) => b.status !== 'cancelled');
+      const totalBookings = validBookings.length;
+
+      const totalSpent = bookings.reduce((sum: number, b: any) => {
+        if (b.status !== 'cancelled' && (b.payment_status === 'paid' || b.status === 'completed' || b.status === 'checked_in')) {
+          return sum + (b.total_amount || 0);
+        }
+        return sum;
+      }, 0);
+
+      const customerWithStats = {
+        ...data,
+        total_bookings: totalBookings,
+        total_spent: totalSpent,
+        last_booking_date: bookings.length > 0
+          ? bookings.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
+          : null
+      };
+
+      return customerWithStats as Customer;
     },
     enabled: !!id,
   });
