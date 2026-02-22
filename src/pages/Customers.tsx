@@ -140,6 +140,7 @@ const Customers = () => {
   // Top 5 customers by spending
   const topCustomers = useMemo(() => {
     return [...allCustomers]
+      .filter(c => (c.total_spent || 0) > 0)
       .sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0))
       .slice(0, 5);
   }, [allCustomers]);

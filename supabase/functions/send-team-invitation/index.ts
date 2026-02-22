@@ -48,7 +48,7 @@ serve(async (req) => {
     // Verify the user is authenticated and has permission
     const token = authHeader.replace('Bearer ', '');
     console.log('send-team-invitation: Verifying user token');
-    
+
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {

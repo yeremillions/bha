@@ -111,6 +111,8 @@ export const useCustomers = (filters?: CustomerFilters) => {
 
       return customersWithStats as Customer[];
     },
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 };
 

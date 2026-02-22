@@ -3,6 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
+// Shared CORS logic
 const ALLOWED_ORIGINS = [
     "https://brooklynhillsapartment.com",
     "https://www.brooklynhillsapartment.com",
@@ -34,7 +35,8 @@ interface ContactEmailRequest {
     message: string;
 }
 
-serve(async (req) => {
+// Using Deno.serve for consistency with newer functions
+Deno.serve(async (req) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: getCorsHeaders(req) });
@@ -67,6 +69,8 @@ serve(async (req) => {
       <p>${message.replace(/\n/g, '<br>')}</p>
     `;
 
+        console.log(`Sending contact email from ${name} (${email}) to bookings@brooklynhillsapartment.com`);
+
         const resendResponse = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -74,9 +78,10 @@ serve(async (req) => {
                 'Authorization': `Bearer ${RESEND_API_KEY}`,
             },
             body: JSON.stringify({
+                // Using the verified notifications subdomain for reliable delivery
                 from: 'Brooklyn Hills Contact <contact@notifications.brooklynhillsapartment.com>',
-                to: ['bookings@brooklynhillsapartment.com'], // Send to the business email
-                reply_to: email, // Allow replying directly to the user
+                to: ['concierge@brooklynhillsapartment.com'],
+                reply_to: email,
                 subject: `New Inquiry from ${name}`,
                 html: emailHtml,
             }),
@@ -85,12 +90,14 @@ serve(async (req) => {
         const resendData = await resendResponse.json();
 
         if (!resendResponse.ok) {
-            console.error('Resend email failed:', resendData);
+            console.error('Resend email failed:', JSON.stringify(resendData));
             return new Response(
                 JSON.stringify({ error: 'Failed to send email', details: resendData }),
                 { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
             );
         }
+
+        console.log('Contact email sent successfully:', resendData.id);
 
         return new Response(
             JSON.stringify({ success: true, id: resendData.id }),

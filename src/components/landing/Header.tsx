@@ -61,16 +61,15 @@ export const Header = () => {
             </Link>
           ))}
 
-          <ContactModal>
-            <button
-              className={cn(
-                "font-body text-sm font-medium transition-colors uppercase tracking-widest hover:text-[#D4AF37]",
-                isTransparent ? "text-white/80" : "text-muted-foreground"
-              )}
-            >
-              Contact
-            </button>
-          </ContactModal>
+          <Link
+            to="/contact"
+            className={cn(
+              "font-body text-sm font-medium transition-colors uppercase tracking-widest hover:text-[#D4AF37]",
+              isTransparent ? "text-white/80" : "text-muted-foreground"
+            )}
+          >
+            Contact
+          </Link>
         </div>
 
         {/* Auth Buttons */}

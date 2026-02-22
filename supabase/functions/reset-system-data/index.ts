@@ -63,7 +63,8 @@ serve(async (req) => {
         await supabaseClient.from('bookings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
         // Reset Stats
-        await supabaseClient.from('customers').update({ total_bookings: 0, total_spent: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
+        // Customers (Delete all customers)
+        await supabaseClient.from('customers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabaseClient.from('housekeeping_staff').update({ total_tasks_completed: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
 
         // 3. Log Action

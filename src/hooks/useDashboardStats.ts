@@ -2,6 +2,24 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from 'date-fns';
 
+export interface DashboardBookings {
+  id: string;
+  customers: { full_name: string } | null;
+  properties: { name: string; images: string[] | null } | null;
+  total_amount: number;
+  status: string;
+  check_in_date: string;
+  check_out_date: string;
+  created_at: string;
+}
+
+export interface DashboardTask {
+  id: string;
+  property: { name: string } | null;
+  assignee: { full_name: string } | null;
+  status: string;
+}
+
 interface DashboardStats {
   todayBookings: number;
   weekBookings: number;
@@ -15,6 +33,11 @@ interface DashboardStats {
   revenueTrend: { value: string; positive: boolean };
   occupancyTrend: { value: string; positive: boolean };
   barSalesTrend: { value: string; positive: boolean };
+  // Lists
+  recentBookings: DashboardBookings[];
+  todayCheckIns: DashboardBookings[];
+  todayCheckOuts: DashboardBookings[];
+  housekeepingTasks: DashboardTask[];
 }
 
 export const useDashboardStats = () => {
@@ -39,15 +62,19 @@ export const useDashboardStats = () => {
         propertiesResult,
         barSalesTodayResult,
         barSalesWeekResult,
+        recentBookingsResult,
+        todayCheckInsResult,
+        todayCheckOutsResult,
+        housekeepingTasksResult,
       ] = await Promise.all([
-        // Today's bookings (check-ins today)
+        // Today's bookings (check-ins today) count
         supabase
           .from('bookings')
           .select('id', { count: 'exact', head: true })
           .eq('check_in_date', todayStart)
           .not('status', 'eq', 'cancelled'),
 
-        // This week's bookings
+        // This week's bookings count
         supabase
           .from('bookings')
           .select('id', { count: 'exact', head: true })
@@ -102,6 +129,68 @@ export const useDashboardStats = () => {
           .eq('category', 'bar_sales')
           .gte('created_at', `${weekStart}T00:00:00`)
           .lte('created_at', `${weekEnd}T23:59:59`),
+
+        // Recent Bookings (Limit 5)
+        supabase
+          .from('bookings')
+          .select(`
+            id,
+            total_amount,
+            status,
+            check_in_date,
+            check_out_date,
+            created_at,
+            customers ( full_name ),
+            properties ( name, images )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5),
+
+        // Today's Check-ins
+        supabase
+          .from('bookings')
+          .select(`
+            id,
+            total_amount,
+            status,
+            check_in_date,
+            check_out_date,
+            created_at,
+            customers ( full_name ),
+            properties ( name, images )
+          `)
+          .eq('check_in_date', todayStart)
+          .not('status', 'eq', 'cancelled')
+          .order('created_at', { ascending: false }),
+
+        // Today's Check-outs
+        supabase
+          .from('bookings')
+          .select(`
+            id,
+            total_amount,
+            status,
+            check_in_date,
+            check_out_date,
+            created_at,
+            customers ( full_name ),
+            properties ( name, images )
+          `)
+          .eq('check_out_date', todayStart)
+          .not('status', 'eq', 'cancelled')
+          .order('created_at', { ascending: false }),
+
+        // Housekeeping Tasks (Active/Recent)
+        supabase
+          .from('housekeeping_tasks')
+          .select(`
+            id,
+            status,
+            property:properties ( name ),
+            assignee:staff!assigned_to ( full_name )
+          `)
+          .not('status', 'eq', 'completed')
+          .limit(5)
       ]);
 
       // Calculate values
@@ -126,6 +215,47 @@ export const useDashboardStats = () => {
       const occupancyTrend = { value: occupancyRate > 50 ? '5%' : '0%', positive: occupancyRate > 50 };
       const barSalesTrend = { value: barSalesWeek > 0 ? '15%' : '0%', positive: barSalesWeek > 0 };
 
+      // Map lists
+      const recentBookings: DashboardBookings[] = (recentBookingsResult.data || []).map((b: any) => ({
+        id: b.id,
+        customers: b.customers,
+        properties: b.properties,
+        total_amount: b.total_amount,
+        status: b.status,
+        check_in_date: b.check_in_date,
+        check_out_date: b.check_out_date,
+        created_at: b.created_at,
+      }));
+
+      const todayCheckIns: DashboardBookings[] = (todayCheckInsResult.data || []).map((b: any) => ({
+        id: b.id,
+        customers: b.customers,
+        properties: b.properties,
+        total_amount: b.total_amount,
+        status: b.status,
+        check_in_date: b.check_in_date,
+        check_out_date: b.check_out_date,
+        created_at: b.created_at,
+      }));
+
+      const todayCheckOuts: DashboardBookings[] = (todayCheckOutsResult.data || []).map((b: any) => ({
+        id: b.id,
+        customers: b.customers,
+        properties: b.properties,
+        total_amount: b.total_amount,
+        status: b.status,
+        check_in_date: b.check_in_date,
+        check_out_date: b.check_out_date,
+        created_at: b.created_at,
+      }));
+
+      const housekeepingTasks: DashboardTask[] = (housekeepingTasksResult.data || []).map((t: any) => ({
+        id: t.id,
+        status: t.status,
+        property: t.property,
+        assignee: t.assignee,
+      }));
+
       return {
         todayBookings,
         weekBookings,
@@ -138,6 +268,10 @@ export const useDashboardStats = () => {
         revenueTrend,
         occupancyTrend,
         barSalesTrend,
+        recentBookings,
+        todayCheckIns,
+        todayCheckOuts,
+        housekeepingTasks,
       };
     },
     refetchInterval: 60000, // Refresh every minute

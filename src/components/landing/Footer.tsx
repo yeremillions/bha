@@ -39,11 +39,7 @@ export const Footer = () => {
             <ul className="space-y-4">
               <li><Link to="/properties" className="font-body text-sm text-white/60 hover:text-white transition-colors">Our Apartments</Link></li>
               <li><Link to="/#the-standard" className="font-body text-sm text-white/60 hover:text-white transition-colors">The Standard</Link></li>
-              <li>
-                <ContactModal>
-                  <button className="font-body text-sm text-white/60 hover:text-white transition-colors text-left">Contact</button>
-                </ContactModal>
-              </li>
+              <li><Link to="/contact" className="font-body text-sm text-white/60 hover:text-white transition-colors">Contact</Link></li>
               <li><Link to="/auth" className="font-body text-sm text-white/60 hover:text-white transition-colors">Guest Portal</Link></li>
             </ul>
           </div>
@@ -67,7 +63,7 @@ export const Footer = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-[#D4AF37] shrink-0" strokeWidth={1.5} />
-                <a href="mailto:bookings@brooklynhillsapartment.com" className="font-body text-sm text-white/60 hover:text-white transition-colors">bookings@brooklynhillsapartment.com</a>
+                <a href="mailto:concierge@brooklynhillsapartment.com" className="font-body text-sm text-white/60 hover:text-white transition-colors">concierge@brooklynhillsapartment.com</a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-[#D4AF37] shrink-0" strokeWidth={1.5} />

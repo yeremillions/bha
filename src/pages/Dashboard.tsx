@@ -47,13 +47,13 @@ const Dashboard = () => {
         <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
         <div className="absolute top-1/2 -left-40 h-96 w-96 rounded-full bg-accent/3 blur-3xl" />
       </div>
-      
+
       {/* Sidebar */}
       <AdminSidebar
         mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)} 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        onMobileClose={() => setMobileMenuOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
       {/* Main Content */}
@@ -134,13 +134,16 @@ const Dashboard = () => {
 
           {/* Main Grid - Modern bento layout */}
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2 mb-8">
-            <TodaySchedule />
-            <RecentBookings />
+            <TodaySchedule
+              checkIns={stats?.todayCheckIns || []}
+              checkOuts={stats?.todayCheckOuts || []}
+            />
+            <RecentBookings bookings={stats?.recentBookings || []} />
           </div>
 
           {/* Bottom Grid */}
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-            <HousekeepingTasks />
+            <HousekeepingTasks tasks={stats?.housekeepingTasks || []} />
             <MonthlyOverview />
           </div>
         </main>

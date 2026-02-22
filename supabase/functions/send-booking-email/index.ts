@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Brooklyn Hills Apartments <noreply@brooklynhillsapartment.com>",
+        from: "Brooklyn Hills Apartments <noreply@notifications.brooklynhillsapartment.com>",
         to: [booking.customer.email],
         subject,
         html,
