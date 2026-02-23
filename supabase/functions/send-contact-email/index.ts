@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
         }
 
         const emailHtml = `
-      <h2>New Contact Form Submission</h2>
+      <h2>New Inquiry from ${name}</h2>
       <p><strong>Name:</strong> ${name}</p>
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
