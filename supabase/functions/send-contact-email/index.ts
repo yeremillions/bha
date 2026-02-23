@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
                 // Using the verified notifications subdomain for reliable delivery
                 from: 'Brooklyn Hills Contact <contact@notifications.brooklynhillsapartment.com>',
-                to: ['concierge@brooklynhillsapartment.com'],
+                to: ['bookings@brooklynhillsapartment.com'],
                 reply_to: email,
                 subject: `New Inquiry from ${name}`,
                 html: emailHtml,
