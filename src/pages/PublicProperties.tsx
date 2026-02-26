@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/carousel';
 import type { Tables } from '@/integrations/supabase/types';
 import { format, parseISO } from 'date-fns';
+import propertiesHero from '@/assets/properties-hero.jpg';
 
 type Property = Tables<'properties'>;
 
@@ -310,7 +311,7 @@ const PublicProperties = () => {
         <div
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: 'url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop")',
+            backgroundImage: `url(${propertiesHero})`,
           }}
         >
           {/* Exact triple-layer overlay from Home Page for perfect consistency */}
