@@ -313,9 +313,10 @@ const PublicProperties = () => {
             backgroundImage: 'url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop")',
           }}
         >
-          {/* Subtle overlay to ensure text legibility while keeping image details */}
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="absolute inset-0 bg-gradient-to-b from-navy/40 via-transparent to-background" />
+          {/* Exact triple-layer overlay from Home Page for perfect consistency */}
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90" />
         </div>
 
         <div className="container mx-auto px-6 relative z-10 py-20">
