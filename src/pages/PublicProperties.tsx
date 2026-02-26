@@ -305,16 +305,17 @@ const PublicProperties = () => {
       <Header />
 
       {/* Cinematic Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center pt-20 overflow-hidden">
-        {/* Background Image with Parallax-like feel */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop"
-            alt="Luxury Property Interior"
-            className="w-full h-full object-cover scale-105"
-          />
-          <div className="absolute inset-0 bg-navy/80 mix-blend-multiply" />
-          <div className="absolute inset-0 bg-gradient-to-b from-navy/60 via-navy/40 to-background" />
+      <section className="relative min-h-[60vh] flex items-center pt-20 overflow-hidden">
+        {/* Background Image with standard CSS approach */}
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop")',
+          }}
+        >
+          {/* Subtle overlay to ensure text legibility while keeping image details */}
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/40 via-transparent to-background" />
         </div>
 
         <div className="container mx-auto px-6 relative z-10 py-20">
