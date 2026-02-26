@@ -49,7 +49,7 @@ export const Footer = () => {
             <h4 className="font-display text-lg text-[#D4AF37] mb-8">Support</h4>
             <ul className="space-y-4">
               <li><Link to="/#common-questions" className="font-body text-sm text-white/60 hover:text-white transition-colors">Common Questions</Link></li>
-              <li><Link to="#" className="font-body text-sm text-white/60 hover:text-white transition-colors">Booking Policy</Link></li>
+              <li><Link to="/booking-policy" className="font-body text-sm text-white/60 hover:text-white transition-colors">Booking Policy</Link></li>
             </ul>
           </div>
 
@@ -80,8 +80,8 @@ export const Footer = () => {
               © {new Date().getFullYear()} BROOKLYN HILLS. ALL RIGHTS RESERVED.
             </p>
             <div className="flex items-center gap-8">
-              <a href="#" className="font-body text-xs text-white/40 hover:text-[#D4AF37] transition-colors uppercase tracking-wider">Terms</a>
-              <a href="#" className="font-body text-xs text-white/40 hover:text-[#D4AF37] transition-colors uppercase tracking-wider">Privacy</a>
+              <Link to="/terms" className="font-body text-xs text-white/40 hover:text-[#D4AF37] transition-colors uppercase tracking-wider">Terms</Link>
+              <Link to="/privacy" className="font-body text-xs text-white/40 hover:text-[#D4AF37] transition-colors uppercase tracking-wider">Privacy</Link>
               <a href="#" className="font-body text-xs text-white/40 hover:text-[#D4AF37] transition-colors uppercase tracking-wider">Cookies</a>
             </div>
           </div>

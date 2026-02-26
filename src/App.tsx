@@ -36,6 +36,9 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import ManageBooking from "./pages/ManageBooking";
+import BookingPolicy from "./pages/BookingPolicy";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +81,9 @@ const App = () => (
               <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
               <Route path="/booking-confirmation/:bookingNumber" element={<BookingConfirmation />} />
               <Route path="/manage-booking" element={<ManageBooking />} />
+              <Route path="/booking-policy" element={<BookingPolicy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
