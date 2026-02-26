@@ -48,6 +48,10 @@ const BookingPolicy = () => {
                             </div>
                             <div className="md:col-span-2 space-y-6">
                                 <div>
+                                    <h3 className="font-display text-lg text-primary mb-2">Payment Terms</h3>
+                                    <p className="font-body text-muted-foreground leading-relaxed font-light">Full payment is required at the time of booking to secure your reservation. Payments are processed securely via Paystack. Your booking is only confirmed upon successful receipt of payment.</p>
+                                </div>
+                                <div>
                                     <h3 className="font-display text-lg text-primary mb-2">Check-in: 2:00 PM</h3>
                                     <p className="font-body text-muted-foreground leading-relaxed font-light">
                                         Early check-in is subject to availability and may incur an additional fee. Please contact our concierge team at least 24 hours in advance to request early arrival.
@@ -79,9 +83,9 @@ const BookingPolicy = () => {
                                     We understand that plans can change. Our cancellation policy is designed to be fair to both our guests and our operations team.
                                 </p>
                                 <ul className="space-y-4 list-disc pl-5 marker:text-accent">
-                                    <li><strong>Full Refund:</strong> Cancellations made at least 48 hours prior to the scheduled check-in time will receive a 100% refund of the booking amount.</li>
-                                    <li><strong>Partial Refund:</strong> Cancellations made between 24 and 48 hours before check-in will be eligible for a 50% refund.</li>
-                                    <li><strong>No Refund:</strong> Cancellations made less than 24 hours before check-in, or no-shows, are non-refundable.</li>
+                                    <li><strong>Full Refund:</strong> Cancellations made at least 7 days prior to the scheduled check-in time will receive a 100% refund of the booking amount, less a 10% administrative charge.</li>
+                                    <li><strong>Partial Refund:</strong> Cancellations made between 3 and 6 days before check-in will be eligible for a 50% refund.</li>
+                                    <li><strong>No Refund:</strong> Cancellations made less than 3 days before check-in, or no-shows, are non-refundable.</li>
                                 </ul>
                             </div>
                         </div>

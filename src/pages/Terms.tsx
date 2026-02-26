@@ -77,6 +77,15 @@ const Terms = () => {
                                     <h3 className="font-display text-lg text-primary mb-2">Payment Terms</h3>
                                     <p>Full payment is required at the time of booking to secure your reservation. Payments are processed securely via Paystack. Your booking is only confirmed upon successful receipt of payment.</p>
                                 </div>
+                                <div>
+                                    <h3 className="font-display text-lg text-primary mb-2">Cancellation & Refunds</h3>
+                                    <p>Our refund policy is as follows:</p>
+                                    <ul className="list-disc pl-5 space-y-2 mt-2">
+                                        <li>Full refund if cancelled 7+ days before check-in, less 10% administrative charge.</li>
+                                        <li>50% refund if cancelled 3-6 days before check-in.</li>
+                                        <li>No refund if cancelled less than 3 days before check-in.</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
 
