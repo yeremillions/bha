@@ -333,13 +333,10 @@ const PublicProperties = () => {
 
           {/* Luxury Search Integration */}
           <div className="max-w-5xl mx-auto animate-fade-in-delay-2">
-            <div className="glass-card p-2 md:p-3 rounded-none shadow-2xl">
-              <AvailabilitySearch
-                initialCheckIn={checkIn ? parseISO(checkIn) : undefined}
-                initialCheckOut={checkOut ? parseISO(checkOut) : undefined}
-                compact
-              />
-            </div>
+            <AvailabilitySearch
+              initialCheckIn={checkIn ? parseISO(checkIn) : undefined}
+              initialCheckOut={checkOut ? parseISO(checkOut) : undefined}
+            />
           </div>
         </div>
       </section>
