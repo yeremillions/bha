@@ -316,7 +316,7 @@ const PublicProperties = () => {
           {/* Exact triple-layer overlay from Home Page for perfect consistency */}
           <div className="absolute inset-0 bg-black/20" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-90" />
         </div>
 
         <div className="container mx-auto px-6 relative z-10 py-20">
