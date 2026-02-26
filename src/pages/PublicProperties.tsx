@@ -30,12 +30,15 @@ import { format, parseISO } from 'date-fns';
 
 type Property = Tables<'properties'>;
 
-const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: (property: Property) => void }) => {
+const PropertyCard = ({ property, onBookNow, index = 0 }: { property: Property; onBookNow: (property: Property) => void; index?: number }) => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const defaultImage = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80';
   const images = property.images?.length ? property.images : [defaultImage];
   const hasMultipleImages = images.length > 1;
+
+  // Stagger animation delay
+  const animationDelay = `${(index % 6) * 0.1}s`;
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -55,32 +58,33 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
     }).format(price);
   };
 
-  const getBadge = () => {
-    if (property.featured) return { label: 'Featured', className: 'bg-accent text-accent-foreground' };
-    if (property.rating && property.rating >= 4.5) return { label: 'Top Rated', className: 'bg-primary text-primary-foreground' };
-    return null;
-  };
+  const badge = property.featured
+    ? { label: 'Featured', className: 'bg-accent text-white border-accent' }
+    : property.rating && property.rating >= 4.8
+      ? { label: 'Highly Rated', className: 'bg-primary text-white border-primary' }
+      : null;
 
-  const badge = getBadge();
   const rating = property.rating || 4.5;
   const reviewCount = property.review_count || 0;
 
   return (
-    <Card className="overflow-hidden group hover:shadow-xl transition-shadow">
-      <div className="relative h-56 overflow-hidden">
+    <Card
+      className="overflow-hidden border-border/50 bg-card hover-lift animate-fade-in group opacity-0"
+      style={{ animationDelay }}
+    >
+      <div className="relative h-64 md:h-72 overflow-hidden">
         {hasMultipleImages ? (
           <Carousel setApi={setCarouselApi} className="w-full h-full">
             <CarouselContent className="-ml-0 h-full">
               {images.map((image, index) => (
-                <CarouselItem key={index} className="pl-0 h-56">
+                <CarouselItem key={index} className="pl-0 h-64 md:h-72">
                   <img
                     src={image}
                     alt={`${property.name} - Image ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 </CarouselItem>
               ))}
@@ -91,23 +95,23 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
                 e.stopPropagation();
                 carouselApi?.scrollPrev();
               }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 hover:bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/20 backdrop-blur-md text-white border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 hover:bg-black/40"
               aria-label="Previous image"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 carouselApi?.scrollNext();
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 hover:bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/20 backdrop-blur-md text-white border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 hover:bg-black/40"
               aria-label="Next image"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5" />
             </button>
 
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
               {images.map((_, index) => (
                 <button
                   key={index}
@@ -115,9 +119,9 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
                     e.stopPropagation();
                     carouselApi?.scrollTo(index);
                   }}
-                  className={`h-2 w-2 rounded-full transition-colors ${index === currentSlide
-                    ? 'bg-background'
-                    : 'bg-background/50 hover:bg-background/75'
+                  className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide
+                    ? 'w-6 bg-accent'
+                    : 'w-1.5 bg-white/50 hover:bg-white'
                     }`}
                   aria-label={`Go to image ${index + 1}`}
                 />
@@ -128,54 +132,68 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
           <img
             src={images[0]}
             alt={property.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         )}
+
         {badge && (
-          <div className={`absolute top-4 left-4 px-3 py-1 text-xs font-semibold rounded-full ${badge.className} z-10`}>
+          <div className={`absolute top-4 left-4 px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] font-bold rounded-full border shadow-sm z-10 ${badge.className}`}>
             {badge.label}
           </div>
         )}
+
+        {/* Overlay for better text separation */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
-      <CardContent className="p-6">
-        <div className="flex items-center gap-1 mb-2">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-accent fill-accent' : 'text-muted-foreground'}`}
-            />
-          ))}
-          <span className="text-sm text-muted-foreground ml-1">({reviewCount} reviews)</span>
+
+      <CardContent className="p-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-1">
+            <Star className="h-3.5 w-3.5 text-accent fill-accent" />
+            <span className="text-sm font-medium text-foreground">{rating}</span>
+            <span className="text-xs text-muted-foreground ml-1">({reviewCount} reviews)</span>
+          </div>
+          <span className="text-[10px] uppercase tracking-widest font-bold text-accent px-2 py-0.5 border border-accent/20 rounded">
+            {property.type}
+          </span>
         </div>
-        <h3 className="font-display text-xl font-semibold text-foreground mb-2">{property.name}</h3>
-        <p className="font-body text-muted-foreground text-sm mb-4 flex items-center gap-1">
-          <MapPin className="h-4 w-4" /> {property.location}
+
+        <h3 className="font-display text-2xl font-medium text-foreground mb-3 leading-tight tracking-tight group-hover:text-accent transition-colors duration-300">
+          {property.name}
+        </h3>
+
+        <p className="font-body text-muted-foreground text-sm mb-6 flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-accent/60" /> {property.location}
         </p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {property.amenities?.slice(0, 4).map((amenity) => (
-            <span key={amenity} className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">
+
+        <div className="flex flex-wrap gap-2 mb-8">
+          {property.amenities?.slice(0, 3).map((amenity) => (
+            <span key={amenity} className="px-3 py-1 bg-secondary/50 text-secondary-foreground text-[10px] uppercase tracking-wider font-semibold rounded-sm border border-border/40">
               {amenity}
             </span>
           ))}
           {property.bedrooms && (
-            <span className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded">
-              {property.bedrooms} {property.bedrooms === 1 ? 'Bed' : 'Beds'}
+            <span className="px-3 py-1 bg-secondary/50 text-secondary-foreground text-[10px] uppercase tracking-wider font-semibold rounded-sm border border-border/40">
+              {property.bedrooms} {property.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between">
+
+        <div className="flex items-center justify-between pt-6 border-t border-border/50">
           <div>
-            <span className="font-display text-2xl font-bold text-foreground">
-              {formatPrice(property.base_price_per_night)}
-            </span>
-            <span className="text-muted-foreground text-sm"> / night</span>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Price from</div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-display text-2xl font-bold text-accent">
+                {formatPrice(property.base_price_per_night)}
+              </span>
+              <span className="text-muted-foreground text-xs">/night</span>
+            </div>
           </div>
           <Button
-            size="sm"
-            className="bg-accent text-accent-foreground hover:bg-accent/90"
+            className="rounded-none px-8 bg-primary hover:bg-primary/90 text-white font-medium tracking-wide transition-all duration-300 hover:scale-[1.02]"
             onClick={() => onBookNow(property)}
           >
-            Book Now
+            BOOK NOW
           </Button>
         </div>
       </CardContent>
@@ -184,20 +202,26 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
 };
 
 const PropertyCardSkeleton = () => (
-  <Card className="overflow-hidden">
-    <Skeleton className="h-56 w-full" />
-    <CardContent className="p-6 space-y-4">
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="h-6 w-3/4" />
+  <Card className="overflow-hidden border-border/50 bg-card">
+    <Skeleton className="h-64 md:h-72 w-full rounded-none" />
+    <CardContent className="p-8 space-y-6">
+      <div className="flex justify-between">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-4 w-16" />
+      </div>
+      <Skeleton className="h-8 w-3/4" />
       <Skeleton className="h-4 w-1/2" />
       <div className="flex gap-2">
-        <Skeleton className="h-6 w-12" />
-        <Skeleton className="h-6 w-12" />
-        <Skeleton className="h-6 w-12" />
+        <Skeleton className="h-6 w-20" />
+        <Skeleton className="h-6 w-20" />
+        <Skeleton className="h-6 w-20" />
       </div>
-      <div className="flex justify-between items-center">
-        <Skeleton className="h-8 w-24" />
-        <Skeleton className="h-9 w-20" />
+      <div className="flex justify-between items-center pt-6 border-t border-border/50">
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+        <Skeleton className="h-10 w-32" />
       </div>
     </CardContent>
   </Card>
@@ -276,62 +300,88 @@ const PublicProperties = () => {
   const propertyTypes = [...new Set(allPropertiesForTypes?.map(p => p.type) || [])];
 
   return (
-    <div className="min-h-screen bg-background pt-20">
-      {/* Header */}
+    <div className="min-h-screen bg-background">
+      {/* Header with glass effect on scroll handled by component */}
       <Header />
 
-      {/* Hero Section */}
-      <section className="bg-primary/5 py-12 lg:py-16">
-        <div className="container mx-auto px-6">
-          <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-center">
-            Find Your Perfect Stay
-          </h1>
-          <p className="font-body text-muted-foreground text-lg max-w-2xl mx-auto text-center mb-8">
-            Browse our collection of premium apartments and book your ideal accommodation in Uyo.
-          </p>
+      {/* Cinematic Hero Section */}
+      <section className="relative min-h-[70vh] flex items-center pt-20 overflow-hidden">
+        {/* Background Image with Parallax-like feel */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop"
+            alt="Luxury Property Interior"
+            className="w-full h-full object-cover scale-105"
+          />
+          <div className="absolute inset-0 bg-navy/80 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/60 via-navy/40 to-background" />
+        </div>
 
-          {/* Unified Search Section */}
-          <div className="max-w-4xl mx-auto mb-8">
-            <AvailabilitySearch
-              initialCheckIn={checkIn ? parseISO(checkIn) : undefined}
-              initialCheckOut={checkOut ? parseISO(checkOut) : undefined}
-              compact
-            />
+        <div className="container mx-auto px-6 relative z-10 py-20">
+          <div className="max-w-4xl mx-auto text-center mb-12 animate-fade-in">
+            <span className="text-accent uppercase tracking-[0.4em] font-bold text-xs mb-4 block animate-fade-in-delay-1">
+              Curated Residences
+            </span>
+            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-medium text-white mb-6 leading-[1.1] animate-fade-in-delay-1">
+              Find Your Perfect <span className="italic font-light text-white/90">Stay.</span>
+            </h1>
+            <p className="font-body text-white/70 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-delay-2">
+              Browse our exclusive collection of premium apartments and experience unmatched luxury in the heart of Uyo.
+            </p>
           </div>
 
-          {/* Search and Filter Bar */}
-          <div className="max-w-4xl mx-auto bg-background rounded-xl shadow-lg p-4 md:p-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or location..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          {/* Luxury Search Integration */}
+          <div className="max-w-5xl mx-auto animate-fade-in-delay-2">
+            <div className="glass-card p-2 md:p-3 rounded-none shadow-2xl">
+              <AvailabilitySearch
+                initialCheckIn={checkIn ? parseISO(checkIn) : undefined}
+                initialCheckOut={checkOut ? parseISO(checkOut) : undefined}
+                compact
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Filter Section - Floating with glass effect */}
+      <section className="sticky top-20 z-30 py-6 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1 w-full relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-accent transition-colors group-focus-within:text-foreground" />
+              <Input
+                placeholder="Search by name or location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 h-12 bg-transparent border-border/50 focus:border-accent/50 rounded-none font-body text-sm"
+              />
+            </div>
+
+            <div className="flex flex-wrap md:flex-nowrap gap-4 w-full md:w-auto">
               <Select value={propertyType} onValueChange={setPropertyType}>
-                <SelectTrigger className="w-full md:w-[180px]">
+                <SelectTrigger className="w-full md:w-[200px] h-12 bg-transparent border-border/50 focus:ring-1 focus:ring-accent rounded-none">
                   <SelectValue placeholder="Property Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="all">All Residences</SelectItem>
                   {propertyTypes.map(type => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Sort by" />
+                <SelectTrigger className="w-full md:w-[200px] h-12 bg-transparent border-border/50 focus:ring-1 focus:ring-accent rounded-none">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="h-4 w-4 text-accent" />
+                    <SelectValue placeholder="Sort by" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="featured">Featured First</SelectItem>
+                  <SelectItem value="featured">Featured Collection</SelectItem>
                   <SelectItem value="price-low">Price: Low to High</SelectItem>
                   <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="rating">Top Rated</SelectItem>
+                  <SelectItem value="rating">Top Guest Rated</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -339,8 +389,12 @@ const PublicProperties = () => {
         </div>
       </section>
 
-      {/* Properties Grid */}
-      <section className="py-12 lg:py-16">
+      {/* Properties Grid Section */}
+      <section className="py-20 bg-background relative overflow-hidden">
+        {/* Subtle background texture or element */}
+        <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-accent/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
+
         <div className="container mx-auto px-6">
           {isLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -394,11 +448,12 @@ const PublicProperties = () => {
                 )}
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {displayedProperties.map((property) => (
+                {displayedProperties.map((property, index) => (
                   <PropertyCard
                     key={property.id}
                     property={property}
                     onBookNow={handleBookNow}
+                    index={index}
                   />
                 ))}
               </div>
