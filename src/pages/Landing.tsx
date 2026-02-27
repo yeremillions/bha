@@ -529,10 +529,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Newsletter Section */}
       <NewsletterSection />
-
-      {/* Footer */}
       <Footer />
     </div>
   );

@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
-import { NewsletterSection } from '@/components/landing/NewsletterSection';
 import { AvailabilityResults } from '@/components/landing/AvailabilityResults';
 import { AvailabilitySearch } from '@/components/booking/AvailabilitySearch';
 import { parseISO } from 'date-fns';
@@ -86,7 +85,6 @@ const SearchResults = () => {
                 )}
             </main>
 
-            <NewsletterSection />
             <Footer />
         </div>
     );

@@ -16,7 +16,6 @@ import { useAvailableProperties } from '@/hooks/useAvailableProperties';
 import { useProperties } from '@/hooks/useProperties';
 import { BookingDialog } from '@/components/booking/BookingDialog';
 import { AvailabilitySearch } from '@/components/booking/AvailabilitySearch';
-import { NewsletterSection } from '@/components/landing/NewsletterSection';
 import { Footer } from '@/components/landing/Footer';
 import { Header } from '@/components/landing/Header';
 import {
@@ -498,10 +497,6 @@ const PublicProperties = () => {
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <NewsletterSection />
-
-      {/* Footer */}
       <Footer />
 
       {/* Booking Dialog */}
