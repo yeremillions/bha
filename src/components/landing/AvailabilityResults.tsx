@@ -251,7 +251,7 @@ export const AvailabilityResults = forwardRef<HTMLElement, AvailabilityResultsPr
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-accent mb-4">
               <Calendar className="h-4 w-4" />
               <span className="font-body text-sm font-medium">
-                {formattedCheckIn} — {formattedCheckOut}
+                {formattedCheckIn} → {formattedCheckOut}
               </span>
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -261,7 +261,7 @@ export const AvailabilityResults = forwardRef<HTMLElement, AvailabilityResultsPr
               {isLoading
                 ? 'Searching for available properties...'
                 : availableProperties?.length
-                  ? `Showing ${availableProperties.length} ${availableProperties.length === 1 ? 'property' : 'properties'} available for ${format(parseISO(checkIn), 'MMM d, yyyy')} - ${format(parseISO(checkOut), 'MMM d, yyyy')}.`
+                  ? `Showing ${availableProperties.length} ${availableProperties.length === 1 ? 'property' : 'properties'} available for ${format(parseISO(checkIn), 'MMM d, yyyy')} → ${format(parseISO(checkOut), 'MMM d, yyyy')}.`
                   : 'No properties available for the selected dates'
               }
             </p>
