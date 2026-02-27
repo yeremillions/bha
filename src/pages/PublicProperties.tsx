@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Star, MapPin, ChevronLeft, ChevronRight, Search, SlidersHorizontal } from 'lucide-react';
+import { Star, MapPin, ChevronLeft, ChevronRight, Search, SlidersHorizontal, ShieldCheck, Zap, Wifi, Wind, UtensilsCrossed, Droplets, Car, Tv } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -70,6 +70,17 @@ const PropertyCard = ({ property, onBookNow, index = 0 }: { property: Property; 
 
   const rating = property.rating || 4.5;
   const reviewCount = property.review_count || 0;
+
+  const amenityIcons: Record<string, any> = {
+    '24/7 Security': ShieldCheck,
+    'Backup Power Supply': Zap,
+    'High-Speed Wi-Fi': Wifi,
+    'Air Conditioning': Wind,
+    'Fully Equipped Kitchen': UtensilsCrossed,
+    'Water Heater': Droplets,
+    'Parking Space': Car,
+    'Smart TV/DSTV': Tv,
+  };
 
   return (
     <Card
@@ -168,15 +179,24 @@ const PropertyCard = ({ property, onBookNow, index = 0 }: { property: Property; 
         </p>
 
         <div className="flex flex-wrap gap-2 mb-8">
-          {property.amenities?.slice(0, 3).map((amenity) => (
-            <span key={amenity} className="px-3 py-1 bg-secondary/50 text-secondary-foreground text-[10px] uppercase tracking-wider font-semibold rounded-sm border border-border/40">
-              {amenity}
-            </span>
-          ))}
+          {property.amenities?.map((amenity) => {
+            const Icon = amenityIcons[amenity];
+            if (!Icon) return null;
+            return (
+              <div
+                key={amenity}
+                className="flex items-center gap-1.5 px-3 py-1 bg-secondary/50 border border-border/40 rounded-sm text-[10px] uppercase tracking-wider font-semibold text-secondary-foreground transition-all duration-300 hover:border-accent/40 group/amenity"
+                title={amenity}
+              >
+                <Icon className="h-2.5 w-2.5 text-accent/80 group-hover/amenity:text-accent" />
+                <span>{amenity}</span>
+              </div>
+            );
+          })}
           {property.bedrooms && (
-            <span className="px-3 py-1 bg-secondary/50 text-secondary-foreground text-[10px] uppercase tracking-wider font-semibold rounded-sm border border-border/40">
+            <div className="flex items-center px-3 py-1 bg-secondary/50 border border-border/40 rounded-sm text-[10px] uppercase tracking-wider font-semibold text-secondary-foreground">
               {property.bedrooms} {property.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
-            </span>
+            </div>
           )}
         </div>
 

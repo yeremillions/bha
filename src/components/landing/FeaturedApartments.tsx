@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, MapPin, ChevronLeft, ChevronRight, ShieldCheck, Zap, Wifi, Wind, UtensilsCrossed, Droplets, Car, Tv } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,6 +48,17 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
   };
 
   const rating = property.rating || 4.5;
+
+  const amenityIcons: Record<string, any> = {
+    '24/7 Security': ShieldCheck,
+    'Backup Power Supply': Zap,
+    'High-Speed Wi-Fi': Wifi,
+    'Air Conditioning': Wind,
+    'Fully Equipped Kitchen': UtensilsCrossed,
+    'Water Heater': Droplets,
+    'Parking Space': Car,
+    'Smart TV/DSTV': Tv,
+  };
 
   return (
     <div className="group cursor-pointer" onClick={() => onBookNow(property)}>
@@ -123,6 +134,23 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
           </span>
           <span className="w-1 h-1 bg-muted-foreground/30 rounded-full" />
           <span>{property.bedrooms} {property.bedrooms === 1 ? 'Bed' : 'Beds'}</span>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          {property.amenities?.map((amenity) => {
+            const Icon = amenityIcons[amenity];
+            if (!Icon) return null;
+            return (
+              <div
+                key={amenity}
+                className="flex items-center gap-1.5 px-2 py-0.5 bg-secondary/30 border border-border/40 rounded-sm text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-accent/40 group/amenity"
+                title={amenity}
+              >
+                <Icon className="h-2.5 w-2.5 text-accent/80 group-hover/amenity:text-accent" />
+                <span>{amenity}</span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="pt-2 flex items-center justify-between border-t border-border/50 mt-2">
