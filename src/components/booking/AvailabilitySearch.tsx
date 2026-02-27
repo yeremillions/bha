@@ -144,7 +144,8 @@ export const AvailabilitySearch = ({
                     <Button
                         className={cn(
                             "w-full rounded-full font-body uppercase tracking-widest text-sm font-bold shadow-lg transition-all transform hover:scale-[1.02]",
-                            compact ? "h-10 bg-primary text-primary-foreground hover:bg-primary/90" : "h-12 bg-[#D4AF37] text-black hover:bg-[#c5a028] shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)]"
+                            compact ? "h-10 bg-primary text-primary-foreground hover:bg-primary/90" : "h-12 bg-[#D4AF37] text-black hover:bg-[#c5a028] shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)]",
+                            checkIn && checkOut && "animate-pulsate-bha border-2 border-white/20"
                         )}
                         onClick={handleCheckAvailability}
                         disabled={!checkIn || !checkOut}

@@ -315,6 +315,23 @@
     animation: gradient-shift 8s ease infinite;
   }
 
+  /* Pulsate BHA - Subtle luxury attention grabber */
+  @keyframes pulsate-bha {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.03);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .animate-pulsate-bha {
+    animation: pulsate-bha 1.5s ease-in-out infinite;
+  }
+
   /* Glass card */
   .glass-card {
     background: hsl(var(--glass));
