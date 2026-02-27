@@ -6,6 +6,7 @@ import { AvailabilityResults } from '@/components/landing/AvailabilityResults';
 import { AvailabilitySearch } from '@/components/booking/AvailabilitySearch';
 import { parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import propertiesHero from '@/assets/properties-hero.jpg';
 
 const SearchResults = () => {
     const [searchParams] = useSearchParams();
@@ -22,15 +23,38 @@ const SearchResults = () => {
         <div className="min-h-screen bg-background">
             <Header />
 
-            <main className="pt-24">
-                {/* Search Bar Section - High contrast dark background */}
-                <section className="bg-[#020408] py-8 border-b border-white/5">
-                    <div className="container mx-auto px-6">
-                        <div className="max-w-5xl mx-auto">
+            <main>
+                {/* Cinematic Hero Section - Replicated from PublicProperties for perfect visibility */}
+                <section className="relative min-h-[50vh] flex items-center pt-20 overflow-hidden">
+                    {/* Background Image with standard CSS approach */}
+                    <div
+                        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+                        style={{
+                            backgroundImage: `url(${propertiesHero})`,
+                        }}
+                    >
+                        {/* Exact triple-layer overlay from Home/Properties Page for perfect consistency */}
+                        <div className="absolute inset-0 bg-black/20" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-90" />
+                    </div>
+
+                    <div className="container mx-auto px-6 relative z-10 py-16">
+                        <div className="max-w-4xl mx-auto text-center mb-10 animate-fade-in">
+                            <span className="text-accent uppercase tracking-[0.4em] font-bold text-xs mb-4 block">
+                                Availability Search
+                            </span>
+                            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-white mb-6 leading-[1.1]">
+                                Exclusive <span className="italic font-light text-white/90">Availability.</span>
+                            </h1>
+                        </div>
+
+                        {/* Luxury Search Integration - Non-compact glass style */}
+                        <div className="max-w-5xl mx-auto animate-fade-in-delay-1">
                             <AvailabilitySearch
                                 initialCheckIn={checkIn ? parseISO(checkIn) : undefined}
                                 initialCheckOut={checkOut ? parseISO(checkOut) : undefined}
-                                className="bg-background shadow-xl"
+                                className="bg-white/10 backdrop-blur-md border hover:border-white/30 transition-all duration-500"
                             />
                         </div>
                     </div>
@@ -38,11 +62,13 @@ const SearchResults = () => {
 
                 {/* Results Section */}
                 {checkIn && checkOut ? (
-                    <AvailabilityResults
-                        checkIn={checkIn}
-                        checkOut={checkOut}
-                        onClear={handleClearSearch}
-                    />
+                    <div className="animate-fade-in-delay-2">
+                        <AvailabilityResults
+                            checkIn={checkIn}
+                            checkOut={checkOut}
+                            onClear={handleClearSearch}
+                        />
+                    </div>
                 ) : (
                     <section className="py-20 text-center">
                         <div className="container mx-auto px-6">
