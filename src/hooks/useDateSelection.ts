@@ -9,6 +9,14 @@ export const useDateSelection = (initialCheckIn?: Date, initialCheckOut?: Date) 
     const [checkOutMonth, setCheckOutMonth] = useState<Date>(initialCheckOut || (initialCheckIn ? addDays(initialCheckIn, 1) : new Date()));
 
     const handleCheckInSelect = (date: Date | undefined) => {
+        if (!date && checkIn) {
+            setCheckInOpen(false);
+            if (!checkOut) {
+                setTimeout(() => setCheckOutOpen(true), 200);
+            }
+            return;
+        }
+
         setCheckIn(date);
 
         // Logic from Landing.tsx
@@ -28,10 +36,17 @@ export const useDateSelection = (initialCheckIn?: Date, initialCheckOut?: Date) 
 
         setCheckInOpen(false);
         // Auto-open checkout popover
-        setTimeout(() => setCheckOutOpen(true), 200);
+        if (date && !checkOut) {
+            setTimeout(() => setCheckOutOpen(true), 200);
+        }
     };
 
     const handleCheckOutSelect = (date: Date | undefined) => {
+        if (!date && checkOut) {
+            setCheckOutOpen(false);
+            return;
+        }
+
         setCheckOut(date);
         if (date) setCheckOutMonth(date);
         setCheckOutOpen(false);
