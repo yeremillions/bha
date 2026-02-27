@@ -122,7 +122,7 @@ const PublicPropertyDetails = () => {
                 <div className="container mx-auto px-6">
                     <div className="grid lg:grid-cols-3 gap-12 lg:gap-16">
                         {/* Main Content */}
-                        <div className="lg:col-span-2 space-y-12">
+                        <div className="lg:col-span-2 space-y-7">
                             <div>
                                 <div className="flex items-center gap-3 mb-4">
                                     <Badge variant="outline" className="text-accent border-accent/30 uppercase tracking-[0.2em] font-bold text-[10px] rounded-sm py-1">
