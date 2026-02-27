@@ -25,7 +25,7 @@ const SearchResults = () => {
 
             <main>
                 {/* Cinematic Hero Section - Replicated from PublicProperties for perfect visibility */}
-                <section className="relative min-h-[50vh] flex items-center pt-20 overflow-hidden">
+                <section id="availability-search-section" className="relative min-h-[50vh] flex items-center pt-20 overflow-hidden">
                     {/* Background Image with standard CSS approach */}
                     <div
                         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"

@@ -265,9 +265,20 @@ export const AvailabilityResults = forwardRef<HTMLElement, AvailabilityResultsPr
                   : 'No properties available for the selected dates'
               }
             </p>
-            <Button variant="outline" size="sm" onClick={onClear}>
-              Clear Search
-            </Button>
+            <div className="flex justify-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  document.getElementById('availability-search-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                Update Search
+              </Button>
+              <Button variant="outline" size="sm" onClick={onClear}>
+                Clear Search
+              </Button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
