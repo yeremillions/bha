@@ -23,8 +23,8 @@ const SearchResults = () => {
             <Header />
 
             <main className="pt-24">
-                {/* Search Bar Section - Allow user to refine search */}
-                <section className="bg-secondary/30 py-12 border-b border-border/50">
+                {/* Search Bar Section - High contrast dark background */}
+                <section className="bg-[#020408] py-8 border-b border-white/5">
                     <div className="container mx-auto px-6">
                         <div className="max-w-5xl mx-auto">
                             <AvailabilitySearch

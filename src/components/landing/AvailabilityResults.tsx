@@ -115,8 +115,8 @@ const PropertyCard = ({
                     carouselApi?.scrollTo(index);
                   }}
                   className={`h-2 w-2 rounded-full transition-colors ${index === currentSlide
-                      ? 'bg-background'
-                      : 'bg-background/50 hover:bg-background/75'
+                    ? 'bg-background'
+                    : 'bg-background/50 hover:bg-background/75'
                     }`}
                   aria-label={`Go to image ${index + 1}`}
                 />
@@ -245,7 +245,7 @@ export const AvailabilityResults = forwardRef<HTMLElement, AvailabilityResultsPr
     const formattedCheckOut = checkOut ? format(parseISO(checkOut), 'MMM d, yyyy') : '';
 
     return (
-      <section ref={ref} className="py-20 lg:py-32 bg-secondary/30">
+      <section ref={ref} className="pt-12 pb-20 lg:pt-16 lg:pb-32 bg-secondary/30">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-accent mb-4">
