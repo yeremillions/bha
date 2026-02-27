@@ -123,7 +123,34 @@ const PublicPropertyDetails = () => {
                     <div className="grid lg:grid-cols-3 gap-12 lg:gap-16">
                         {/* Main Content */}
                         <div className="lg:col-span-2 space-y-12">
-                            {/* Gallery Section - Now within the grid */}
+                            <div>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Badge variant="outline" className="text-accent border-accent/30 uppercase tracking-[0.2em] font-bold text-[10px] rounded-sm py-1">
+                                        {property.type}
+                                    </Badge>
+                                    {property.featured && (
+                                        <Badge className="bg-[#D4AF37] text-white border-transparent uppercase tracking-[0.2em] font-bold text-[10px] rounded-sm py-1">
+                                            Featured
+                                        </Badge>
+                                    )}
+                                </div>
+                                <h1 className="font-display text-4xl md:text-5xl font-medium text-foreground mb-6 tracking-tight">
+                                    {property.name}
+                                </h1>
+                                <div className="flex flex-wrap items-center gap-6 text-muted-foreground font-body">
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-5 w-5 text-accent" />
+                                        <span>{property.location}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Star className="h-5 w-5 text-[#D4AF37] fill-[#D4AF37]" />
+                                        <span className="font-medium text-foreground">{property.rating || 4.5}</span>
+                                        <span className="text-sm">({property.review_count || 0} Reviews)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Gallery Section */}
                             <div className="bg-[#0A0C10] rounded-lg overflow-hidden group shadow-2xl relative aspect-video sm:aspect-[16/10]">
                                 <Carousel setApi={setCarouselApi} className="w-full h-full">
                                     <CarouselContent className="-ml-0 h-full">
@@ -171,33 +198,6 @@ const PublicPropertyDetails = () => {
                                         </>
                                     )}
                                 </Carousel>
-                            </div>
-
-                            <div>
-                                <div className="flex items-center gap-3 mb-4">
-                                    <Badge variant="outline" className="text-accent border-accent/30 uppercase tracking-[0.2em] font-bold text-[10px] rounded-sm py-1">
-                                        {property.type}
-                                    </Badge>
-                                    {property.featured && (
-                                        <Badge className="bg-[#D4AF37] text-white border-transparent uppercase tracking-[0.2em] font-bold text-[10px] rounded-sm py-1">
-                                            Featured
-                                        </Badge>
-                                    )}
-                                </div>
-                                <h1 className="font-display text-4xl md:text-5xl font-medium text-foreground mb-6 tracking-tight">
-                                    {property.name}
-                                </h1>
-                                <div className="flex flex-wrap items-center gap-6 text-muted-foreground font-body">
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="h-5 w-5 text-accent" />
-                                        <span>{property.location}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Star className="h-5 w-5 text-[#D4AF37] fill-[#D4AF37]" />
-                                        <span className="font-medium text-foreground">{property.rating || 4.5}</span>
-                                        <span className="text-sm">({property.review_count || 0} Reviews)</span>
-                                    </div>
-                                </div>
                             </div>
 
                             <Separator className="bg-border/50" />
