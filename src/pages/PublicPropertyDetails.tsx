@@ -120,7 +120,7 @@ const PublicPropertyDetails = () => {
 
             {/* Hero Gallery Section */}
             <section className="relative pt-20">
-                <div className="aspect-[21/9] w-full overflow-hidden bg-muted group">
+                <div className="aspect-video w-full max-h-[70vh] overflow-hidden bg-muted group">
                     <Carousel setApi={setCarouselApi} className="w-full h-full">
                         <CarouselContent className="-ml-0 h-full">
                             {images.map((image, index) => (
@@ -129,7 +129,7 @@ const PublicPropertyDetails = () => {
                                         <img
                                             src={image}
                                             alt={`${property.name} - ${index + 1}`}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover object-center"
                                         />
                                         <div className="absolute inset-0 bg-black/20" />
                                     </div>
