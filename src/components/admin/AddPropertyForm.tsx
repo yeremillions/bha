@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { X, Upload, Home } from 'lucide-react';
+import { X, Upload, Home, Shield, Zap, Wifi, Wind, UtensilsCrossed, Droplets, Car, Tv } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -37,6 +39,17 @@ export interface PropertyFormData {
 
 const propertyTypes = ['Apartment', 'Penthouse', 'Studio', 'House', 'Villa', 'Loft'];
 
+const amenityOptions = [
+  { id: 'security', label: '24/7 Security', icon: Shield, description: '24/7 uniformed security & CCTV' },
+  { id: 'power', label: 'Backup Power Supply', icon: Zap, description: 'Backup generators & inverters' },
+  { id: 'wifi', label: 'High-Speed Wi-Fi', icon: Wifi, description: 'Fast and reliable fiber internet' },
+  { id: 'ac', label: 'Air Conditioning', icon: Wind, description: 'Full climate control in all rooms' },
+  { id: 'kitchen', label: 'Fully Equipped Kitchen', icon: UtensilsCrossed, description: 'Full kitchen facilities with appliances' },
+  { id: 'water_heater', label: 'Water Heater', icon: Droplets, description: 'Hot water in all bathrooms & kitchen' },
+  { id: 'parking', label: 'Parking Space', icon: Car, description: 'Secure on-site parking' },
+  { id: 'entertainment', label: 'Smart TV/DSTV', icon: Tv, description: 'High-definition entertainment' },
+];
+
 export const AddPropertyForm = ({ onClose, onSubmit }: AddPropertyFormProps) => {
   const [formData, setFormData] = useState<PropertyFormData>({
     name: '',
@@ -52,7 +65,7 @@ export const AddPropertyForm = ({ onClose, onSubmit }: AddPropertyFormProps) => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.type || !formData.location || !formData.pricePerNight) {
       toast({
         title: "Missing fields",
@@ -70,8 +83,16 @@ export const AddPropertyForm = ({ onClose, onSubmit }: AddPropertyFormProps) => 
     onClose();
   };
 
-  const handleChange = (field: keyof PropertyFormData, value: string | number) => {
+  const handleChange = (field: keyof PropertyFormData, value: string | number | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAmenityToggle = (amenityId: string) => {
+    const currentAmenities = formData.amenities || [];
+    const newAmenities = currentAmenities.includes(amenityId)
+      ? currentAmenities.filter(a => a !== amenityId)
+      : [...currentAmenities, amenityId];
+    handleChange('amenities', newAmenities);
   };
 
   return (
@@ -220,6 +241,34 @@ export const AddPropertyForm = ({ onClose, onSubmit }: AddPropertyFormProps) => 
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
             />
+          </div>
+
+          {/* Amenities */}
+          <div className="md:col-span-2">
+            <Label className="text-sm font-medium mb-3 block">Amenities</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {amenityOptions.map((amenity) => {
+                const Icon = amenity.icon;
+                const isChecked = formData.amenities?.includes(amenity.id);
+                return (
+                  <div
+                    key={amenity.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                      isChecked ? "bg-accent/10 border-accent" : "border-border hover:bg-muted/50"
+                    )}
+                    onClick={() => handleAmenityToggle(amenity.id)}
+                  >
+                    <Checkbox checked={isChecked} onCheckedChange={() => handleAmenityToggle(amenity.id)} />
+                    <Icon className={cn("h-5 w-5", isChecked ? "text-accent" : "text-muted-foreground")} />
+                    <div className="flex-1">
+                      <p className="font-medium text-xs">{amenity.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{amenity.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Image Upload Placeholder */}

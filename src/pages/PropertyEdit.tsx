@@ -37,15 +37,21 @@ import {
   Wifi,
   Tv,
   UtensilsCrossed,
+  Wind,
+  Droplets,
+  Car,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const amenityOptions = [
-  { id: 'security', label: 'Security', icon: Shield, description: '24/7 Security & CCTV' },
-  { id: 'power', label: 'Power', icon: Zap, description: 'Backup generators & inverters' },
-  { id: 'wifi', label: 'WiFi', icon: Wifi, description: 'High-speed internet' },
-  { id: 'entertainment', label: 'Smart TV', icon: Tv, description: 'Streaming services' },
-  { id: 'kitchen', label: 'Kitchen', icon: UtensilsCrossed, description: 'Full kitchen facilities' },
+  { id: 'security', label: '24/7 Security', icon: Shield, description: '24/7 uniformed security & CCTV' },
+  { id: 'power', label: 'Backup Power Supply', icon: Zap, description: 'Backup generators & inverters' },
+  { id: 'wifi', label: 'High-Speed Wi-Fi', icon: Wifi, description: 'Fast and reliable fiber internet' },
+  { id: 'ac', label: 'Air Conditioning', icon: Wind, description: 'Full climate control in all rooms' },
+  { id: 'kitchen', label: 'Fully Equipped Kitchen', icon: UtensilsCrossed, description: 'Full kitchen facilities with appliances' },
+  { id: 'water_heater', label: 'Water Heater', icon: Droplets, description: 'Hot water in all bathrooms & kitchen' },
+  { id: 'parking', label: 'Parking Space', icon: Car, description: 'Secure on-site parking' },
+  { id: 'entertainment', label: 'Smart TV/DSTV', icon: Tv, description: 'High-definition entertainment' },
 ];
 
 const propertyTypes = [

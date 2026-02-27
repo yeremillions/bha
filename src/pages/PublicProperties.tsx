@@ -71,15 +71,23 @@ const PropertyCard = ({ property, onBookNow, index = 0 }: { property: Property; 
   const rating = property.rating || 4.5;
   const reviewCount = property.review_count || 0;
 
-  const amenityIcons: Record<string, any> = {
-    '24/7 Security': ShieldCheck,
-    'Backup Power Supply': Zap,
-    'High-Speed Wi-Fi': Wifi,
-    'Air Conditioning': Wind,
-    'Fully Equipped Kitchen': UtensilsCrossed,
-    'Water Heater': Droplets,
-    'Parking Space': Car,
-    'Smart TV/DSTV': Tv,
+  const amenityIcons: Record<string, { icon: any; label: string }> = {
+    'security': { icon: ShieldCheck, label: '24/7 Security' },
+    '24/7 Security': { icon: ShieldCheck, label: '24/7 Security' },
+    'power': { icon: Zap, label: 'Backup Power Supply' },
+    'Backup Power Supply': { icon: Zap, label: 'Backup Power Supply' },
+    'wifi': { icon: Wifi, label: 'High-Speed Wi-Fi' },
+    'High-Speed Wi-Fi': { icon: Wifi, label: 'High-Speed Wi-Fi' },
+    'Air Conditioning': { icon: Wind, label: 'Air Conditioning' },
+    'ac': { icon: Wind, label: 'Air Conditioning' },
+    'Fully Equipped Kitchen': { icon: UtensilsCrossed, label: 'Fully Equipped Kitchen' },
+    'kitchen': { icon: UtensilsCrossed, label: 'Fully Equipped Kitchen' },
+    'Water Heater': { icon: Droplets, label: 'Water Heater' },
+    'water_heater': { icon: Droplets, label: 'Water Heater' },
+    'Parking Space': { icon: Car, label: 'Parking Space' },
+    'parking': { icon: Car, label: 'Parking Space' },
+    'Smart TV/DSTV': { icon: Tv, label: 'Smart TV/DSTV' },
+    'entertainment': { icon: Tv, label: 'Smart TV/DSTV' },
   };
 
   return (
@@ -180,16 +188,17 @@ const PropertyCard = ({ property, onBookNow, index = 0 }: { property: Property; 
 
         <div className="flex flex-wrap gap-2 mb-8">
           {property.amenities?.map((amenity) => {
-            const Icon = amenityIcons[amenity];
-            if (!Icon) return null;
+            const mapping = amenityIcons[amenity];
+            if (!mapping) return null;
+            const Icon = mapping.icon;
             return (
               <div
                 key={amenity}
                 className="flex items-center gap-1.5 px-3 py-1 bg-secondary/50 border border-border/40 rounded-sm text-[10px] uppercase tracking-wider font-semibold text-secondary-foreground transition-all duration-300 hover:border-accent/40 group/amenity"
-                title={amenity}
+                title={mapping.label}
               >
                 <Icon className="h-2.5 w-2.5 text-accent/80 group-hover/amenity:text-accent" />
-                <span>{amenity}</span>
+                <span>{mapping.label}</span>
               </div>
             );
           })}
