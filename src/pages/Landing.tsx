@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDateSelection } from '@/hooks/useDateSelection';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,9 +49,7 @@ const STANDARD_FALLBACK = 'https://images.unsplash.com/photo-1600607686527-6fb88
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [checkIn, setCheckIn] = useState<Date | undefined>();
-  const [checkOut, setCheckOut] = useState<Date | undefined>();
-  const [hasSearched, setHasSearched] = useState(false);
+  const { checkIn, checkOut } = useDateSelection();
   const resultsRef = useRef<HTMLElement>(null);
 
   // Image State with Fallbacks
@@ -71,10 +70,8 @@ const Landing = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const handleClearSearch = () => {
-    setHasSearched(false);
-    setCheckIn(undefined);
-    setCheckOut(undefined);
+  const handleSearch = () => {
+    // Navigation is handled by AvailabilitySearch component
   };
   const trustBadges = [
     {
@@ -338,16 +335,6 @@ const Landing = () => {
           </div>
         </div>
       </section>
-
-      {/* Availability Results - shows when user searches */}
-      {hasSearched && checkIn && checkOut && (
-        <AvailabilityResults
-          ref={resultsRef}
-          checkIn={format(checkIn, 'yyyy-MM-dd')}
-          checkOut={format(checkOut, 'yyyy-MM-dd')}
-          onClear={handleClearSearch}
-        />
-      )}
 
       {/* Featured Apartments - Now uses real database data */}
       <FeaturedApartments />

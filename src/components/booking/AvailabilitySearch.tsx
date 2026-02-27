@@ -48,7 +48,7 @@ export const AvailabilitySearch = ({
                 const params = new URLSearchParams();
                 params.set('checkIn', format(checkIn, 'yyyy-MM-dd'));
                 params.set('checkOut', format(checkOut, 'yyyy-MM-dd'));
-                navigate(`/properties?${params.toString()}`);
+                navigate(`/search-results?${params.toString()}`);
             }
         }
     };

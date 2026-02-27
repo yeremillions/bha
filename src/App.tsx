@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
 import PublicProperties from "./pages/PublicProperties";
 import PublicPropertyDetails from "./pages/PublicPropertyDetails";
+import SearchResults from "./pages/SearchResults";
 import Contact from "./pages/Contact";
 import PropertyDetails from "./pages/PropertyDetails";
 import PropertyEdit from "./pages/PropertyEdit";
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/properties" element={<PublicProperties />} />
               <Route path="/properties/:id" element={<PublicPropertyDetails />} />
+              <Route path="/search-results" element={<SearchResults />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/properties" element={<Properties />} />

@@ -23,13 +23,13 @@ interface AvailabilityResultsProps {
   onClear: () => void;
 }
 
-const PropertyCard = ({ 
-  property, 
+const PropertyCard = ({
+  property,
   onBookNow,
   checkIn,
-  checkOut 
-}: { 
-  property: Property; 
+  checkOut
+}: {
+  property: Property;
   onBookNow: (property: Property) => void;
   checkIn: string;
   checkOut: string;
@@ -42,17 +42,17 @@ const PropertyCard = ({
 
   useEffect(() => {
     if (!carouselApi) return;
-    
+
     const onSelect = () => {
       setCurrentSlide(carouselApi.selectedScrollSnap());
     };
-    
+
     carouselApi.on('select', onSelect);
     return () => {
       carouselApi.off('select', onSelect);
     };
   }, [carouselApi]);
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -76,15 +76,15 @@ const PropertyCard = ({
             <CarouselContent className="-ml-0 h-full">
               {images.map((image, index) => (
                 <CarouselItem key={index} className="pl-0 h-56">
-                  <img 
-                    src={image} 
+                  <img
+                    src={image}
                     alt={`${property.name} - Image ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -105,7 +105,7 @@ const PropertyCard = ({
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-            
+
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
               {images.map((_, index) => (
                 <button
@@ -114,19 +114,18 @@ const PropertyCard = ({
                     e.stopPropagation();
                     carouselApi?.scrollTo(index);
                   }}
-                  className={`h-2 w-2 rounded-full transition-colors ${
-                    index === currentSlide 
-                      ? 'bg-background' 
+                  className={`h-2 w-2 rounded-full transition-colors ${index === currentSlide
+                      ? 'bg-background'
                       : 'bg-background/50 hover:bg-background/75'
-                  }`}
+                    }`}
                   aria-label={`Go to image ${index + 1}`}
                 />
               ))}
             </div>
           </Carousel>
         ) : (
-          <img 
-            src={images[0]} 
+          <img
+            src={images[0]}
             alt={property.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -138,9 +137,9 @@ const PropertyCard = ({
       <CardContent className="p-6">
         <div className="flex items-center gap-1 mb-2">
           {[...Array(5)].map((_, i) => (
-            <Star 
-              key={i} 
-              className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-accent fill-accent' : 'text-muted-foreground'}`} 
+            <Star
+              key={i}
+              className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-accent fill-accent' : 'text-muted-foreground'}`}
             />
           ))}
           <span className="text-sm text-muted-foreground ml-1">({reviewCount} reviews)</span>
@@ -175,7 +174,7 @@ const PropertyCard = ({
             </span>
           </div>
         </div>
-        <Button 
+        <Button
           className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
           onClick={() => onBookNow(property)}
         >
@@ -259,10 +258,10 @@ export const AvailabilityResults = forwardRef<HTMLElement, AvailabilityResultsPr
               Available Properties
             </h2>
             <p className="font-body text-muted-foreground text-lg max-w-3xl mx-auto mb-4">
-              {isLoading 
+              {isLoading
                 ? 'Searching for available properties...'
-                : availableProperties?.length 
-                  ? `Found ${availableProperties.length} ${availableProperties.length === 1 ? 'property' : 'properties'} available for your dates`
+                : availableProperties?.length
+                  ? `Showing ${availableProperties.length} ${availableProperties.length === 1 ? 'property' : 'properties'} available for ${format(parseISO(checkIn), 'MMM d, yyyy')} - ${format(parseISO(checkOut), 'MMM d, yyyy')}.`
                   : 'No properties available for the selected dates'
               }
             </p>
@@ -270,7 +269,7 @@ export const AvailabilityResults = forwardRef<HTMLElement, AvailabilityResultsPr
               Clear Search
             </Button>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {isLoading ? (
               <>
@@ -289,9 +288,9 @@ export const AvailabilityResults = forwardRef<HTMLElement, AvailabilityResultsPr
               </div>
             ) : (
               availableProperties?.map((property) => (
-                <PropertyCard 
-                  key={property.id} 
-                  property={property} 
+                <PropertyCard
+                  key={property.id}
+                  property={property}
                   onBookNow={handleBookNow}
                   checkIn={checkIn}
                   checkOut={checkOut}
