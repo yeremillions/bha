@@ -7,6 +7,7 @@ import { AvailabilitySearch } from '@/components/booking/AvailabilitySearch';
 import { parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import propertiesHero from '@/assets/properties-hero.jpg';
+import searchResultsHero from '@/assets/search-results-hero.jpg';
 
 const SearchResults = () => {
     const [searchParams] = useSearchParams();
@@ -30,7 +31,7 @@ const SearchResults = () => {
                     <div
                         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
                         style={{
-                            backgroundImage: `url(${propertiesHero})`,
+                            backgroundImage: `url(${searchResultsHero})`,
                         }}
                     >
                         {/* Exact triple-layer overlay from Home/Properties Page for perfect consistency */}
