@@ -29,9 +29,12 @@ import type { Tables } from '@/integrations/supabase/types';
 import { format, parseISO } from 'date-fns';
 import propertiesHero from '@/assets/properties-hero.jpg';
 
+import { useNavigate } from 'react-router-dom';
+
 type Property = Tables<'properties'>;
 
 const PropertyCard = ({ property, onBookNow, index = 0 }: { property: Property; onBookNow: (property: Property) => void; index?: number }) => {
+  const navigate = useNavigate();
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const defaultImage = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80';
@@ -92,8 +95,9 @@ const PropertyCard = ({ property, onBookNow, index = 0 }: { property: Property; 
 
   return (
     <Card
-      className="overflow-hidden border-border/50 bg-card hover-lift animate-fade-in group opacity-0"
+      className="overflow-hidden border-border/50 bg-card hover-lift animate-fade-in group opacity-0 cursor-pointer"
       style={{ animationDelay }}
+      onClick={() => navigate(`/properties/${property.id}`)}
     >
       <div className="relative h-64 md:h-72 overflow-hidden">
         {hasMultipleImages ? (
@@ -221,7 +225,10 @@ const PropertyCard = ({ property, onBookNow, index = 0 }: { property: Property; 
           </div>
           <Button
             className="rounded-none px-8 bg-primary hover:bg-primary/90 text-white font-medium tracking-wide transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => onBookNow(property)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onBookNow(property);
+            }}
           >
             BOOK NOW
           </Button>

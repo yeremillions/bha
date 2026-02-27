@@ -12,6 +12,7 @@ import AcceptInvitation from "./pages/AcceptInvitation";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
 import PublicProperties from "./pages/PublicProperties";
+import PublicPropertyDetails from "./pages/PublicPropertyDetails";
 import Contact from "./pages/Contact";
 import PropertyDetails from "./pages/PropertyDetails";
 import PropertyEdit from "./pages/PropertyEdit";
@@ -54,6 +55,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/properties" element={<PublicProperties />} />
+              <Route path="/properties/:id" element={<PublicPropertyDetails />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/properties" element={<Properties />} />

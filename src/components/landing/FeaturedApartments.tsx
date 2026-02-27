@@ -68,8 +68,10 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
     'entertainment': { icon: Tv, label: 'Smart TV/DSTV' },
   };
 
+  const navigate = useNavigate();
+
   return (
-    <div className="group cursor-pointer" onClick={() => onBookNow(property)}>
+    <div className="group cursor-pointer" onClick={() => navigate(`/properties/${property.id}`)}>
       {/* Editorial Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden mb-4 bg-muted">
         {hasMultipleImages ? (
@@ -170,10 +172,13 @@ const PropertyCard = ({ property, onBookNow }: { property: Property; onBookNow: 
             </span>
           </div>
           <Button
-            variant="link"
-            className="p-0 h-auto text-foreground hover:text-[#D4AF37] hover:no-underline group/btn"
+            className="rounded-sm px-6 bg-[#D4AF37] hover:bg-[#B8962E] text-white font-medium tracking-wide transition-all duration-300 hover:scale-[1.02]"
+            onClick={(e) => {
+              e.stopPropagation();
+              onBookNow(property);
+            }}
           >
-            View Details <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
+            BOOK NOW
           </Button>
         </div>
       </div>
