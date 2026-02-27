@@ -399,24 +399,23 @@ const Landing = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-x-8 gap-y-12">
-            {[
-              {
-                name: 'Chioma Adeyemi',
-                quote: 'Absolutely stunning apartment! The attention to detail was impeccable. The bar access was a fantastic touch, and the staff were incredibly welcoming.',
-                role: 'Business Traveler'
-              },
-              {
-                name: 'David Okonkwo',
-                quote: 'Perfect for my business trip to Uyo! The apartment was spotless, WiFi was excellent, and the location couldn\'t be better. Brooklyn Hills exceeded expectations.',
-                role: 'CEO, TechNext'
-              },
-              {
-                name: 'Sarah Eze',
-                quote: 'My family and I had an amazing week here! The kids loved the pool, and we appreciated how well-equipped the kitchen was. True luxury at a reasonable price.',
-                role: 'Family Vacation'
-              },
-            ].map((testimonial, index) => (
+            {testimonials.map((testimonial, index) => (
               <div key={index} className="flex flex-col items-center text-center group">
+                <div className="relative mb-8">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-accent/20 group-hover:border-accent transition-colors duration-500 shadow-xl">
+                    <img
+                      src={testimonial.image}
+                      alt={testimonial.name}
+                      className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-1.5 shadow-md">
+                    <div className="bg-[#D4AF37] rounded-full p-1">
+                      <Star weight="fill" className="h-2 w-2 text-white" />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mb-6 text-[#D4AF37]">
                   <Star weight="fill" className="h-4 w-4 inline-block" />
                   <Star weight="fill" className="h-4 w-4 inline-block" />
@@ -429,7 +428,7 @@ const Landing = () => {
                 </p>
                 <div className="mt-auto">
                   <h4 className="font-body font-bold text-sm uppercase tracking-widest text-foreground">{testimonial.name}</h4>
-                  <span className="text-xs text-muted-foreground mt-1 block">{testimonial.role}</span>
+                  <span className="text-xs text-muted-foreground mt-1 block">{testimonial.location}</span>
                 </div>
               </div>
             ))}
