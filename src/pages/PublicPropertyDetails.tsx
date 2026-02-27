@@ -118,64 +118,61 @@ const PublicPropertyDetails = () => {
         <div className="min-h-screen bg-background">
             <Header />
 
-            {/* Hero Gallery Section */}
-            <section className="relative pt-20">
-                <div className="h-[40vh] sm:h-[50vh] md:h-[65vh] lg:h-[75vh] w-full overflow-hidden bg-muted group">
-                    <Carousel setApi={setCarouselApi} className="w-full h-full">
-                        <CarouselContent className="-ml-0 h-full">
-                            {images.map((image, index) => (
-                                <CarouselItem key={index} className="pl-0 h-full">
-                                    <div className="relative w-full h-full">
-                                        <img
-                                            src={image}
-                                            alt={`${property.name} - ${index + 1}`}
-                                            className="w-full h-full object-cover object-bottom"
-                                        />
-                                        <div className="absolute inset-0 bg-black/20" />
-                                    </div>
-                                </CarouselItem>
-                            ))}
-                        </CarouselContent>
-
-                        {images.length > 1 && (
-                            <>
-                                <div className="absolute inset-0 flex items-center justify-between p-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        onClick={() => carouselApi?.scrollPrev()}
-                                        className="h-12 w-12 rounded-full bg-black/20 backdrop-blur-md text-white border border-white/20 flex items-center justify-center hover:bg-black/40 transition-colors"
-                                    >
-                                        <ChevronLeft className="h-6 w-6" />
-                                    </button>
-                                    <button
-                                        onClick={() => carouselApi?.scrollNext()}
-                                        className="h-12 w-12 rounded-full bg-black/20 backdrop-blur-md text-white border border-white/20 flex items-center justify-center hover:bg-black/40 transition-colors"
-                                    >
-                                        <ChevronRight className="h-6 w-6" />
-                                    </button>
-                                </div>
-                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-                                    {images.map((_, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => carouselApi?.scrollTo(index)}
-                                            className={cn(
-                                                "h-1.5 rounded-full transition-all duration-300",
-                                                index === currentSlide ? "w-8 bg-accent" : "w-1.5 bg-white/50"
-                                            )}
-                                        />
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </Carousel>
-                </div>
-            </section>
-
-            <section className="py-12 lg:py-20">
+            <section className="py-24 lg:py-32">
                 <div className="container mx-auto px-6">
                     <div className="grid lg:grid-cols-3 gap-12 lg:gap-16">
                         {/* Main Content */}
                         <div className="lg:col-span-2 space-y-12">
+                            {/* Gallery Section - Now within the grid */}
+                            <div className="bg-[#0A0C10] rounded-lg overflow-hidden group shadow-2xl relative aspect-video sm:aspect-[16/10]">
+                                <Carousel setApi={setCarouselApi} className="w-full h-full">
+                                    <CarouselContent className="-ml-0 h-full">
+                                        {images.map((image, index) => (
+                                            <CarouselItem key={index} className="pl-0 h-full">
+                                                <div className="relative w-full h-full flex items-center justify-center">
+                                                    <img
+                                                        src={image}
+                                                        alt={`${property.name} - ${index + 1}`}
+                                                        className="max-w-full max-h-full w-auto h-auto object-contain"
+                                                    />
+                                                </div>
+                                            </CarouselItem>
+                                        ))}
+                                    </CarouselContent>
+
+                                    {images.length > 1 && (
+                                        <>
+                                            <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => carouselApi?.scrollPrev()}
+                                                    className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition-colors"
+                                                >
+                                                    <ChevronLeft className="h-5 w-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => carouselApi?.scrollNext()}
+                                                    className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition-colors"
+                                                >
+                                                    <ChevronRight className="h-5 w-5" />
+                                                </button>
+                                            </div>
+                                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                                {images.map((_, index) => (
+                                                    <button
+                                                        key={index}
+                                                        onClick={() => carouselApi?.scrollTo(index)}
+                                                        className={cn(
+                                                            "h-1 rounded-full transition-all duration-300",
+                                                            index === currentSlide ? "w-6 bg-accent" : "w-1.5 bg-white/30"
+                                                        )}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </Carousel>
+                            </div>
+
                             <div>
                                 <div className="flex items-center gap-3 mb-4">
                                     <Badge variant="outline" className="text-accent border-accent/30 uppercase tracking-[0.2em] font-bold text-[10px] rounded-sm py-1">
